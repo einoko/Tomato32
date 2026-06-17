@@ -1,0 +1,57 @@
+Using device: /dev/cu.usbmodem101
+================================================
+ESP32-S3 Docker Build
+Project root: /Users/sumire/Projects/esp32-pomodoro
+ESP32 dir:    /Users/sumire/Projects/esp32-pomodoro/platform/esp32
+Docker image: espressif/idf:v5.4
+================================================
+Checking "python3" ...
+Python 3.12.3
+"python3" has been detected
+[38;5;208mActivating ESP-IDF [0m[1;38;5;208m5.4[0m
+[38;5;208m*[0m Checking python version [33m...[0m [1;32m3.12[0m[32m.[0m[1;32m3[0m
+[38;5;208m*[0m Checking python dependencies [33m...[0m [32mOK[0m
+[38;5;208m*[0m Deactivating the current ESP-IDF environment [1m([0mif any[1m)[0m [33m...[0m [32mOK[0m
+[38;5;208m*[0m Establishing a new ESP-IDF environment [33m...[0m [32mOK[0m
+[38;5;208m*[0m Identifying shell [33m...[0m [32mbash[0m
+[38;5;208m*[0m Detecting outdated tools in system [33m...[0m [32mOK - no outdated tools found[0m
+[38;5;208m*[0m Shell completion [33m...[0m [32mAutocompletion code generated[0m
+
+Done! You can now compile ESP-IDF projects.
+Go to the project directory and run:
+
+  idf.py build
+=> Building...
+Executing action: all (aliases: build)
+Running ninja in directory /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build
+Executing "ninja all"...
+[1/10] Performing build step for 'bootloader'[K[1/1] cd /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/bootloader/esp-idf/esptool_py && /opt/esp/python_env/idf5.4_py3.12_env/bin/python /opt/esp/idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/bootloader/bootloader.bin[K
+Bootloader binary size 0x5210 bytes. 0x2df0 bytes (36%) free.
+[2/10] No install step for 'bootloader'[K[3/10] cd /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build && /opt/esp/python_env/idf5.4_py3.12_env/bin/python /opt/esp/idf/components/spiffs/spiffsgen.py 0x200000 /Users/sumire/Projects/esp32-pomodoro/platform/esp32/spiffs_image /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/storage.bin --page-size=256 --obj-name-len=32 --meta-len=4 --use-magic --use-magic-len[K[4/10] Completed 'bootloader'[K[5/10] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/audio.c.obj[K[6/10] Linking C static library esp-idf/main/libmain.a[K[7/10] Generating ld/sections.ld[K[8/10] Linking CXX executable pomodoro_esp32.elf[K[9/10] Generating binary image from built executable[K
+esptool.py v4.8.1
+Creating esp32s3 image...
+Merged 2 ELF sections
+Successfully created esp32s3 image.
+Generated /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/pomodoro_esp32.bin
+[10/10] cd /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/esp-idf/esptool_py && /opt/esp/python_env/idf5.4_py3.12_env/bin/python /opt/esp/idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/partition_table/partition-table.bin /Users/sumire/Projects/esp32-pomodoro/platform/esp32/build/pomodoro_esp32.bin[K
+pomodoro_esp32.bin binary size 0x1aa860 bytes. Smallest app partition is 0x800000 bytes. 0x6557a0 bytes (79%) free.
+
+Project build complete. To flash, run:
+ idf.py flash
+or
+ idf.py -p PORT flash
+or
+ python -m esptool --chip esp32s3 -b 460800 --before default_reset --after hard_reset write_flash --flash_mode dio --flash_size 16MB --flash_freq 80m 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/pomodoro_esp32.bin 0x810000 build/storage.bin
+or from the "/Users/sumire/Projects/esp32-pomodoro/platform/esp32/build" directory
+ python -m esptool --chip esp32s3 -b 460800 --before default_reset --after hard_reset write_flash "@flash_args"
+=> Build done.
+=> Flashing from host...
+[0;33mWarning:[0m DEPRECATED: 'esptool.py' is deprecated. Please use 'esptool' instead. The '.py' suffix will be removed in a future major release.
+esptool --chip esp32s3 -p /dev/cu.usbmodem101 -b 460800 --before default_reset --after hard_reset write-flash --flash_mode dio --flash_freq 80m --flash_size 16MB 0x0 bootloader/bootloader.bin 0x10000 pomodoro_esp32.bin 0x8000 partition_table/partition-table.bin 0x810000 storage.bin
+[0;33mWarning:[0m Deprecated: Option '--flash_mode' is deprecated. Use '--flash-mode' instead.
+[0;33mWarning:[0m Deprecated: Option '--flash_freq' is deprecated. Use '--flash-freq' instead.
+[0;33mWarning:[0m Deprecated: Option '--flash_size' is deprecated. Use '--flash-size' instead.
+[0;33mWarning:[0m Deprecated: Choice 'default_reset' for option '--before' is deprecated. Use 'default-reset' instead.
+[0;33mWarning:[0m Deprecated: Choice 'hard_reset' for option '--after' is deprecated. Use 'hard-reset' instead.
+esptool v5.2.0
+Serial port /dev/cu.usbmodem101:

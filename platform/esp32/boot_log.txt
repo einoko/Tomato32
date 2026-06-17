@@ -1,0 +1,7 @@
+Using device: /dev/cu.usbmodem101
+================================================
+ESP32-S3 Docker Build
+Project root: /Users/sumire/Projects/esp32-pomodoro
+ESP32 dir:    /Users/sumire/Projects/esp32-pomodoro/platform/esp32
+Docker image: espressif/idf:v5.4
+================================================

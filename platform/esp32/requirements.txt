@@ -1,0 +1,2 @@
+esptool==5.2.0
+esp-idf-monitor==1.9.0

@@ -1,0 +1,321 @@
+#include "timer_screen.h"
+#include "app.h"
+#include "pomodoro.h"
+#include "theme.h"
+
+#define DISPLAY_W 640
+#define DISPLAY_H 172
+#define LEFT_W 360
+#define RIGHT_W (DISPLAY_W - LEFT_W)
+
+static lv_obj_t *scr;
+static lv_obj_t *bg_glow;
+static lv_obj_t *lbl_phase;
+static lv_obj_t *lbl_timer;
+static lv_obj_t *btn_start_pause;
+static lv_obj_t *lbl_start_pause;
+static lv_obj_t *btn_reset;
+static lv_obj_t *btn_skip;
+static lv_obj_t *dots[POMODORO_MAX_ROUNDS];
+static lv_obj_t *pulse_stop_overlay;
+
+static lv_style_t style_circle_btn;
+static lv_style_t style_circle_btn_pressed;
+static bool circle_btn_styles_ready = false;
+
+static lv_anim_t blink_bg_anim;
+static bool is_blinking = false;
+
+static void phase_long_press_cb(lv_event_t *e) {
+  (void)e;
+  app_show_stats_screen();
+}
+
+static void phase_short_click_cb(lv_event_t *e) {
+  (void)e;
+  app_show_settings_screen();
+}
+
+static void blink_bg_anim_cb(void *var, int32_t v) {
+  lv_obj_set_style_bg_opa((lv_obj_t *)var, v, 0);
+}
+
+static void btn_start_pause_cb(lv_event_t *e) {
+  (void)e;
+  pomodoro_start_pause();
+  timer_screen_update();
+}
+
+static void btn_reset_cb(lv_event_t *e) {
+  (void)e;
+  pomodoro_reset();
+  timer_screen_update();
+}
+
+static void btn_skip_cb(lv_event_t *e) {
+  (void)e;
+  pomodoro_skip_to_next();
+  timer_screen_update();
+}
+
+static void dot_click_cb(lv_event_t *e) {
+  int round = (int)(intptr_t)lv_event_get_user_data(e);
+  pomodoro_jump_to_round(round);
+  timer_screen_update();
+}
+
+static void stop_pulse_cb(lv_event_t *e) {
+  (void)e;
+  if (pomodoro_get_ran_out_waiting()) {
+    pomodoro_clear_ran_out_waiting();
+    timer_screen_update();
+  }
+}
+
+static lv_obj_t *create_circle_btn(lv_obj_t *parent, const char *symbol,
+                                   lv_event_cb_t cb, int size) {
+  if (!circle_btn_styles_ready) {
+    lv_style_init(&style_circle_btn);
+    lv_style_set_bg_color(&style_circle_btn, COLOR_CTRL);
+    lv_style_set_bg_opa(&style_circle_btn, LV_OPA_COVER);
+    lv_style_set_radius(&style_circle_btn, LV_RADIUS_CIRCLE);
+    lv_style_set_border_width(&style_circle_btn, 0);
+    lv_style_set_text_color(&style_circle_btn, lv_color_white());
+    lv_style_set_text_font(&style_circle_btn, &lv_font_montserrat_20);
+    lv_style_set_pad_all(&style_circle_btn, 0);
+
+    lv_style_init(&style_circle_btn_pressed);
+    lv_style_set_bg_color(&style_circle_btn_pressed, COLOR_CTRL_PRESSED);
+
+    circle_btn_styles_ready = true;
+  }
+
+  lv_obj_t *btn = lv_btn_create(parent);
+  lv_obj_remove_style_all(btn);
+  lv_obj_add_style(btn, &style_circle_btn, 0);
+  lv_obj_add_style(btn, &style_circle_btn_pressed, LV_STATE_PRESSED);
+  lv_obj_set_size(btn, size, size);
+  lv_obj_add_event_cb(btn, cb, LV_EVENT_CLICKED, NULL);
+
+  lv_obj_t *lbl = lv_label_create(btn);
+  lv_label_set_text(lbl, symbol);
+  lv_obj_center(lbl);
+
+  return btn;
+}
+
+lv_obj_t *timer_screen_create(void) {
+  scr = lv_obj_create(NULL);
+  theme_apply_scr(scr);
+  theme_apply_custom_bg(scr);
+
+  bg_glow = lv_obj_create(scr);
+  lv_obj_remove_style_all(bg_glow);
+  lv_obj_set_size(bg_glow, DISPLAY_W, DISPLAY_H);
+  lv_obj_set_style_bg_opa(bg_glow, 0, 0);
+
+  /* --- LEFT PANEL: Timer + Dots --- */
+  lv_obj_t *left = lv_obj_create(scr);
+  lv_obj_remove_style_all(left);
+  lv_obj_set_size(left, LEFT_W, DISPLAY_H);
+  lv_obj_set_pos(left, 0, 0);
+  lv_obj_set_style_bg_opa(left, LV_OPA_TRANSP, 0);
+  lv_obj_remove_flag(left, LV_OBJ_FLAG_SCROLLABLE);
+
+  lbl_timer = lv_label_create(left);
+  theme_apply_label_large(lbl_timer);
+  lv_obj_align(lbl_timer, LV_ALIGN_CENTER, 18, -12);
+  lv_label_set_text(lbl_timer, "25:00");
+
+  lv_obj_t *dots_cont = lv_obj_create(left);
+  lv_obj_remove_style_all(dots_cont);
+  lv_obj_set_size(dots_cont, LV_SIZE_CONTENT, 16);
+  lv_obj_align(dots_cont, LV_ALIGN_BOTTOM_MID, 18, -16);
+  lv_obj_set_flex_flow(dots_cont, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(dots_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_gap(dots_cont, 10, 0);
+
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+    dots[i] = lv_obj_create(dots_cont);
+    lv_obj_remove_style_all(dots[i]);
+    lv_obj_add_style(dots[i], &theme.dot_empty, 0);
+    lv_obj_set_size(dots[i], 16, 16);
+    lv_obj_add_flag(dots[i], LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(dots[i], dot_click_cb, LV_EVENT_CLICKED,
+                        (void *)(intptr_t)i);
+    /* Hide dots beyond the default interval; update() will manage visibility */
+    if (i >= 4)
+      lv_obj_add_flag(dots[i], LV_OBJ_FLAG_HIDDEN);
+  }
+
+  /* Transparent overlay to stop pulse when tapping the left pane */
+  pulse_stop_overlay = lv_obj_create(left);
+  lv_obj_remove_style_all(pulse_stop_overlay);
+  lv_obj_set_size(pulse_stop_overlay, LEFT_W, DISPLAY_H);
+  lv_obj_set_pos(pulse_stop_overlay, 0, 0);
+  lv_obj_set_style_bg_opa(pulse_stop_overlay, LV_OPA_TRANSP, 0);
+  lv_obj_add_flag(pulse_stop_overlay, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_remove_flag(pulse_stop_overlay, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_event_cb(pulse_stop_overlay, stop_pulse_cb, LV_EVENT_CLICKED,
+                      NULL);
+  lv_obj_add_flag(pulse_stop_overlay, LV_OBJ_FLAG_HIDDEN);
+
+  /* --- RIGHT PANEL: Phase label + Controls --- */
+  lv_obj_t *right = lv_obj_create(scr);
+  lv_obj_remove_style_all(right);
+  lv_obj_set_size(right, RIGHT_W, DISPLAY_H);
+  lv_obj_set_pos(right, LEFT_W, 0);
+  lv_obj_set_style_bg_opa(right, LV_OPA_TRANSP, 0);
+  lv_obj_remove_flag(right, LV_OBJ_FLAG_SCROLLABLE);
+
+  lv_obj_t *phase_touch_area = lv_obj_create(right);
+  lv_obj_remove_style_all(phase_touch_area);
+  lv_obj_set_size(phase_touch_area, RIGHT_W, 72);
+  lv_obj_align(phase_touch_area, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_set_style_bg_opa(phase_touch_area, LV_OPA_TRANSP, 0);
+  lv_obj_add_flag(phase_touch_area, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_remove_flag(phase_touch_area, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_event_cb(phase_touch_area, phase_long_press_cb,
+                      LV_EVENT_LONG_PRESSED, NULL);
+  lv_obj_add_event_cb(phase_touch_area, phase_short_click_cb,
+                      LV_EVENT_SHORT_CLICKED, NULL);
+
+  lbl_phase = lv_label_create(phase_touch_area);
+  theme_apply_label_title(lbl_phase);
+  lv_obj_set_style_text_font(lbl_phase, &inter_42, 0);
+  lv_obj_align(lbl_phase, LV_ALIGN_TOP_MID, 0, 18);
+  lv_label_set_text(lbl_phase, "Focus");
+
+  /* Button row: small, large, small */
+  lv_obj_t *btn_cont = lv_obj_create(right);
+  lv_obj_remove_style_all(btn_cont);
+  lv_obj_set_size(btn_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_align(btn_cont, LV_ALIGN_CENTER, 0, 32);
+  lv_obj_set_flex_flow(btn_cont, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(btn_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_gap(btn_cont, 16, 0);
+
+  btn_reset = create_circle_btn(btn_cont, LV_SYMBOL_PREV, btn_reset_cb, 48);
+
+  btn_start_pause =
+      create_circle_btn(btn_cont, LV_SYMBOL_PLAY, btn_start_pause_cb, 72);
+  lbl_start_pause = lv_obj_get_child(btn_start_pause, 0);
+  lv_obj_set_style_text_font(lbl_start_pause, &lv_font_montserrat_24, 0);
+
+  btn_skip = create_circle_btn(btn_cont, LV_SYMBOL_NEXT, btn_skip_cb, 48);
+
+  return scr;
+}
+
+void timer_screen_update(void) {
+  pomodoro_phase_t phase = pomodoro_get_phase();
+  uint32_t remaining = pomodoro_get_remaining();
+  bool running = pomodoro_is_running();
+  int current_round = pomodoro_get_current_round();
+  pomodoro_preset_id_t preset = pomodoro_get_active_preset();
+  pomodoro_preset_t *p = pomodoro_get_preset(preset);
+  lv_color_t preset_color = theme_get_preset_color((int)preset);
+
+  switch (phase) {
+  case PHASE_WORK:
+    lv_label_set_text(lbl_phase, "Focus");
+    break;
+  case PHASE_SHORT_BREAK:
+    lv_label_set_text(lbl_phase, "Break");
+    break;
+  case PHASE_LONG_BREAK:
+    lv_label_set_text(lbl_phase, "Long Break");
+    break;
+  }
+
+  uint32_t minutes = remaining / 60;
+  uint32_t seconds = remaining % 60;
+  char buf[8];
+  lv_snprintf(buf, sizeof(buf), "%02" LV_PRIu32 ":%02" LV_PRIu32, minutes,
+              seconds);
+  lv_label_set_text(lbl_timer, buf);
+
+  bool should_blink =
+      pomodoro_get_ran_out_waiting() && pomodoro_get_visual_pulse();
+  if (should_blink) {
+    lv_obj_remove_flag(pulse_stop_overlay, LV_OBJ_FLAG_HIDDEN);
+    if (!is_blinking) {
+      lv_obj_set_style_bg_color(bg_glow, preset_color, 0);
+
+      lv_anim_init(&blink_bg_anim);
+      lv_anim_set_var(&blink_bg_anim, bg_glow);
+      uint8_t pulse_opacity = pomodoro_get_visual_pulse_opacity();
+      lv_anim_set_values(&blink_bg_anim, 0, LV_OPA_COVER * pulse_opacity / 100);
+      lv_anim_set_time(&blink_bg_anim, 800);
+      lv_anim_set_playback_time(&blink_bg_anim, 800);
+      lv_anim_set_repeat_count(&blink_bg_anim, LV_ANIM_REPEAT_INFINITE);
+      lv_anim_set_path_cb(&blink_bg_anim, lv_anim_path_ease_in_out);
+      lv_anim_set_exec_cb(&blink_bg_anim, blink_bg_anim_cb);
+      lv_anim_start(&blink_bg_anim);
+
+      is_blinking = true;
+    }
+  } else {
+    lv_obj_add_flag(pulse_stop_overlay, LV_OBJ_FLAG_HIDDEN);
+    if (is_blinking) {
+      lv_anim_del(bg_glow, blink_bg_anim_cb);
+      lv_obj_set_style_bg_opa(bg_glow, 0, 0);
+
+      is_blinking = false;
+    }
+  }
+
+  lv_label_set_text(lbl_start_pause,
+                    running ? LV_SYMBOL_PAUSE : LV_SYMBOL_PLAY);
+
+  /* Update control button colors to match active preset */
+  bool can_prev = true;
+  if (!running && current_round == 0 && phase == PHASE_WORK &&
+      remaining == p->work_duration && !pomodoro_get_ran_out_waiting()) {
+    can_prev = false;
+  }
+
+  if (can_prev) {
+    lv_obj_add_flag(btn_reset, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_color(btn_reset, preset_color, 0);
+    lv_obj_set_style_bg_color(btn_reset, preset_color, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(btn_reset, LV_OPA_COVER, 0);
+  } else {
+    lv_obj_remove_flag(btn_reset, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_bg_color(btn_reset, lv_color_white(), 0);
+    lv_obj_set_style_bg_opa(btn_reset, LV_OPA_50, 0);
+  }
+
+  lv_obj_set_style_bg_color(btn_start_pause, preset_color, 0);
+  lv_obj_set_style_bg_color(btn_skip, preset_color, 0);
+  lv_obj_set_style_bg_color(btn_start_pause, preset_color, LV_STATE_PRESSED);
+  lv_obj_set_style_bg_color(btn_skip, preset_color, LV_STATE_PRESSED);
+
+  /* Update dots: show only the active interval count, filled dots use preset
+   * color */
+  int interval = p->long_break_interval;
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+    if (i >= interval) {
+      lv_obj_add_flag(dots[i], LV_OBJ_FLAG_HIDDEN);
+      continue;
+    }
+    lv_obj_remove_flag(dots[i], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_style(dots[i], NULL, LV_PART_MAIN | LV_STATE_ANY);
+    if (pomodoro_is_completed(i)) {
+      lv_obj_add_style(dots[i], &theme.dot_filled, 0);
+      lv_obj_set_style_bg_color(dots[i], preset_color, 0);
+    } else if (i == current_round && phase == PHASE_WORK) {
+      lv_obj_add_style(dots[i], &theme.dot_filled, 0);
+      lv_obj_set_style_bg_color(dots[i], theme_get_inverse_bg(), 0);
+    } else {
+      lv_obj_add_style(dots[i], &theme.dot_empty, 0);
+    }
+  }
+}
+
+void timer_screen_refresh_theme(void) {
+  lv_style_set_text_color(&style_circle_btn, lv_color_white());
+  theme_apply_custom_bg(scr);
+}

@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.16)
+
+set(ESP32_ENV_FILE "${CMAKE_CURRENT_LIST_DIR}/.env")
+set(WIFI_SYNC_SSID "")
+set(WIFI_SYNC_PASS "")
+set(WIFI_SYNC_TZ "UTC0")
+
+if(EXISTS "${ESP32_ENV_FILE}")
+	file(STRINGS "${ESP32_ENV_FILE}" ESP32_ENV_LINES)
+	foreach(ENV_LINE IN LISTS ESP32_ENV_LINES)
+		string(STRIP "${ENV_LINE}" ENV_LINE)
+		if(ENV_LINE STREQUAL "" OR ENV_LINE MATCHES "^#")
+			continue()
+		endif()
+
+		if(NOT ENV_LINE MATCHES "^[A-Za-z_][A-Za-z0-9_]*=.*$")
+			continue()
+		endif()
+
+		string(REGEX MATCH "^([A-Za-z_][A-Za-z0-9_]*)=(.*)$" _ "${ENV_LINE}")
+		set(ENV_KEY "${CMAKE_MATCH_1}")
+		set(ENV_VAL "${CMAKE_MATCH_2}")
+
+		string(REGEX REPLACE "^\"(.*)\"$" "\\1" ENV_VAL "${ENV_VAL}")
+		string(REGEX REPLACE "^'(.*)'$" "\\1" ENV_VAL "${ENV_VAL}")
+
+		if(ENV_KEY STREQUAL "WIFI_SSID")
+			set(WIFI_SYNC_SSID "${ENV_VAL}")
+		elseif(ENV_KEY STREQUAL "WIFI_PASS")
+			set(WIFI_SYNC_PASS "${ENV_VAL}")
+		elseif(ENV_KEY STREQUAL "WIFI_TZ")
+			set(WIFI_SYNC_TZ "${ENV_VAL}")
+		endif()
+	endforeach()
+endif()
+
+if(WIFI_SYNC_SSID STREQUAL "" AND DEFINED ENV{WIFI_SSID})
+	set(WIFI_SYNC_SSID "$ENV{WIFI_SSID}")
+endif()
+if(WIFI_SYNC_PASS STREQUAL "" AND DEFINED ENV{WIFI_PASS})
+	set(WIFI_SYNC_PASS "$ENV{WIFI_PASS}")
+endif()
+if(WIFI_SYNC_TZ STREQUAL "UTC0" AND DEFINED ENV{WIFI_TZ})
+	set(WIFI_SYNC_TZ "$ENV{WIFI_TZ}")
+endif()
+
+set(WIFI_SYNC_SSID "${WIFI_SYNC_SSID}" CACHE INTERNAL "Wi-Fi SSID")
+set(WIFI_SYNC_PASS "${WIFI_SYNC_PASS}" CACHE INTERNAL "Wi-Fi password")
+set(WIFI_SYNC_TZ "${WIFI_SYNC_TZ}" CACHE INTERNAL "Timezone for localtime/tzset")
+
+if(WIFI_SYNC_SSID STREQUAL "" OR WIFI_SYNC_PASS STREQUAL "")
+	message(WARNING "Wi-Fi credentials are not configured. Create platform/esp32/.env from .env.example.")
+else()
+	message(STATUS "Wi-Fi credentials loaded from env file")
+endif()
+message(STATUS "NTP timezone: ${WIFI_SYNC_TZ}")
+
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+set(EXTRA_COMPONENT_DIRS "../../lvgl" "../../app" "components")
+project(pomodoro_esp32)
+
+spiffs_create_partition_image(storage spiffs_image FLASH_IN_PROJECT)
