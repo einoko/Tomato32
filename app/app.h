@@ -12,7 +12,8 @@ typedef void (*app_brightness_provider_t)(uint8_t percent);
 typedef void (*app_bell_volume_provider_t)(uint8_t percent);
 typedef void (*app_power_off_provider_t)(void);
 
-typedef enum {
+typedef enum
+{
   APP_SCREEN_TIMER,
   APP_SCREEN_SETTINGS,
   APP_SCREEN_STATS,
@@ -32,5 +33,7 @@ void app_set_power_off_provider(app_power_off_provider_t provider);
 int app_get_battery_percent(void);
 bool app_is_battery_charging(void);
 void app_notify_user_activity(void);
+void app_timer_toggle(void);
+void app_invalidate_pause_state(void);
 
 #endif /* APP_H */

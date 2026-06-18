@@ -26,55 +26,69 @@ static bool circle_btn_styles_ready = false;
 static lv_anim_t blink_bg_anim;
 static bool is_blinking = false;
 
-static void phase_long_press_cb(lv_event_t *e) {
+static void phase_long_press_cb(lv_event_t *e)
+{
   (void)e;
   app_show_stats_screen();
 }
 
-static void phase_short_click_cb(lv_event_t *e) {
+static void phase_short_click_cb(lv_event_t *e)
+{
   (void)e;
   app_show_settings_screen();
 }
 
-static void blink_bg_anim_cb(void *var, int32_t v) {
+static void blink_bg_anim_cb(void *var, int32_t v)
+{
   lv_obj_set_style_bg_opa((lv_obj_t *)var, v, 0);
 }
 
-static void btn_start_pause_cb(lv_event_t *e) {
+static void btn_start_pause_cb(lv_event_t *e)
+{
   (void)e;
-  pomodoro_start_pause();
+  app_timer_toggle();
   timer_screen_update();
 }
 
-static void btn_reset_cb(lv_event_t *e) {
+static void btn_reset_cb(lv_event_t *e)
+{
   (void)e;
+  app_invalidate_pause_state();
   pomodoro_reset();
   timer_screen_update();
 }
 
-static void btn_skip_cb(lv_event_t *e) {
+static void btn_skip_cb(lv_event_t *e)
+{
   (void)e;
+  app_invalidate_pause_state();
   pomodoro_skip_to_next();
   timer_screen_update();
 }
 
-static void dot_click_cb(lv_event_t *e) {
+static void dot_click_cb(lv_event_t *e)
+{
   int round = (int)(intptr_t)lv_event_get_user_data(e);
+  app_invalidate_pause_state();
   pomodoro_jump_to_round(round);
   timer_screen_update();
 }
 
-static void stop_pulse_cb(lv_event_t *e) {
+static void stop_pulse_cb(lv_event_t *e)
+{
   (void)e;
-  if (pomodoro_get_ran_out_waiting()) {
+  if (pomodoro_get_ran_out_waiting())
+  {
     pomodoro_clear_ran_out_waiting();
     timer_screen_update();
   }
 }
 
 static lv_obj_t *create_circle_btn(lv_obj_t *parent, const char *symbol,
-                                   lv_event_cb_t cb, int size) {
-  if (!circle_btn_styles_ready) {
+                                   lv_event_cb_t cb, int size)
+{
+  if (!circle_btn_styles_ready)
+  {
     lv_style_init(&style_circle_btn);
     lv_style_set_bg_color(&style_circle_btn, COLOR_CTRL);
     lv_style_set_bg_opa(&style_circle_btn, LV_OPA_COVER);
@@ -104,7 +118,8 @@ static lv_obj_t *create_circle_btn(lv_obj_t *parent, const char *symbol,
   return btn;
 }
 
-lv_obj_t *timer_screen_create(void) {
+lv_obj_t *timer_screen_create(void)
+{
   scr = lv_obj_create(NULL);
   theme_apply_scr(scr);
   theme_apply_custom_bg(scr);
@@ -136,7 +151,8 @@ lv_obj_t *timer_screen_create(void) {
                         LV_FLEX_ALIGN_CENTER);
   lv_obj_set_style_pad_gap(dots_cont, 10, 0);
 
-  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++)
+  {
     dots[i] = lv_obj_create(dots_cont);
     lv_obj_remove_style_all(dots[i]);
     lv_obj_add_style(dots[i], &theme.dot_empty, 0);
@@ -209,7 +225,8 @@ lv_obj_t *timer_screen_create(void) {
   return scr;
 }
 
-void timer_screen_update(void) {
+void timer_screen_update(void)
+{
   pomodoro_phase_t phase = pomodoro_get_phase();
   uint32_t remaining = pomodoro_get_remaining();
   bool running = pomodoro_is_running();
@@ -218,7 +235,8 @@ void timer_screen_update(void) {
   pomodoro_preset_t *p = pomodoro_get_preset(preset);
   lv_color_t preset_color = theme_get_preset_color((int)preset);
 
-  switch (phase) {
+  switch (phase)
+  {
   case PHASE_WORK:
     lv_label_set_text(lbl_phase, "Focus");
     break;
@@ -239,9 +257,11 @@ void timer_screen_update(void) {
 
   bool should_blink =
       pomodoro_get_ran_out_waiting() && pomodoro_get_visual_pulse();
-  if (should_blink) {
+  if (should_blink)
+  {
     lv_obj_remove_flag(pulse_stop_overlay, LV_OBJ_FLAG_HIDDEN);
-    if (!is_blinking) {
+    if (!is_blinking)
+    {
       lv_obj_set_style_bg_color(bg_glow, preset_color, 0);
 
       lv_anim_init(&blink_bg_anim);
@@ -257,9 +277,12 @@ void timer_screen_update(void) {
 
       is_blinking = true;
     }
-  } else {
+  }
+  else
+  {
     lv_obj_add_flag(pulse_stop_overlay, LV_OBJ_FLAG_HIDDEN);
-    if (is_blinking) {
+    if (is_blinking)
+    {
       lv_anim_del(bg_glow, blink_bg_anim_cb);
       lv_obj_set_style_bg_opa(bg_glow, 0, 0);
 
@@ -273,16 +296,20 @@ void timer_screen_update(void) {
   /* Update control button colors to match active preset */
   bool can_prev = true;
   if (!running && current_round == 0 && phase == PHASE_WORK &&
-      remaining == p->work_duration && !pomodoro_get_ran_out_waiting()) {
+      remaining == p->work_duration && !pomodoro_get_ran_out_waiting())
+  {
     can_prev = false;
   }
 
-  if (can_prev) {
+  if (can_prev)
+  {
     lv_obj_add_flag(btn_reset, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_bg_color(btn_reset, preset_color, 0);
     lv_obj_set_style_bg_color(btn_reset, preset_color, LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(btn_reset, LV_OPA_COVER, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_remove_flag(btn_reset, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_bg_color(btn_reset, lv_color_white(), 0);
     lv_obj_set_style_bg_opa(btn_reset, LV_OPA_50, 0);
@@ -296,26 +323,34 @@ void timer_screen_update(void) {
   /* Update dots: show only the active interval count, filled dots use preset
    * color */
   int interval = p->long_break_interval;
-  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
-    if (i >= interval) {
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++)
+  {
+    if (i >= interval)
+    {
       lv_obj_add_flag(dots[i], LV_OBJ_FLAG_HIDDEN);
       continue;
     }
     lv_obj_remove_flag(dots[i], LV_OBJ_FLAG_HIDDEN);
     lv_obj_remove_style(dots[i], NULL, LV_PART_MAIN | LV_STATE_ANY);
-    if (pomodoro_is_completed(i)) {
+    if (pomodoro_is_completed(i))
+    {
       lv_obj_add_style(dots[i], &theme.dot_filled, 0);
       lv_obj_set_style_bg_color(dots[i], preset_color, 0);
-    } else if (i == current_round && phase == PHASE_WORK) {
+    }
+    else if (i == current_round && phase == PHASE_WORK)
+    {
       lv_obj_add_style(dots[i], &theme.dot_filled, 0);
       lv_obj_set_style_bg_color(dots[i], theme_get_inverse_bg(), 0);
-    } else {
+    }
+    else
+    {
       lv_obj_add_style(dots[i], &theme.dot_empty, 0);
     }
   }
 }
 
-void timer_screen_refresh_theme(void) {
+void timer_screen_refresh_theme(void)
+{
   lv_style_set_text_color(&style_circle_btn, lv_color_white());
   theme_apply_custom_bg(scr);
 }
