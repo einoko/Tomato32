@@ -294,6 +294,12 @@ static void wifi_resync_task(void *arg) {
 static void power_off_handler(void) {
   ESP_LOGI(TAG, "Auto-shutdown: 15 min inactivity with no timer running");
   if (display_power_off()) {
+    /* Release the LVGL mutex before spinning: power_off_handler is called from
+     * tick_cb which runs inside lv_timer_handler under display_lock. Without
+     * this, the LVGL task holds the mutex indefinitely while waiting for the
+     * device to power down. When charging, the device never powers off, so the
+     * mutex would be held forever and the screen would freeze. */
+    display_unlock();
     for (;;) {
       vTaskDelay(pdMS_TO_TICKS(1000));
     }

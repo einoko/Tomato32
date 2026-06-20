@@ -105,7 +105,7 @@ static void tick_cb(lv_timer_t *timer) {
     stats_screen_update();
   }
 
-  if (!pomodoro_is_running() &&
+  if (!pomodoro_is_running() && !app_is_battery_charging() &&
       lv_display_get_inactive_time(NULL) >= AUTO_SHUTDOWN_TIMEOUT_MS) {
     if (power_off_provider) {
       power_off_provider();
