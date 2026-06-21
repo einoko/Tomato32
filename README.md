@@ -15,6 +15,8 @@ https://github.com/user-attachments/assets/c5f4a6f5-b433-481a-8e97-07911eff9add
   - You can adjust the durations for focus time, short break, long break, and the number of focus sessions before a long break.
 - Various settings to make it fit your workflow.
 - Custom background support (see [Custom Backgrounds](#custom-backgrounds))
+- Battery life of ~14-24 hours with always-on display, depending on screen brightness used (using the 18650 battery).
+  - Battery life can be extended if screen dimming is enabled.
 
 ## Requirements
 
