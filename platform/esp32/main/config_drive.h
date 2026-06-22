@@ -2,7 +2,8 @@
 
 #include <stdbool.h>
 
-typedef struct {
+typedef struct
+{
   char wifi_ssid[64];
   char wifi_pass[64];
   char tz[64];
@@ -10,7 +11,7 @@ typedef struct {
 
 /*
  * Initialize the config drive:
- *   - Mounts the FAT "config" partition and reads TOMATO32_CONFIG.txt.
+ *   - Mounts the FAT "config" partition and reads TOMATO32_CONFIG.conf.
  *   - Installs TinyUSB CDC + MSC so the drive is visible when connected to USB.
  *   - Redirects the serial console to USB CDC.
  * Must be called before wifi_sync_init().

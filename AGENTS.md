@@ -57,7 +57,7 @@ On ESP32 builds, `app/gen_bg_images.py` converts `custom_background_dark.png` an
 
 ## ESP32 persistence
 
-State and theme are saved to SPIFFS (`/spiffs/.pomodoro_state`, `/spiffs/.pomodoro_theme`). Wi-Fi credentials and timezone are read at boot from `TOMATO32_CONFIG.txt` on the FAT `config` partition (exposed as a USB mass-storage drive named **TOMATO32**).
+State and theme are saved to SPIFFS (`/spiffs/.pomodoro_state`, `/spiffs/.pomodoro_theme`). Wi-Fi credentials and timezone are read at boot from `TOMATO32_CONFIG.conf` on the FAT `config` partition (exposed as a USB mass-storage drive named **TOMATO32**).
 
 ## No automated tests
 

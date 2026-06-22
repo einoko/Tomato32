@@ -81,7 +81,7 @@ The serial monitor is available in **config mode only**.
 
 ### Wi-Fi credentials via config drive
 
-Enter **config mode** (see instructions in [How to boot?](#how-to-boot)). Connect the device to your computer with a USB-C cable, a drive will appear on your computer. Open `⁠TOMATO32_CONFIG.txt` on that drive and fill in your credentials:
+Enter **config mode** (see instructions in [How to boot?](#how-to-boot)). Connect the device to your computer with a USB-C cable, a drive will appear on your computer. Open `⁠TOMATO32_CONFIG.conf` on that drive and fill in your credentials:
 
 ```
 WIFI_SSID=your_network
