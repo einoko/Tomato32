@@ -19,6 +19,7 @@ typedef struct sdl_driver {
   int mouse_y;
   bool mouse_pressed;
   uint8_t brightness_percent;
+  sdl_key_handler_t key_handler;
 } sdl_driver_t;
 
 static void flush_cb(lv_display_t *disp, const lv_area_t *area,
@@ -196,6 +197,13 @@ void sdl_driver_set_brightness(sdl_driver_t *drv, uint8_t percent) {
   drv->brightness_percent = percent;
 }
 
+void sdl_driver_set_key_handler(sdl_driver_t *drv, sdl_key_handler_t handler) {
+  if (!drv) {
+    return;
+  }
+  drv->key_handler = handler;
+}
+
 bool sdl_driver_poll_event(sdl_driver_t *drv) {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
@@ -221,6 +229,11 @@ bool sdl_driver_poll_event(sdl_driver_t *drv) {
     case SDL_WINDOWEVENT:
       if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
         lv_refr_now(drv->display);
+      }
+      break;
+    case SDL_KEYDOWN:
+      if (drv->key_handler) {
+        drv->key_handler(event.key.keysym.sym);
       }
       break;
     default:

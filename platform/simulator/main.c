@@ -12,6 +12,16 @@ static void simulator_brightness_set(uint8_t percent) {
   sdl_driver_set_brightness(g_drv, percent);
 }
 
+static void simulator_key_handler(SDL_Keycode sym) {
+  if (sym == SDLK_s) {
+    if (app_get_active_screen() == APP_SCREEN_SETTINGS) {
+      app_show_timer_screen();
+    } else {
+      app_show_settings_screen();
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   (void)argc;
   (void)argv;
@@ -31,6 +41,7 @@ int main(int argc, char **argv) {
   app_set_brightness_provider(simulator_brightness_set);
 
   app_init(sdl_driver_get_display(drv));
+  sdl_driver_set_key_handler(drv, simulator_key_handler);
 
   bool running = true;
   while (running) {
