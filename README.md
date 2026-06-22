@@ -62,9 +62,20 @@ pip install -r requirements.txt
 > [!NOTE]
 > Replace `/dev/cu.usbmodem101` with the actual serial port of your ESP32 board. Run `ls /dev/cu.*` before and after plugging in the board to identify the correct port.
 
+### Boot modes
+
+Tomato32 has two boot modes you can enter:
+
+| Mode            | How to enter                                                                                                                                                   | What happens                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Normal**      | Hold the **PWR** button until you see the Tomato32 splash screen                                                                                               | Normal timer functionality. No USB activity.                          |
+| **Config mode** | Hold the **PWR** button for one second. While still holding **PWR**, immediately press and hold the **BOOT** button until the Tomato32 splash screen displays. | A drive will appear over USB. The startup screen shows _Config mode_. |
+
+Config mode is the only mode where the USB drive and serial monitor are available. In normal operation no USB peripheral is active, which keeps battery draw low.
+
 ### Serial monitor
 
-After flashing, the board presents a USB CDC serial port (in addition to the config drive). Use that port with the monitor command:
+The serial monitor is available in **config mode only**. Hold BOOT while powering on, then:
 
 ```sh
 ./build.sh monitor /dev/cu.usbmodem101
@@ -75,7 +86,7 @@ After flashing, the board presents a USB CDC serial port (in addition to the con
 
 ### Wi-Fi credentials via config drive
 
-When you plug in the board, a small drive called **TOMATO32** appears on your computer. Open `TOMATO32_CONFIG.txt` on that drive and fill in your credentials:
+Enter **config mode** (see instructions in [Boot modes](#boot-modes)). If you connect the device to your computer with a USB-C cable, a drive will appear on your computer. Open `⁠TOMATO32_CONFIG.txt` on that drive and fill in your credentials:
 
 ```
 WIFI_SSID=your_network
@@ -85,7 +96,7 @@ TZ=UTC0
 
 See [TZ format examples](https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html) (`JST-9`, `CET-1CEST,M3.5.0/2,M10.5.0/3`, etc.).
 
-Safely eject the drive, then power-cycle the device. The new settings take effect on the next boot.
+Eject the drive, then power-cycle the device. The new settings take effect on the next boot.
 
 > [!NOTE]
 > **Why do I need Wi-Fi for a Pomodoro timer?**
