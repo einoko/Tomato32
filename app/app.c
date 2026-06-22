@@ -1,4 +1,5 @@
 #include "app.h"
+#include "debug_screen.h"
 #include "pomodoro.h"
 #include "settings_screen.h"
 #include "stats_screen.h"
@@ -8,6 +9,7 @@
 static lv_obj_t *timer_scr;
 static lv_obj_t *settings_scr;
 static lv_obj_t *stats_scr;
+static lv_obj_t *debug_scr;
 static lv_timer_t *tick_timer;
 static uint32_t last_tick_ms = 0;
 static uint32_t pause_elapsed_in_second = 0;
@@ -18,6 +20,10 @@ static app_battery_charging_provider_t battery_charging_provider;
 static app_brightness_provider_t brightness_provider;
 static app_bell_volume_provider_t bell_volume_provider;
 static app_power_off_provider_t power_off_provider;
+static app_debug_str_provider_t wifi_ssid_provider;
+static app_debug_str_provider_t wifi_pass_provider;
+static app_debug_str_provider_t ip_addr_provider;
+static app_free_heap_provider_t free_heap_provider;
 static app_screen_t active_screen = APP_SCREEN_TIMER;
 static uint8_t s_last_brightness_percent = 0;
 static bool s_last_brightness_valid = false;
@@ -102,6 +108,8 @@ static void tick_cb(lv_timer_t *timer) {
     timer_screen_update();
   } else if (active_screen == APP_SCREEN_STATS) {
     stats_screen_update();
+  } else if (active_screen == APP_SCREEN_DEBUG) {
+    debug_screen_update();
   }
 }
 
@@ -112,6 +120,7 @@ void app_init(lv_display_t *display) {
   timer_scr = timer_screen_create();
   settings_scr = settings_screen_create();
   stats_scr = stats_screen_create();
+  debug_scr = debug_screen_create();
 
   timer_screen_update();
   lv_scr_load(timer_scr);
@@ -141,6 +150,12 @@ void app_show_stats_screen(void) {
   active_screen = APP_SCREEN_STATS;
 }
 
+void app_show_debug_screen(void) {
+  debug_screen_update();
+  lv_scr_load(debug_scr);
+  active_screen = APP_SCREEN_DEBUG;
+}
+
 app_screen_t app_get_active_screen(void) { return active_screen; }
 
 void app_set_battery_percent_provider(app_battery_percent_provider_t provider) {
@@ -165,6 +180,38 @@ void app_set_bell_volume_provider(app_bell_volume_provider_t provider) {
 
 void app_set_power_off_provider(app_power_off_provider_t provider) {
   power_off_provider = provider;
+}
+
+void app_set_wifi_ssid_provider(app_debug_str_provider_t provider) {
+  wifi_ssid_provider = provider;
+}
+
+void app_set_wifi_pass_provider(app_debug_str_provider_t provider) {
+  wifi_pass_provider = provider;
+}
+
+void app_set_ip_addr_provider(app_debug_str_provider_t provider) {
+  ip_addr_provider = provider;
+}
+
+void app_set_free_heap_provider(app_free_heap_provider_t provider) {
+  free_heap_provider = provider;
+}
+
+const char *app_get_wifi_ssid(void) {
+  return wifi_ssid_provider ? wifi_ssid_provider() : "";
+}
+
+const char *app_get_wifi_pass(void) {
+  return wifi_pass_provider ? wifi_pass_provider() : "";
+}
+
+const char *app_get_ip_addr(void) {
+  return ip_addr_provider ? ip_addr_provider() : "";
+}
+
+uint32_t app_get_free_heap(void) {
+  return free_heap_provider ? free_heap_provider() : 0;
 }
 
 int app_get_battery_percent(void) {

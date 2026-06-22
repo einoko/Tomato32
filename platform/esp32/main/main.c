@@ -2,6 +2,7 @@
 #include <sys/time.h>
 
 #include "driver/gpio.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_pm.h"
 #include "freertos/FreeRTOS.h"
@@ -292,6 +293,18 @@ static void wifi_resync_task(void *arg) {
   }
 }
 
+static const char *debug_wifi_ssid(void) {
+  return config_drive_get_config()->wifi_ssid;
+}
+
+static const char *debug_wifi_pass(void) {
+  return config_drive_get_config()->wifi_pass;
+}
+
+static uint32_t debug_free_heap(void) {
+  return (uint32_t)esp_get_free_heap_size();
+}
+
 static void power_off_handler(void) {
   ESP_LOGI(TAG, "Auto-shutdown: 15 min inactivity with no timer running");
   if (display_power_off()) {
@@ -343,6 +356,12 @@ void app_main(void) {
   app_set_brightness_provider(display_set_brightness);
   app_set_bell_volume_provider(audio_set_bell_volume);
   app_set_power_off_provider(power_off_handler);
+
+  /* Debug info providers */
+  app_set_wifi_ssid_provider(debug_wifi_ssid);
+  app_set_wifi_pass_provider(debug_wifi_pass);
+  app_set_ip_addr_provider(wifi_sync_get_ip_str);
+  app_set_free_heap_provider(debug_free_heap);
 
   /* Try to restore system time from RTC before Wi-Fi comes up */
   struct tm rtc_time = {0};

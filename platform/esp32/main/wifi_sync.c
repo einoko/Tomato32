@@ -25,6 +25,7 @@ static bool s_wifi_config_valid = false;
 static char s_runtime_ssid[64] = {0};
 static char s_runtime_pass[64] = {0};
 static char s_runtime_tz[64] = {0};
+static char s_ip_str[24] = {0};
 
 void wifi_sync_set_credentials(const char *ssid, const char *pass,
                                const char *tz) {
@@ -79,6 +80,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     s_reconnect_delay_ms = WIFI_RECONNECT_DELAY_MIN_MS;
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+    snprintf(s_ip_str, sizeof(s_ip_str), IPSTR, IP2STR(&event->ip_info.ip));
     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
 
     /* Start SNTP once we have IP */
@@ -232,3 +234,5 @@ bool wifi_sync_request_sync(int timeout_ms) {
 
   return synced;
 }
+
+const char *wifi_sync_get_ip_str(void) { return s_ip_str; }

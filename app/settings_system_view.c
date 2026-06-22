@@ -7,6 +7,8 @@
 #include "stats_screen.h"
 #include "theme.h"
 
+#include "debug_screen.h"
+
 extern void timer_screen_refresh_theme(void);
 
 static system_subview_t system_subview = SYSTEM_SUBVIEW_ROOT;
@@ -70,6 +72,7 @@ static void toggle_theme_cb(lv_event_t *e) {
   settings_screen_refresh_theme();
   timer_screen_refresh_theme();
   stats_screen_refresh_theme();
+  debug_screen_refresh_theme();
   lv_obj_invalidate(lv_scr_act());
 }
 
@@ -88,6 +91,7 @@ static void toggle_custom_bg_cb(lv_event_t *e) {
   pomodoro_save();
   timer_screen_refresh_theme();
   stats_screen_refresh_theme();
+  debug_screen_refresh_theme();
   lv_obj_invalidate(lv_scr_act());
 }
 

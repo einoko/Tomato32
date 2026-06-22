@@ -40,6 +40,7 @@ if(ESP_PLATFORM)
     idf_component_register(
         SRCS
             app.c
+            debug_screen.c
             pomodoro.c
             timer_screen.c
             settings_screen.c
@@ -74,6 +75,7 @@ if(ESP_PLATFORM)
 else()
     add_library(app STATIC
         app.c
+        debug_screen.c
         pomodoro.c
         timer_screen.c
         settings_screen.c

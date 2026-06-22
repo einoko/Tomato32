@@ -8,6 +8,9 @@
 #define LEFT_W 360
 #define RIGHT_W (DISPLAY_W - LEFT_W)
 
+#define DEBUG_TAP_COUNT 10
+#define DEBUG_TAP_WINDOW_MS 5000
+
 static lv_obj_t *scr;
 static lv_obj_t *bg_glow;
 static lv_obj_t *lbl_phase;
@@ -25,6 +28,8 @@ static bool circle_btn_styles_ready = false;
 
 static lv_anim_t blink_bg_anim;
 static bool is_blinking = false;
+static int debug_tap_count = 0;
+static uint32_t debug_first_tap_ms = 0;
 
 static void phase_long_press_cb(lv_event_t *e) {
   (void)e;
@@ -34,6 +39,22 @@ static void phase_long_press_cb(lv_event_t *e) {
 static void phase_short_click_cb(lv_event_t *e) {
   (void)e;
   app_show_settings_screen();
+}
+
+static void timer_tap_cb(lv_event_t *e) {
+  (void)e;
+  uint32_t now = lv_tick_get();
+  if (debug_tap_count == 0 ||
+      (now - debug_first_tap_ms) > DEBUG_TAP_WINDOW_MS) {
+    debug_tap_count = 1;
+    debug_first_tap_ms = now;
+  } else {
+    debug_tap_count++;
+    if (debug_tap_count >= DEBUG_TAP_COUNT) {
+      debug_tap_count = 0;
+      app_show_debug_screen();
+    }
+  }
 }
 
 static void blink_bg_anim_cb(void *var, int32_t v) {
@@ -129,6 +150,8 @@ lv_obj_t *timer_screen_create(void) {
   theme_apply_label_large(lbl_timer);
   lv_obj_align(lbl_timer, LV_ALIGN_CENTER, 18, -12);
   lv_label_set_text(lbl_timer, "25:00");
+  lv_obj_add_flag(lbl_timer, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(lbl_timer, timer_tap_cb, LV_EVENT_CLICKED, NULL);
 
   lv_obj_t *dots_cont = lv_obj_create(left);
   lv_obj_remove_style_all(dots_cont);
