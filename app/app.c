@@ -1,6 +1,7 @@
 #include "app.h"
 #include "debug_screen.h"
 #include "pomodoro.h"
+#include "settings_main_view.h"
 #include "settings_screen.h"
 #include "stats_screen.h"
 #include "theme.h"
@@ -142,6 +143,7 @@ void app_show_timer_screen(void) {
 }
 
 void app_show_settings_screen(void) {
+  settings_main_view_show();
   settings_screen_update();
   lv_scr_load(settings_scr);
   active_screen = APP_SCREEN_SETTINGS;
