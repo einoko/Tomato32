@@ -70,13 +70,13 @@ void pomodoro_init(void) {
   state.presets[PRESET_C].long_break_duration = 10 * 60;
   state.presets[PRESET_C].long_break_interval = 4;
 
-  state.auto_advance = true;
+  state.auto_advance = false;
   state.ran_out_waiting = false;
   state.visual_pulse = true;
-  state.visual_pulse_opacity = 80;
+  state.visual_pulse_opacity = 60;
   state.sound = true;
   state.bell_volume = 80;
-  state.default_brightness = 80;
+  state.default_brightness = 50;
   state.smart_dim_brightness = 10;
   state.smart_dim = true;
   state.power_nap_mode = false;
@@ -377,12 +377,12 @@ static bool pomodoro_load(void) {
   int visual_pulse;
   int sound;
   unsigned int bell_volume = 80;
-  unsigned int default_brightness = 80;
+  unsigned int default_brightness = 50;
   int smart_dim = 1;
   int power_nap_mode = 0;
   int custom_bg = 0;
   unsigned int smart_dim_brightness = 10;
-  unsigned int visual_pulse_opacity = 80;
+  unsigned int visual_pulse_opacity = 60;
   int parsed =
       sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u", &active_preset,
              &auto_adv, &visual_pulse, &sound, &bell_volume,
@@ -397,7 +397,7 @@ static bool pomodoro_load(void) {
     bell_volume = 80;
   }
   if (parsed <= 5) {
-    default_brightness = 80;
+    default_brightness = 50;
   }
   if (parsed <= 6) {
     smart_dim = 1;
@@ -412,7 +412,7 @@ static bool pomodoro_load(void) {
     smart_dim_brightness = 10;
   }
   if (parsed <= 10) {
-    visual_pulse_opacity = 80;
+    visual_pulse_opacity = 60;
   }
 
   pomodoro_preset_t tmp_presets[PRESET_COUNT];
