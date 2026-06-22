@@ -149,6 +149,7 @@ static void handle_boot_release(TickType_t now, button_state_t *button) {
     } else {
       app_screen_t active_screen = app_get_active_screen();
       if (active_screen == APP_SCREEN_STATS ||
+          active_screen == APP_SCREEN_DEBUG ||
           active_screen == APP_SCREEN_SETTINGS) {
         ESP_LOGI(TAG, "BOOT short press (%" PRIu32 "ms) -> timer screen",
                  press_ms);
