@@ -106,6 +106,7 @@ docker run --rm -i ${TTY_FLAG} \
 
         if ${DO_CLEAN}; then
             echo '=> Cleaning build...'
+            find managed_components -name '.component_hash' -delete 2>/dev/null || true
             idf.py fullclean
             exit 0
         fi
