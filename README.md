@@ -147,6 +147,20 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 | Smart dim            | On / Off | Dims to the smart dim level after 60 seconds of inactivity while the timer runs. Tap anywhere to restore. |
 | Smart sleep          | On / Off | Turns the screen off after 60 seconds of inactivity instead of dimming. Tap to wake up.                   |
 
+## Special Screens
+
+### Statistics screen
+
+Shows **Focused today** and **Total focus time** (all-time total).
+
+To access the screen, tap and hold the phase label (**Focus** / **Break** / **Long Break**) text in the main timer screen for 1 second to open.
+
+### Debug screen
+
+Shows the current datetime, Wi-Fi SSID, IP address, and free heap.
+
+To access the screen, tap the main timer text (MM:SS) 10 times within 5 seconds to open it.
+
 ## Custom Backgrounds
 
 To use a custom background image on the timer, go to **System Settings → UI → Custom Backdrop** and set it to **On**.
