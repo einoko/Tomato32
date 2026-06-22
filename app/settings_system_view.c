@@ -34,11 +34,9 @@ static void toggle_smart_dim_cb(lv_event_t *e);
 static void toggle_power_nap_cb(lv_event_t *e);
 static void toggle_date_source_cb(lv_event_t *e);
 
-static void system_back_cb(lv_event_t *e)
-{
+static void system_back_cb(lv_event_t *e) {
   (void)e;
-  switch (system_subview)
-  {
+  switch (system_subview) {
   case SYSTEM_SUBVIEW_DISPLAY:
     settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
     break;
@@ -61,62 +59,52 @@ static void system_back_cb(lv_event_t *e)
   }
 }
 
-static void system_display_menu_cb(lv_event_t *e)
-{
+static void system_display_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_DISPLAY);
 }
 
-static void system_sound_menu_cb(lv_event_t *e)
-{
+static void system_sound_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_SOUND);
 }
 
-static void system_system_menu_cb(lv_event_t *e)
-{
+static void system_system_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_SYSTEM_MENU);
 }
 
-static void system_appearance_menu_cb(lv_event_t *e)
-{
+static void system_appearance_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_UI);
 }
 
-static void system_brightness_sub_menu_cb(lv_event_t *e)
-{
+static void system_brightness_sub_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_BRIGHTNESS);
 }
 
-static void system_datetime_menu_cb(lv_event_t *e)
-{
+static void system_datetime_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_DATETIME);
 }
 
-static void default_brightness_menu_cb(lv_event_t *e)
-{
+static void default_brightness_menu_cb(lv_event_t *e) {
   (void)e;
   settings_edit_view_show(4);
 }
 
-static void sound_volume_menu_cb(lv_event_t *e)
-{
+static void sound_volume_menu_cb(lv_event_t *e) {
   (void)e;
   settings_edit_view_show(5);
 }
 
-static void set_date_cb(lv_event_t *e)
-{
+static void set_date_cb(lv_event_t *e) {
   (void)e;
   /* Seed manual date from current system time so the stepper starts from now */
   time_t now = time(NULL);
   struct tm tm_now;
-  if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024)
-  {
+  if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024) {
     pomodoro_set_manual_year((uint16_t)(tm_now.tm_year + 1900));
     pomodoro_set_manual_month((uint8_t)(tm_now.tm_mon + 1));
     pomodoro_set_manual_day((uint8_t)tm_now.tm_mday);
@@ -124,27 +112,23 @@ static void set_date_cb(lv_event_t *e)
   settings_edit_view_show(10); /* year first */
 }
 
-static void set_time_cb(lv_event_t *e)
-{
+static void set_time_cb(lv_event_t *e) {
   (void)e;
   /* Seed manual time from current system time so the stepper starts from now */
   time_t now = time(NULL);
   struct tm tm_now;
-  if (localtime_r(&now, &tm_now))
-  {
+  if (localtime_r(&now, &tm_now)) {
     pomodoro_set_manual_hour((uint8_t)tm_now.tm_hour);
     pomodoro_set_manual_minute((uint8_t)tm_now.tm_min);
   }
   settings_edit_view_show(8); /* hour first */
 }
 
-static void toggle_date_source_cb(lv_event_t *e)
-{
+static void toggle_date_source_cb(lv_event_t *e) {
   /* user_data: 0 = NTP, 1 = Manual */
   int manual = (int)(intptr_t)lv_event_get_user_data(e);
   pomodoro_set_date_source_ntp(!manual);
-  if (!manual)
-  {
+  if (!manual) {
     /* Switched to NTP — request an immediate sync so the clock corrects
        without waiting for the next 24-hour periodic sync. */
     app_request_ntp_sync();
@@ -157,15 +141,11 @@ static void toggle_date_source_cb(lv_event_t *e)
   pomodoro_save();
 }
 
-static void toggle_theme_cb(lv_event_t *e)
-{
+static void toggle_theme_cb(lv_event_t *e) {
   int mode = (int)(intptr_t)lv_event_get_user_data(e);
-  if (mode == 0)
-  {
+  if (mode == 0) {
     theme_set_dark(false);
-  }
-  else
-  {
+  } else {
     theme_set_dark(true);
   }
   theme_save();
@@ -177,16 +157,14 @@ static void toggle_theme_cb(lv_event_t *e)
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void toggle_visual_pulse_cb(lv_event_t *e)
-{
+static void toggle_visual_pulse_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_visual_pulse(!pomodoro_get_visual_pulse());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_custom_bg_cb(lv_event_t *e)
-{
+static void toggle_custom_bg_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_custom_bg(!pomodoro_get_custom_bg());
   settings_screen_update();
@@ -198,32 +176,28 @@ static void toggle_custom_bg_cb(lv_event_t *e)
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void toggle_sound_cb(lv_event_t *e)
-{
+static void toggle_sound_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_sound(!pomodoro_get_sound());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_smart_dim_cb(lv_event_t *e)
-{
+static void toggle_smart_dim_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_smart_dim(!pomodoro_get_smart_dim());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_power_nap_cb(lv_event_t *e)
-{
+static void toggle_power_nap_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_power_nap_mode(!pomodoro_get_power_nap_mode());
   settings_screen_update();
   pomodoro_save();
 }
 
-void settings_system_view_build(lv_obj_t *parent)
-{
+void settings_system_view_build(lv_obj_t *parent) {
   view_system = lv_obj_create(parent);
   lv_obj_remove_style_all(view_system);
   lv_obj_set_size(view_system, SETTINGS_DISPLAY_W, SETTINGS_DISPLAY_H);
@@ -396,7 +370,7 @@ void settings_system_view_build(lv_obj_t *parent)
   /* Theme segmented control */
   system_theme_seg_container = lv_obj_create(row_theme);
   lv_obj_remove_style_all(system_theme_seg_container);
-  lv_obj_set_size(system_theme_seg_container, 148, 40);
+  lv_obj_set_size(system_theme_seg_container, 146, 40);
   lv_obj_set_style_radius(system_theme_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_theme_seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_theme_seg_container, LV_OPA_COVER, 0);
@@ -410,7 +384,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_theme_light, 18, 0);
   lv_obj_add_event_cb(system_theme_light, toggle_theme_cb, LV_EVENT_CLICKED,
                       (void *)0);
-  lv_obj_set_pos(system_theme_light, 2, 2);
+  lv_obj_set_pos(system_theme_light, 0, 0);
 
   lv_obj_t *lbl_seg_light = lv_label_create(system_theme_light);
   lv_label_set_text(lbl_seg_light, "Light");
@@ -423,7 +397,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_theme_dark, 18, 0);
   lv_obj_add_event_cb(system_theme_dark, toggle_theme_cb, LV_EVENT_CLICKED,
                       (void *)1);
-  lv_obj_set_pos(system_theme_dark, 66, 2);
+  lv_obj_set_pos(system_theme_dark, 64, 0);
 
   lv_obj_t *lbl_seg_dark = lv_label_create(system_theme_dark);
   lv_label_set_text(lbl_seg_dark, "Dark");
@@ -446,7 +420,7 @@ void settings_system_view_build(lv_obj_t *parent)
   /* Visual pulse segmented control */
   system_visual_seg_container = lv_obj_create(row_visual);
   lv_obj_remove_style_all(system_visual_seg_container);
-  lv_obj_set_size(system_visual_seg_container, 148, 40);
+  lv_obj_set_size(system_visual_seg_container, 146, 40);
   lv_obj_set_style_radius(system_visual_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_visual_seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_visual_seg_container, LV_OPA_COVER, 0);
@@ -460,7 +434,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_visual_on, 18, 0);
   lv_obj_add_event_cb(system_visual_on, toggle_visual_pulse_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_visual_on, 2, 2);
+  lv_obj_set_pos(system_visual_on, 0, 0);
 
   lv_obj_t *lbl_visual_on = lv_label_create(system_visual_on);
   lv_label_set_text(lbl_visual_on, "On");
@@ -473,7 +447,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_visual_off, 18, 0);
   lv_obj_add_event_cb(system_visual_off, toggle_visual_pulse_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_visual_off, 66, 2);
+  lv_obj_set_pos(system_visual_off, 64, 0);
 
   lv_obj_t *lbl_visual_off = lv_label_create(system_visual_off);
   lv_label_set_text(lbl_visual_off, "Off");
@@ -495,7 +469,7 @@ void settings_system_view_build(lv_obj_t *parent)
 
   system_custom_bg_seg_container = lv_obj_create(row_custom_bg);
   lv_obj_remove_style_all(system_custom_bg_seg_container);
-  lv_obj_set_size(system_custom_bg_seg_container, 148, 40);
+  lv_obj_set_size(system_custom_bg_seg_container, 146, 40);
   lv_obj_set_style_radius(system_custom_bg_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_custom_bg_seg_container, theme_get_seg_bg(),
                             0);
@@ -510,7 +484,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_custom_bg_on, 18, 0);
   lv_obj_add_event_cb(system_custom_bg_on, toggle_custom_bg_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_custom_bg_on, 2, 2);
+  lv_obj_set_pos(system_custom_bg_on, 0, 0);
 
   lv_obj_t *lbl_custom_bg_on = lv_label_create(system_custom_bg_on);
   lv_label_set_text(lbl_custom_bg_on, "On");
@@ -523,7 +497,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_custom_bg_off, 18, 0);
   lv_obj_add_event_cb(system_custom_bg_off, toggle_custom_bg_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_custom_bg_off, 66, 2);
+  lv_obj_set_pos(system_custom_bg_off, 64, 0);
 
   lv_obj_t *lbl_custom_bg_off = lv_label_create(system_custom_bg_off);
   lv_label_set_text(lbl_custom_bg_off, "Off");
@@ -554,7 +528,7 @@ void settings_system_view_build(lv_obj_t *parent)
   /* Sound segmented control */
   system_sound_seg_container = lv_obj_create(row_sound);
   lv_obj_remove_style_all(system_sound_seg_container);
-  lv_obj_set_size(system_sound_seg_container, 148, 40);
+  lv_obj_set_size(system_sound_seg_container, 146, 40);
   lv_obj_set_style_radius(system_sound_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_sound_seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_sound_seg_container, LV_OPA_COVER, 0);
@@ -567,7 +541,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_size(system_sound_on, 62, 36);
   lv_obj_set_style_radius(system_sound_on, 18, 0);
   lv_obj_add_event_cb(system_sound_on, toggle_sound_cb, LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_sound_on, 2, 2);
+  lv_obj_set_pos(system_sound_on, 0, 0);
 
   lv_obj_t *lbl_sound_on = lv_label_create(system_sound_on);
   lv_label_set_text(lbl_sound_on, "On");
@@ -580,7 +554,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_sound_off, 18, 0);
   lv_obj_add_event_cb(system_sound_off, toggle_sound_cb, LV_EVENT_CLICKED,
                       NULL);
-  lv_obj_set_pos(system_sound_off, 66, 2);
+  lv_obj_set_pos(system_sound_off, 64, 0);
 
   lv_obj_t *lbl_sound_off = lv_label_create(system_sound_off);
   lv_label_set_text(lbl_sound_off, "Off");
@@ -669,7 +643,7 @@ void settings_system_view_build(lv_obj_t *parent)
 
   system_smart_dim_seg_container = lv_obj_create(row_smart_dim);
   lv_obj_remove_style_all(system_smart_dim_seg_container);
-  lv_obj_set_size(system_smart_dim_seg_container, 148, 40);
+  lv_obj_set_size(system_smart_dim_seg_container, 146, 40);
   lv_obj_set_style_radius(system_smart_dim_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_smart_dim_seg_container, theme_get_seg_bg(),
                             0);
@@ -684,7 +658,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_smart_dim_on, 18, 0);
   lv_obj_add_event_cb(system_smart_dim_on, toggle_smart_dim_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_smart_dim_on, 2, 2);
+  lv_obj_set_pos(system_smart_dim_on, 0, 0);
 
   lv_obj_t *lbl_smart_dim_on = lv_label_create(system_smart_dim_on);
   lv_label_set_text(lbl_smart_dim_on, "On");
@@ -697,7 +671,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_smart_dim_off, 18, 0);
   lv_obj_add_event_cb(system_smart_dim_off, toggle_smart_dim_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_smart_dim_off, 66, 2);
+  lv_obj_set_pos(system_smart_dim_off, 64, 0);
 
   lv_obj_t *lbl_smart_dim_off = lv_label_create(system_smart_dim_off);
   lv_label_set_text(lbl_smart_dim_off, "Off");
@@ -719,7 +693,7 @@ void settings_system_view_build(lv_obj_t *parent)
 
   system_power_nap_seg_container = lv_obj_create(row_power_nap);
   lv_obj_remove_style_all(system_power_nap_seg_container);
-  lv_obj_set_size(system_power_nap_seg_container, 148, 40);
+  lv_obj_set_size(system_power_nap_seg_container, 146, 40);
   lv_obj_set_style_radius(system_power_nap_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_power_nap_seg_container, theme_get_seg_bg(),
                             0);
@@ -734,7 +708,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_power_nap_on, 18, 0);
   lv_obj_add_event_cb(system_power_nap_on, toggle_power_nap_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_power_nap_on, 2, 2);
+  lv_obj_set_pos(system_power_nap_on, 0, 0);
 
   lv_obj_t *lbl_power_nap_on = lv_label_create(system_power_nap_on);
   lv_label_set_text(lbl_power_nap_on, "On");
@@ -747,7 +721,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_power_nap_off, 18, 0);
   lv_obj_add_event_cb(system_power_nap_off, toggle_power_nap_cb,
                       LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(system_power_nap_off, 66, 2);
+  lv_obj_set_pos(system_power_nap_off, 64, 0);
 
   lv_obj_t *lbl_power_nap_off = lv_label_create(system_power_nap_off);
   lv_label_set_text(lbl_power_nap_off, "Off");
@@ -863,7 +837,7 @@ void settings_system_view_build(lv_obj_t *parent)
 
   system_date_source_seg_container = lv_obj_create(row_date_source);
   lv_obj_remove_style_all(system_date_source_seg_container);
-  lv_obj_set_size(system_date_source_seg_container, 156, 40);
+  lv_obj_set_size(system_date_source_seg_container, 154, 40);
   lv_obj_set_style_radius(system_date_source_seg_container, 20, 0);
   lv_obj_set_style_bg_color(system_date_source_seg_container,
                             theme_get_seg_bg(), 0);
@@ -878,7 +852,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_date_source_ntp_btn, 18, 0);
   lv_obj_add_event_cb(system_date_source_ntp_btn, toggle_date_source_cb,
                       LV_EVENT_CLICKED, (void *)0);
-  lv_obj_set_pos(system_date_source_ntp_btn, 2, 2);
+  lv_obj_set_pos(system_date_source_ntp_btn, 0, 0);
 
   lv_obj_t *lbl_ds_ntp = lv_label_create(system_date_source_ntp_btn);
   lv_label_set_text(lbl_ds_ntp, "NTP");
@@ -892,7 +866,7 @@ void settings_system_view_build(lv_obj_t *parent)
   lv_obj_set_style_radius(system_date_source_manual_btn, 18, 0);
   lv_obj_add_event_cb(system_date_source_manual_btn, toggle_date_source_cb,
                       LV_EVENT_CLICKED, (void *)1);
-  lv_obj_set_pos(system_date_source_manual_btn, 74, 2);
+  lv_obj_set_pos(system_date_source_manual_btn, 72, 0);
 
   lv_obj_t *lbl_ds_manual = lv_label_create(system_date_source_manual_btn);
   lv_label_set_text(lbl_ds_manual, "Manual");
@@ -962,10 +936,8 @@ void settings_system_view_build(lv_obj_t *parent)
   settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
 }
 
-void settings_system_view_show(void)
-{
-  if (repeat_timer)
-  {
+void settings_system_view_show(void) {
+  if (repeat_timer) {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
@@ -975,8 +947,7 @@ void settings_system_view_show(void)
   settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
 }
 
-void settings_system_view_set_subview(system_subview_t subview)
-{
+void settings_system_view_set_subview(system_subview_t subview) {
   system_subview = subview;
 
   lv_obj_add_flag(view_system_root, LV_OBJ_FLAG_HIDDEN);
@@ -987,8 +958,7 @@ void settings_system_view_set_subview(system_subview_t subview)
   lv_obj_add_flag(view_system_system_menu, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(view_system_datetime, LV_OBJ_FLAG_HIDDEN);
 
-  switch (subview)
-  {
+  switch (subview) {
   case SYSTEM_SUBVIEW_DISPLAY:
     lv_label_set_text(lbl_system_title, "Display");
     lv_obj_remove_flag(view_system_display, LV_OBJ_FLAG_HIDDEN);

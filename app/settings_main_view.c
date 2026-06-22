@@ -161,7 +161,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   /* Segmented control */
   seg_container = lv_obj_create(row_advance);
   lv_obj_remove_style_all(seg_container);
-  lv_obj_set_size(seg_container, 148, 40);
+  lv_obj_set_size(seg_container, 146, 40);
   lv_obj_set_style_radius(seg_container, 20, 0);
   lv_obj_set_style_bg_color(seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(seg_container, LV_OPA_COVER, 0);
@@ -174,7 +174,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_size(seg_auto, 62, 36);
   lv_obj_set_style_radius(seg_auto, 18, 0);
   lv_obj_add_event_cb(seg_auto, toggle_auto_cb, LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(seg_auto, 2, 2);
+  lv_obj_set_pos(seg_auto, 0, 0);
 
   lv_obj_t *lbl_seg_auto = lv_label_create(seg_auto);
   lv_label_set_text(lbl_seg_auto, "Auto");
@@ -186,7 +186,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_size(seg_manual, 78, 36);
   lv_obj_set_style_radius(seg_manual, 18, 0);
   lv_obj_add_event_cb(seg_manual, toggle_auto_cb, LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(seg_manual, 66, 2);
+  lv_obj_set_pos(seg_manual, 64, 0);
 
   lv_obj_t *lbl_seg_manual = lv_label_create(seg_manual);
   lv_label_set_text(lbl_seg_manual, "Manual");

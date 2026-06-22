@@ -12,8 +12,7 @@
 #define SETTINGS_RIGHT_W (SETTINGS_DISPLAY_W - SETTINGS_LEFT_W)
 
 /* System subview navigation. */
-typedef enum
-{
+typedef enum {
   SYSTEM_SUBVIEW_ROOT = 0,
   SYSTEM_SUBVIEW_DISPLAY,     /* Display intermediate menu */
   SYSTEM_SUBVIEW_UI,          /* Appearance */

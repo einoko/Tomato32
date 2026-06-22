@@ -4,15 +4,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef enum
-{
+typedef enum {
   PHASE_WORK,
   PHASE_SHORT_BREAK,
   PHASE_LONG_BREAK
 } pomodoro_phase_t;
 
-typedef enum
-{
+typedef enum {
   PRESET_A = 0,
   PRESET_B,
   PRESET_C,
@@ -21,8 +19,7 @@ typedef enum
 
 #define POMODORO_MAX_ROUNDS 10
 
-typedef struct
-{
+typedef struct {
   uint32_t work_duration;        /* seconds */
   uint32_t short_break_duration; /* seconds */
   uint32_t long_break_duration;  /* seconds */
@@ -30,8 +27,7 @@ typedef struct
       long_break_interval; /* long break after every N focus rounds (2–10) */
 } pomodoro_preset_t;
 
-typedef struct
-{
+typedef struct {
   pomodoro_phase_t phase;
   int current_round;
   bool completed[POMODORO_MAX_ROUNDS];

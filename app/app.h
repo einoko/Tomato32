@@ -12,8 +12,7 @@ typedef void (*app_brightness_provider_t)(uint8_t percent);
 typedef void (*app_bell_volume_provider_t)(uint8_t percent);
 typedef void (*app_power_off_provider_t)(void);
 
-typedef enum
-{
+typedef enum {
   APP_SCREEN_TIMER,
   APP_SCREEN_SETTINGS,
   APP_SCREEN_STATS,
