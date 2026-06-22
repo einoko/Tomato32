@@ -23,7 +23,6 @@ static uint8_t s_last_brightness_percent = 0;
 static bool s_last_brightness_valid = false;
 
 #define SMART_DIM_TIMEOUT_MS (60 * 1000U)
-#define AUTO_SHUTDOWN_TIMEOUT_MS (15 * 60 * 1000U)
 
 static void apply_screen_brightness(uint8_t brightness_percent) {
   if (brightness_provider) {
@@ -103,13 +102,6 @@ static void tick_cb(lv_timer_t *timer) {
     timer_screen_update();
   } else if (active_screen == APP_SCREEN_STATS) {
     stats_screen_update();
-  }
-
-  if (!pomodoro_is_running() && !app_is_battery_charging() &&
-      lv_display_get_inactive_time(NULL) >= AUTO_SHUTDOWN_TIMEOUT_MS) {
-    if (power_off_provider) {
-      power_off_provider();
-    }
   }
 }
 
