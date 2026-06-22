@@ -196,7 +196,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   /* Row 3: System Settings */
   lv_obj_t *row_system = lv_obj_create(right);
   lv_obj_remove_style_all(row_system);
-  lv_obj_set_size(row_system, SETTINGS_RIGHT_W, 58);
+  lv_obj_set_size(row_system, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_system, 0, 114);
   lv_obj_remove_flag(row_system, LV_OBJ_FLAG_SCROLLABLE);
 
