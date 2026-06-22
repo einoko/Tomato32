@@ -30,8 +30,8 @@ bool wifi_sync_wait_for_ntp(int timeout_ms);
 bool wifi_sync_request_sync(int timeout_ms);
 
 /*
- * Returns the last known IP address as a string, or an empty string if
- * Wi-Fi has not connected yet. Valid after wifi_sync_init().
+ * Returns the last known IP address as a dotted-decimal string, or an empty
+ * string if Wi-Fi has not yet connected. Valid after wifi_sync_init().
  */
 const char *wifi_sync_get_ip_str(void);
 

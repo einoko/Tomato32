@@ -302,7 +302,7 @@ static const char *debug_wifi_pass(void) {
 }
 
 static uint32_t debug_free_heap(void) {
-  return (uint32_t)esp_get_free_heap_size();
+  return (uint32_t)heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
 }
 
 static void power_off_handler(void) {
@@ -356,8 +356,6 @@ void app_main(void) {
   app_set_brightness_provider(display_set_brightness);
   app_set_bell_volume_provider(audio_set_bell_volume);
   app_set_power_off_provider(power_off_handler);
-
-  /* Debug info providers */
   app_set_wifi_ssid_provider(debug_wifi_ssid);
   app_set_wifi_pass_provider(debug_wifi_pass);
   app_set_ip_addr_provider(wifi_sync_get_ip_str);
