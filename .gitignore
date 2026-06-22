@@ -13,7 +13,6 @@ dist/
 *.log
 *.tmp
 *.bak
-platform/esp32/.env
 platform/esp32/build/
 platform/esp32/managed_components/
 platform/esp32/sdkconfig

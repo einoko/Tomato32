@@ -12,6 +12,7 @@
 #include "app/app.h"
 #include "audio.h"
 #include "battery.h"
+#include "config_drive.h"
 #include "display.h"
 #include "rtc_pcf85063.h"
 #include "storage.h"
@@ -352,11 +353,20 @@ void app_main(void) {
     ESP_LOGI(TAG, "System time restored from RTC");
   }
 
+  /* Config drive: read TOMATO32_CONFIG.txt and start TinyUSB CDC + MSC.
+   * This must run before wifi_sync_init() so runtime credentials are
+   * available, and before display_init() so TinyUSB owns the USB peripheral
+   * before LVGL starts touching shared resources. */
+  config_drive_init();
+  const config_drive_config_t *cfg = config_drive_get_config();
+  wifi_sync_set_credentials(cfg->wifi_ssid, cfg->wifi_pass, cfg->tz);
+
   lv_display_t *disp = display_init();
   assert(disp);
 
   if (display_lock(-1)) {
-    display_show_startup_screen("Tomato32", "Starting...");
+    display_show_startup_screen(
+        "Tomato32", config_drive_usb_active() ? "Config mode" : "Starting...");
     lv_timer_handler();
     display_unlock();
   }

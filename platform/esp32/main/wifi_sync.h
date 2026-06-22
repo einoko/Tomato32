@@ -4,6 +4,14 @@
 #include <stdbool.h>
 
 /*
+ * Override Wi-Fi credentials and timezone at runtime (e.g. from config drive).
+ * Call before wifi_sync_init(). Overrides compile-time values from
+ * TOMATO32_CONFIG.txt at runtime. Pass NULL to leave a value unchanged.
+ */
+void wifi_sync_set_credentials(const char *ssid, const char *pass,
+                               const char *tz);
+
+/*
  * Initialize Wi-Fi/NTP stack in STA mode without connecting.
  * Sync is triggered on demand via wifi_sync_request_sync().
  */

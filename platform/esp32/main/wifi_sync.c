@@ -9,7 +9,6 @@
 #include "freertos/event_groups.h"
 #include "nvs_flash.h"
 #include "rtc_pcf85063.h"
-#include "wifi_sync_config.h"
 #include <inttypes.h>
 #include <string.h>
 #include <time.h>
@@ -21,6 +20,21 @@ static EventGroupHandle_t s_wifi_event_group;
 static bool s_keep_wifi_running = true;
 static bool s_wifi_started = false;
 static bool s_wifi_config_valid = false;
+
+/* Runtime credential overrides (set via wifi_sync_set_credentials()). */
+static char s_runtime_ssid[64] = {0};
+static char s_runtime_pass[64] = {0};
+static char s_runtime_tz[64] = {0};
+
+void wifi_sync_set_credentials(const char *ssid, const char *pass,
+                               const char *tz) {
+  if (ssid)
+    strlcpy(s_runtime_ssid, ssid, sizeof(s_runtime_ssid));
+  if (pass)
+    strlcpy(s_runtime_pass, pass, sizeof(s_runtime_pass));
+  if (tz)
+    strlcpy(s_runtime_tz, tz, sizeof(s_runtime_tz));
+}
 
 /* Exponential backoff for reconnect attempts. Starts at 500 ms, doubles each
  * failure up to a 30-second cap.  Reset on every successful connection or when
@@ -120,14 +134,18 @@ static void time_sync_notification_cb(struct timeval *tv) {
 void wifi_sync_init(void) {
   s_wifi_event_group = xEventGroupCreate();
 
-  if (strlen(WIFI_SYNC_SSID) == 0 || strlen(WIFI_SYNC_PASS) == 0) {
-    ESP_LOGW(TAG, "Wi-Fi credentials are not configured. Set "
-                  "WIFI_SSID/WIFI_PASS in platform/esp32/.env");
+  const char *ssid = s_runtime_ssid;
+  const char *pass = s_runtime_pass;
+  const char *tz = (s_runtime_tz[0] != '\0') ? s_runtime_tz : "UTC0";
+
+  if (strlen(ssid) == 0 || strlen(pass) == 0) {
+    ESP_LOGW(TAG, "Wi-Fi credentials not configured. Set WIFI_SSID and "
+                  "WIFI_PASS in TOMATO32_CONFIG.txt on the TOMATO32 drive.");
     s_wifi_config_valid = false;
     return;
   }
 
-  setenv("TZ", WIFI_SYNC_TZ, 1);
+  setenv("TZ", tz, 1);
   tzset();
 
   ESP_ERROR_CHECK(nvs_flash_init());
@@ -146,13 +164,11 @@ void wifi_sync_init(void) {
       IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
   wifi_config_t wifi_config = {
-      .sta =
-          {
-              .ssid = WIFI_SYNC_SSID,
-              .password = WIFI_SYNC_PASS,
-              .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-          },
+      .sta = {.threshold.authmode = WIFI_AUTH_WPA2_PSK},
   };
+  strlcpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
+  strlcpy((char *)wifi_config.sta.password, pass,
+          sizeof(wifi_config.sta.password));
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
   s_keep_wifi_running = false;

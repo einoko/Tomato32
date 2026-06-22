@@ -48,23 +48,6 @@ cmake --build build
 
 ## ESP32 Build and Flash
 
-Create the environment file first:
-
-```sh
-cp platform/esp32/.env.example platform/esp32/.env
-```
-
-For NTP/RTC time sync, set these values in `.env`:
-
-- `WIFI_SSID`
-- `WIFI_PASS`
-- `WIFI_TZ` (default: `UTC0`)
-
-> [!NOTE]
-> **Why do I need Wi-Fi for a Pomodoro timer?**
->
-> Wi-Fi is only used to sync the date and time via NTP and update the RTC. This is only needed for the daily "Focused today" statistic. Providing Wi-Fi credentials is completely optional. Without them, the timer will still work, but the "Focused today" stat may not reset at the correct local midnight.
-
 ### Build and flash
 
 ```sh
@@ -72,13 +55,42 @@ cd platform/esp32
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-./build.sh
+./build.sh clean
 ./build.sh flash /dev/cu.usbmodem101
-./build.sh monitor /dev/cu.usbmodem101
 ```
 
 > [!NOTE]
 > Replace `/dev/cu.usbmodem101` with the actual serial port of your ESP32 board. Run `ls /dev/cu.*` before and after plugging in the board to identify the correct port.
+
+### Serial monitor
+
+After flashing, the board presents a USB CDC serial port (in addition to the config drive). Use that port with the monitor command:
+
+```sh
+./build.sh monitor /dev/cu.usbmodem101
+```
+
+> [!NOTE]
+> The CDC serial port is assigned by the OS and may differ from the port used for flashing. Run `ls /dev/cu.*` while the board is connected to find the right one.
+
+### Wi-Fi credentials via config drive
+
+When you plug in the board, a small drive called **TOMATO32** appears on your computer. Open `TOMATO32_CONFIG.txt` on that drive and fill in your credentials:
+
+```
+WIFI_SSID=your_network
+WIFI_PASS=your_password
+TZ=UTC0
+```
+
+See [TZ format examples](https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html) (`JST-9`, `CET-1CEST,M3.5.0/2,M10.5.0/3`, etc.).
+
+Safely eject the drive, then power-cycle the device. The new settings take effect on the next boot.
+
+> [!NOTE]
+> **Why do I need Wi-Fi for a Pomodoro timer?**
+>
+> Wi-Fi is only used to sync the date and time via NTP and update the RTC. This is only needed for the daily "Focused today" statistic. Providing Wi-Fi credentials is completely optional. Without them, the timer will still work, but the "Focused today" stat may not reset at the correct local midnight.
 
 ## Custom Backgrounds
 

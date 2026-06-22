@@ -2,4 +2,5 @@
 nvs,      data, nvs,     ,        0x6000,
 phy_init, data, phy,     ,        0x1000,
 factory,  app,  factory, ,        8M,
+config,   data, fat,     ,        128K,
 storage,  data, spiffs,  ,        4M,

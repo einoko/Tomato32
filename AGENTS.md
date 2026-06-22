@@ -3,6 +3,7 @@
 ## Project overview
 
 Tomato32 — a Pomodoro timer built with LVGL, targeting two platforms:
+
 - **Simulator**: macOS SDL2 desktop app for local development
 - **ESP32**: Waveshare ESP32-S3-Touch-LCD-3.49 (built via Docker, no local ESP-IDF needed)
 
@@ -22,6 +23,7 @@ Code uses `#ifdef ESP_PLATFORM` to branch at compile time (see `app/CMakeLists.t
 ## Build & run commands
 
 **Simulator (macOS):**
+
 ```sh
 cmake -B build
 cmake --build build
@@ -29,14 +31,15 @@ cmake --build build
 ```
 
 **ESP32 (Docker-based):**
+
 ```sh
 cd platform/esp32
-cp .env.example .env   # first time; set WIFI_SSID / WIFI_PASS
 ./build.sh                           # build only
 ./build.sh flash /dev/cu.usbmodem101 # build + flash
 ./build.sh monitor /dev/cu.usbmodem101 # build + flash + monitor
 ./build.sh clean                     # full clean
 ```
+
 Flashing requires `esptool` on the host (`pip install esptool`). Monitoring requires `esp-idf-monitor` or falls back to `miniterm`.
 
 ## Formatting
@@ -45,6 +48,7 @@ Flashing requires `esptool` on the host (`pip install esptool`). Monitoring requ
 ./format.sh          # auto-format (clang-format, cmake-format, shfmt)
 ./format.sh --check  # check only, exit on failure
 ```
+
 Formats `app/`, `platform/`, root `CMakeLists.txt`, `lv_conf.h`, and `format.sh` itself. Excludes `lvgl/` and `build/`.
 
 ## ESP32 build-time code generation
@@ -53,7 +57,7 @@ On ESP32 builds, `app/gen_bg_images.py` converts `custom_background_dark.png` an
 
 ## ESP32 persistence
 
-State and theme are saved to SPIFFS (`/spiffs/.pomodoro_state`, `/spiffs/.pomodoro_theme`). Wi-Fi credentials are read from `platform/esp32/.env` at CMake configure time — this file is gitignored and must be created from `.env.example`.
+State and theme are saved to SPIFFS (`/spiffs/.pomodoro_state`, `/spiffs/.pomodoro_theme`). Wi-Fi credentials and timezone are read at boot from `TOMATO32_CONFIG.txt` on the FAT `config` partition (exposed as a USB mass-storage drive named **TOMATO32**).
 
 ## No automated tests
 
