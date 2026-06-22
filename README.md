@@ -98,6 +98,55 @@ Eject the drive, then power-cycle the device. The new settings take effect on th
 >
 > Wi-Fi is only used to sync the date and time via NTP and update the RTC. This is only needed for the daily "Focused today" statistic. Providing Wi-Fi credentials is completely optional. Without them, the timer will still work, but the "Focused today" stat may not reset at the correct local midnight.
 
+## Settings
+
+Press the **BOOT** button to open Settings. Press it again to return to the timer.
+
+### Timer profiles
+
+Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations** to configure it, then **Use profile** to go back to the timer.
+
+| Setting       | Description                                      |
+| ------------- | ------------------------------------------------ |
+| Focus session | Focus phase length (minutes).                    |
+| Short break   | Short break length (minutes).                    |
+| Long break    | Long break length (minutes).                     |
+| Rounds        | Focus sessions before a long break is triggered. |
+
+### Advance to next
+
+| Option | Description                                                |
+| ------ | ---------------------------------------------------------- |
+| Auto   | Next phase starts automatically when the current one ends. |
+| Manual | You have to manually start the next phase.                 |
+
+### System settings
+
+#### UI
+
+| Setting         | Options      | Description                                                                                    |
+| --------------- | ------------ | ---------------------------------------------------------------------------------------------- |
+| Theme           | Light / Dark | Colour scheme.                                                                                 |
+| Visual pulse    | On / Off     | Pulsing background color when the timer ends.                                                  |
+| Custom backdrop | On / Off     | Shows a custom background on the timer screen (see [Custom Backgrounds](#custom-backgrounds)). |
+
+#### Sound
+
+| Setting | Options  | Description                     |
+| ------- | -------- | ------------------------------- |
+| Sound   | On / Off | Chime at the end of each phase. |
+| Volume  | 0–100 %  | Chime volume.                   |
+
+#### Screen
+
+| Setting              | Options  | Description                                                                                               |
+| -------------------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| Default brightness   | 0–100 %  | Screen brightness during normal use.                                                                      |
+| Smart dim brightness | 0–100 %  | Brightness when smart dim is enabled.                                                                     |
+| Visual pulse opacity | 0–100 %  | Opacity of the visual pulse color.                                                                        |
+| Smart dim            | On / Off | Dims to the smart dim level after 60 seconds of inactivity while the timer runs. Tap anywhere to restore. |
+| Smart sleep          | On / Off | Turns the screen off after 60 seconds of inactivity instead of dimming. Tap to wake up.                   |
+
 ## Custom Backgrounds
 
 To use a custom background image on the timer, go to **System Settings → UI → Custom Backdrop** and set it to **On**.
@@ -140,7 +189,7 @@ The typeface used in the UI is [Inter](https://rsms.me/inter/), licensed under t
 
 ### Sound effect
 
-The sound effect used for timer start/end is sourced from [freesound.org](https://freesound.org/people/JetRye/sounds/140128) and licensed under Creative Commons 0.
+The sound effect used for timer end is sourced from [freesound.org](https://freesound.org/people/JetRye/sounds/140128) and licensed under Creative Commons 0.
 
 ### Custom background images
 
