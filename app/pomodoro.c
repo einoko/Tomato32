@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <time.h>
 
 #ifndef PERSIST_PATH
@@ -11,49 +12,59 @@
 
 static pomodoro_state_t state;
 
-static uint32_t current_day_key(void) {
+static uint32_t current_day_key(void)
+{
   time_t now = time(NULL);
-  if (now <= 0) {
+  if (now <= 0)
+  {
     return 0;
   }
 
   struct tm tm_now;
-  if (!localtime_r(&now, &tm_now)) {
+  if (!localtime_r(&now, &tm_now))
+  {
     return 0;
   }
 
   int year = tm_now.tm_year + 1900;
-  if (year < 2020) {
+  if (year < 2020)
+  {
     return 0;
   }
 
   return (uint32_t)(year * 10000 + (tm_now.tm_mon + 1) * 100 + tm_now.tm_mday);
 }
 
-static void refresh_today_focus_bucket(void) {
+static void refresh_today_focus_bucket(void)
+{
   uint32_t day_key = current_day_key();
-  if (day_key == 0) {
+  if (day_key == 0)
+  {
     return;
   }
 
-  if (state.last_focus_day_key == 0) {
+  if (state.last_focus_day_key == 0)
+  {
     state.last_focus_day_key = day_key;
     return;
   }
 
-  if (state.last_focus_day_key != day_key) {
+  if (state.last_focus_day_key != day_key)
+  {
     state.last_focus_day_key = day_key;
     state.today_focus_minutes = 0;
   }
 }
 
-static pomodoro_preset_t *active(void) {
+static pomodoro_preset_t *active(void)
+{
   return &state.presets[state.active_preset];
 }
 
 static bool pomodoro_load(void);
 
-void pomodoro_init(void) {
+void pomodoro_init(void)
+{
   state.presets[PRESET_A].work_duration = 25 * 60;
   state.presets[PRESET_A].short_break_duration = 5 * 60;
   state.presets[PRESET_A].long_break_duration = 15 * 60;
@@ -80,6 +91,27 @@ void pomodoro_init(void) {
   state.smart_dim = true;
   state.power_nap_mode = false;
   state.custom_bg = false;
+  state.date_source_ntp = true;
+  {
+    time_t now = time(NULL);
+    struct tm tm_now;
+    if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024)
+    {
+      state.manual_year = (uint16_t)(tm_now.tm_year + 1900);
+      state.manual_month = (uint8_t)(tm_now.tm_mon + 1);
+      state.manual_day = (uint8_t)tm_now.tm_mday;
+      state.manual_hour = (uint8_t)tm_now.tm_hour;
+      state.manual_minute = (uint8_t)tm_now.tm_min;
+    }
+    else
+    {
+      state.manual_year = 2024;
+      state.manual_month = 1;
+      state.manual_day = 1;
+      state.manual_hour = 0;
+      state.manual_minute = 0;
+    }
+  }
   state.active_preset = PRESET_A;
   state.phase = PHASE_WORK;
   state.current_round = 0;
@@ -92,18 +124,25 @@ void pomodoro_init(void) {
 
   pomodoro_load();
   refresh_today_focus_bucket();
+  if (!state.date_source_ntp)
+  {
+    pomodoro_apply_manual_time();
+  }
 }
 
-void pomodoro_start_pause(void) {
+void pomodoro_start_pause(void)
+{
   state.running = !state.running;
   state.ran_out_waiting = false;
 }
 
-void pomodoro_reset(void) {
+void pomodoro_reset(void)
+{
   pomodoro_preset_t *p = active();
   uint32_t full_duration = 0;
 
-  switch (state.phase) {
+  switch (state.phase)
+  {
   case PHASE_WORK:
     full_duration = p->work_duration;
     break;
@@ -116,21 +155,30 @@ void pomodoro_reset(void) {
   }
 
   if (state.running || state.remaining != full_duration ||
-      state.ran_out_waiting) {
+      state.ran_out_waiting)
+  {
     state.running = false;
     state.ran_out_waiting = false;
     state.remaining = full_duration;
-  } else {
-    if (state.phase == PHASE_SHORT_BREAK) {
+  }
+  else
+  {
+    if (state.phase == PHASE_SHORT_BREAK)
+    {
       state.phase = PHASE_WORK;
       state.completed[state.current_round] = false;
       state.remaining = p->work_duration;
-    } else if (state.phase == PHASE_LONG_BREAK) {
+    }
+    else if (state.phase == PHASE_LONG_BREAK)
+    {
       state.phase = PHASE_WORK;
       state.completed[state.current_round] = false;
       state.remaining = p->work_duration;
-    } else if (state.phase == PHASE_WORK) {
-      if (state.current_round > 0) {
+    }
+    else if (state.phase == PHASE_WORK)
+    {
+      if (state.current_round > 0)
+      {
         state.current_round--;
         state.phase = PHASE_SHORT_BREAK;
         state.remaining = p->short_break_duration;
@@ -139,7 +187,8 @@ void pomodoro_reset(void) {
   }
 }
 
-void pomodoro_tick(void) {
+void pomodoro_tick(void)
+{
   if (!state.running)
     return;
   if (state.remaining == 0)
@@ -147,8 +196,10 @@ void pomodoro_tick(void) {
 
   state.remaining--;
 
-  if (state.remaining == 0) {
-    if (state.sound) {
+  if (state.remaining == 0)
+  {
+    if (state.sound)
+    {
 #ifdef __APPLE__
       system("afplay app/bell.wav &");
 #elif defined(ESP_PLATFORM)
@@ -161,53 +212,71 @@ void pomodoro_tick(void) {
 
     pomodoro_preset_t *p = active();
 
-    if (state.phase == PHASE_WORK) {
+    if (state.phase == PHASE_WORK)
+    {
       state.completed[state.current_round] = true;
       refresh_today_focus_bucket();
       state.total_focus_minutes += p->work_duration / 60;
       state.today_focus_minutes += p->work_duration / 60;
-      if (state.current_round >= p->long_break_interval - 1) {
+      if (state.current_round >= p->long_break_interval - 1)
+      {
         state.phase = PHASE_LONG_BREAK;
         state.remaining = p->long_break_duration;
-      } else {
+      }
+      else
+      {
         state.phase = PHASE_SHORT_BREAK;
         state.remaining = p->short_break_duration;
       }
-    } else if (state.phase == PHASE_SHORT_BREAK) {
+    }
+    else if (state.phase == PHASE_SHORT_BREAK)
+    {
       state.current_round++;
       state.phase = PHASE_WORK;
       state.remaining = p->work_duration;
-    } else { /* PHASE_LONG_BREAK */
+    }
+    else
+    { /* PHASE_LONG_BREAK */
       memset(state.completed, 0, sizeof(state.completed));
       state.current_round = 0;
       state.phase = PHASE_WORK;
       state.remaining = p->work_duration;
     }
 
-    if (!state.auto_advance) {
+    if (!state.auto_advance)
+    {
       state.running = false;
       state.ran_out_waiting = true;
     }
   }
 }
 
-void pomodoro_skip_to_next(void) {
+void pomodoro_skip_to_next(void)
+{
   pomodoro_preset_t *p = active();
 
-  if (state.phase == PHASE_WORK) {
+  if (state.phase == PHASE_WORK)
+  {
     state.completed[state.current_round] = true;
-    if (state.current_round >= p->long_break_interval - 1) {
+    if (state.current_round >= p->long_break_interval - 1)
+    {
       state.phase = PHASE_LONG_BREAK;
       state.remaining = p->long_break_duration;
-    } else {
+    }
+    else
+    {
       state.phase = PHASE_SHORT_BREAK;
       state.remaining = p->short_break_duration;
     }
-  } else if (state.phase == PHASE_SHORT_BREAK) {
+  }
+  else if (state.phase == PHASE_SHORT_BREAK)
+  {
     state.current_round++;
     state.phase = PHASE_WORK;
     state.remaining = p->work_duration;
-  } else { /* PHASE_LONG_BREAK */
+  }
+  else
+  { /* PHASE_LONG_BREAK */
     memset(state.completed, 0, sizeof(state.completed));
     state.current_round = 0;
     state.phase = PHASE_WORK;
@@ -218,7 +287,8 @@ void pomodoro_skip_to_next(void) {
   state.ran_out_waiting = false;
 }
 
-void pomodoro_jump_to_round(int round) {
+void pomodoro_jump_to_round(int round)
+{
   int max = active()->long_break_interval - 1;
   if (round < 0)
     round = 0;
@@ -231,12 +301,14 @@ void pomodoro_jump_to_round(int round) {
   state.running = false;
   state.ran_out_waiting = false;
 
-  for (int i = round; i < POMODORO_MAX_ROUNDS; i++) {
+  for (int i = round; i < POMODORO_MAX_ROUNDS; i++)
+  {
     state.completed[i] = false;
   }
 }
 
-void pomodoro_set_active_preset(pomodoro_preset_id_t id) {
+void pomodoro_set_active_preset(pomodoro_preset_id_t id)
+{
   if (id >= PRESET_COUNT)
     return;
   state.active_preset = id;
@@ -248,11 +320,13 @@ void pomodoro_set_active_preset(pomodoro_preset_id_t id) {
   state.running = false;
 }
 
-void pomodoro_reset_preset(pomodoro_preset_id_t id) {
+void pomodoro_reset_preset(pomodoro_preset_id_t id)
+{
   if (id >= PRESET_COUNT)
     return;
 
-  switch (id) {
+  switch (id)
+  {
   case PRESET_A:
     state.presets[id].work_duration = 25 * 60;
     state.presets[id].short_break_duration = 5 * 60;
@@ -275,7 +349,8 @@ void pomodoro_reset_preset(pomodoro_preset_id_t id) {
     break;
   }
 
-  if (state.active_preset == id) {
+  if (state.active_preset == id)
+  {
     state.phase = PHASE_WORK;
     state.current_round = 0;
     memset(state.completed, 0, sizeof(state.completed));
@@ -293,23 +368,27 @@ uint32_t pomodoro_get_remaining(void) { return state.remaining; }
 
 bool pomodoro_is_running(void) { return state.running; }
 
-bool pomodoro_is_completed(int round) {
+bool pomodoro_is_completed(int round)
+{
   if (round < 0 || round >= POMODORO_MAX_ROUNDS)
     return false;
   return state.completed[round];
 }
 
-pomodoro_preset_id_t pomodoro_get_active_preset(void) {
+pomodoro_preset_id_t pomodoro_get_active_preset(void)
+{
   return state.active_preset;
 }
 
-pomodoro_preset_t *pomodoro_get_preset(pomodoro_preset_id_t id) {
+pomodoro_preset_t *pomodoro_get_preset(pomodoro_preset_id_t id)
+{
   if (id >= PRESET_COUNT)
     return NULL;
   return &state.presets[id];
 }
 
-void pomodoro_save(void) {
+void pomodoro_save(void)
+{
   refresh_today_focus_bucket();
 
   FILE *f = fopen(PERSIST_PATH, "w");
@@ -323,7 +402,8 @@ void pomodoro_save(void) {
           state.power_nap_mode ? 1 : 0, state.custom_bg ? 1 : 0,
           (unsigned)state.smart_dim_brightness,
           (unsigned)state.visual_pulse_opacity);
-  for (int i = 0; i < PRESET_COUNT; i++) {
+  for (int i = 0; i < PRESET_COUNT; i++)
+  {
     pomodoro_preset_t *p = &state.presets[i];
     fprintf(f, "%" PRIu32 " %" PRIu32 " %" PRIu32 " %u\n", p->work_duration,
             p->short_break_duration, p->long_break_duration,
@@ -332,16 +412,22 @@ void pomodoro_save(void) {
   fprintf(f, "%" PRIu32 "\n", state.total_focus_minutes);
   fprintf(f, "%" PRIu32 "\n", state.last_focus_day_key);
   fprintf(f, "%" PRIu32 "\n", state.today_focus_minutes);
+  fprintf(f, "%d %u %u %u %u %u\n", state.date_source_ntp ? 1 : 0,
+          (unsigned)state.manual_year, (unsigned)state.manual_month,
+          (unsigned)state.manual_day, (unsigned)state.manual_hour,
+          (unsigned)state.manual_minute);
   fclose(f);
 }
 
-static bool pomodoro_load(void) {
+static bool pomodoro_load(void)
+{
   FILE *f = fopen(PERSIST_PATH, "r");
   if (!f)
     return false;
 
   char first_line[128] = {0};
-  if (!fgets(first_line, sizeof(first_line), f)) {
+  if (!fgets(first_line, sizeof(first_line), f))
+  {
     fclose(f);
     return false;
   }
@@ -363,38 +449,48 @@ static bool pomodoro_load(void) {
              &default_brightness, &smart_dim, &power_nap_mode, &custom_bg,
              &smart_dim_brightness, &visual_pulse_opacity);
   if (parsed < 4 || active_preset < 0 || active_preset >= PRESET_COUNT ||
-      (visual_pulse != 0 && visual_pulse != 1) || (sound != 0 && sound != 1)) {
+      (visual_pulse != 0 && visual_pulse != 1) || (sound != 0 && sound != 1))
+  {
     fclose(f);
     return false;
   }
-  if (parsed == 4) {
+  if (parsed == 4)
+  {
     bell_volume = 80;
   }
-  if (parsed <= 5) {
+  if (parsed <= 5)
+  {
     default_brightness = 80;
   }
-  if (parsed <= 6) {
+  if (parsed <= 6)
+  {
     smart_dim = 1;
   }
-  if (parsed <= 7) {
+  if (parsed <= 7)
+  {
     power_nap_mode = 0;
   }
-  if (parsed <= 8) {
+  if (parsed <= 8)
+  {
     custom_bg = 0;
   }
-  if (parsed <= 9) {
+  if (parsed <= 9)
+  {
     smart_dim_brightness = 10;
   }
-  if (parsed <= 10) {
+  if (parsed <= 10)
+  {
     visual_pulse_opacity = 80;
   }
 
   pomodoro_preset_t tmp_presets[PRESET_COUNT];
-  for (int i = 0; i < PRESET_COUNT; i++) {
+  for (int i = 0; i < PRESET_COUNT; i++)
+  {
     uint32_t w, s, l;
     unsigned int interval;
     if (fscanf(f, "%" SCNu32 " %" SCNu32 " %" SCNu32 " %u", &w, &s, &l,
-               &interval) != 4) {
+               &interval) != 4)
+    {
       fclose(f);
       return false;
     }
@@ -409,21 +505,31 @@ static bool pomodoro_load(void) {
 
   uint32_t last_focus_day_key = 0;
   uint32_t today_focus_minutes = 0;
-  if (fscanf(f, "%" SCNu32, &last_focus_day_key) != 1) {
+  if (fscanf(f, "%" SCNu32, &last_focus_day_key) != 1)
+  {
     last_focus_day_key = 0;
   }
-  if (fscanf(f, "%" SCNu32, &today_focus_minutes) != 1) {
+  if (fscanf(f, "%" SCNu32, &today_focus_minutes) != 1)
+  {
     today_focus_minutes = 0;
   }
+
+  int date_ntp = 1;
+  unsigned m_year = 2024, m_month = 1, m_day = 1, m_hour = 0, m_min = 0;
+  (void)fscanf(f, "%d %u %u %u %u %u", &date_ntp, &m_year, &m_month, &m_day,
+               &m_hour, &m_min);
+
   fclose(f);
 
   /* Validate presets before applying */
-  for (int i = 0; i < PRESET_COUNT; i++) {
+  for (int i = 0; i < PRESET_COUNT; i++)
+  {
     if (tmp_presets[i].work_duration == 0 ||
         tmp_presets[i].short_break_duration == 0 ||
         tmp_presets[i].long_break_duration == 0 ||
         tmp_presets[i].long_break_interval < 2 ||
-        tmp_presets[i].long_break_interval > 10) {
+        tmp_presets[i].long_break_interval > 10)
+    {
       return false;
     }
   }
@@ -432,31 +538,39 @@ static bool pomodoro_load(void) {
   state.auto_advance = auto_adv ? true : false;
   state.visual_pulse = visual_pulse ? true : false;
   state.sound = sound ? true : false;
-  if (bell_volume < 10) {
+  if (bell_volume < 10)
+  {
     bell_volume = 10;
   }
-  if (bell_volume > 100) {
+  if (bell_volume > 100)
+  {
     bell_volume = 100;
   }
   state.bell_volume = (uint8_t)bell_volume;
-  if (default_brightness < 10) {
+  if (default_brightness < 10)
+  {
     default_brightness = 10;
   }
-  if (default_brightness > 100) {
+  if (default_brightness > 100)
+  {
     default_brightness = 100;
   }
   state.default_brightness = (uint8_t)default_brightness;
-  if (smart_dim_brightness < 10) {
+  if (smart_dim_brightness < 10)
+  {
     smart_dim_brightness = 10;
   }
-  if (smart_dim_brightness > 100) {
+  if (smart_dim_brightness > 100)
+  {
     smart_dim_brightness = 100;
   }
   state.smart_dim_brightness = (uint8_t)smart_dim_brightness;
-  if (visual_pulse_opacity < 10) {
+  if (visual_pulse_opacity < 10)
+  {
     visual_pulse_opacity = 10;
   }
-  if (visual_pulse_opacity > 100) {
+  if (visual_pulse_opacity > 100)
+  {
     visual_pulse_opacity = 100;
   }
   state.visual_pulse_opacity = (uint8_t)visual_pulse_opacity;
@@ -473,6 +587,13 @@ static bool pomodoro_load(void) {
   state.total_focus_minutes = total_focus_minutes;
   state.last_focus_day_key = last_focus_day_key;
   state.today_focus_minutes = today_focus_minutes;
+  state.date_source_ntp = date_ntp ? true : false;
+  state.manual_year =
+      (m_year >= 2024 && m_year <= 2100) ? (uint16_t)m_year : 2024;
+  state.manual_month = (m_month >= 1 && m_month <= 12) ? (uint8_t)m_month : 1;
+  state.manual_day = (m_day >= 1 && m_day <= 31) ? (uint8_t)m_day : 1;
+  state.manual_hour = (m_hour <= 23) ? (uint8_t)m_hour : 0;
+  state.manual_minute = (m_min <= 59) ? (uint8_t)m_min : 0;
   refresh_today_focus_bucket();
   return true;
 }
@@ -485,15 +606,19 @@ bool pomodoro_get_visual_pulse(void) { return state.visual_pulse; }
 
 void pomodoro_set_visual_pulse(bool val) { state.visual_pulse = val; }
 
-uint8_t pomodoro_get_visual_pulse_opacity(void) {
+uint8_t pomodoro_get_visual_pulse_opacity(void)
+{
   return state.visual_pulse_opacity;
 }
 
-void pomodoro_set_visual_pulse_opacity(uint8_t val) {
-  if (val < 10) {
+void pomodoro_set_visual_pulse_opacity(uint8_t val)
+{
+  if (val < 10)
+  {
     val = 10;
   }
-  if (val > 100) {
+  if (val > 100)
+  {
     val = 100;
   }
   state.visual_pulse_opacity = val;
@@ -505,25 +630,32 @@ void pomodoro_set_sound(bool val) { state.sound = val; }
 
 uint8_t pomodoro_get_bell_volume(void) { return state.bell_volume; }
 
-void pomodoro_set_bell_volume(uint8_t val) {
-  if (val < 10) {
+void pomodoro_set_bell_volume(uint8_t val)
+{
+  if (val < 10)
+  {
     val = 10;
   }
-  if (val > 100) {
+  if (val > 100)
+  {
     val = 100;
   }
   state.bell_volume = val;
 }
 
-uint8_t pomodoro_get_default_brightness(void) {
+uint8_t pomodoro_get_default_brightness(void)
+{
   return state.default_brightness;
 }
 
-void pomodoro_set_default_brightness(uint8_t val) {
-  if (val < 10) {
+void pomodoro_set_default_brightness(uint8_t val)
+{
+  if (val < 10)
+  {
     val = 10;
   }
-  if (val > 100) {
+  if (val > 100)
+  {
     val = 100;
   }
   state.default_brightness = val;
@@ -533,15 +665,19 @@ bool pomodoro_get_smart_dim(void) { return state.smart_dim; }
 
 void pomodoro_set_smart_dim(bool val) { state.smart_dim = val; }
 
-uint8_t pomodoro_get_smart_dim_brightness(void) {
+uint8_t pomodoro_get_smart_dim_brightness(void)
+{
   return state.smart_dim_brightness;
 }
 
-void pomodoro_set_smart_dim_brightness(uint8_t val) {
-  if (val < 10) {
+void pomodoro_set_smart_dim_brightness(uint8_t val)
+{
+  if (val < 10)
+  {
     val = 10;
   }
-  if (val > 100) {
+  if (val > 100)
+  {
     val = 100;
   }
   state.smart_dim_brightness = val;
@@ -559,11 +695,84 @@ bool pomodoro_get_ran_out_waiting(void) { return state.ran_out_waiting; }
 
 void pomodoro_clear_ran_out_waiting(void) { state.ran_out_waiting = false; }
 
-uint32_t pomodoro_get_total_focus_minutes(void) {
+uint32_t pomodoro_get_total_focus_minutes(void)
+{
   return state.total_focus_minutes;
 }
 
-uint32_t pomodoro_get_today_focus_minutes(void) {
+uint32_t pomodoro_get_today_focus_minutes(void)
+{
   refresh_today_focus_bucket();
   return state.today_focus_minutes;
+}
+
+bool pomodoro_get_date_source_ntp(void) { return state.date_source_ntp; }
+void pomodoro_set_date_source_ntp(bool val) { state.date_source_ntp = val; }
+
+uint16_t pomodoro_get_manual_year(void) { return state.manual_year; }
+void pomodoro_set_manual_year(uint16_t val)
+{
+  if (val < 2024)
+    val = 2024;
+  if (val > 2100)
+    val = 2100;
+  state.manual_year = val;
+}
+
+uint8_t pomodoro_get_manual_month(void) { return state.manual_month; }
+void pomodoro_set_manual_month(uint8_t val)
+{
+  if (val < 1)
+    val = 1;
+  if (val > 12)
+    val = 12;
+  state.manual_month = val;
+}
+
+uint8_t pomodoro_get_manual_day(void) { return state.manual_day; }
+void pomodoro_set_manual_day(uint8_t val)
+{
+  if (val < 1)
+    val = 1;
+  if (val > 31)
+    val = 31;
+  state.manual_day = val;
+}
+
+uint8_t pomodoro_get_manual_hour(void) { return state.manual_hour; }
+void pomodoro_set_manual_hour(uint8_t val)
+{
+  if (val > 23)
+    val = 23;
+  state.manual_hour = val;
+}
+
+uint8_t pomodoro_get_manual_minute(void) { return state.manual_minute; }
+void pomodoro_set_manual_minute(uint8_t val)
+{
+  if (val > 59)
+    val = 59;
+  state.manual_minute = val;
+}
+
+void pomodoro_apply_manual_time(void)
+{
+  struct tm t;
+  memset(&t, 0, sizeof(t));
+  t.tm_year = state.manual_year - 1900;
+  t.tm_mon = state.manual_month - 1;
+  t.tm_mday = state.manual_day;
+  t.tm_hour = state.manual_hour;
+  t.tm_min = state.manual_minute;
+  t.tm_sec = 0;
+  t.tm_isdst = -1;
+  time_t epoch = mktime(&t);
+  if (epoch == (time_t)-1)
+  {
+    return;
+  }
+  struct timeval tv;
+  tv.tv_sec = epoch;
+  tv.tv_usec = 0;
+  settimeofday(&tv, NULL);
 }

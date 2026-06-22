@@ -4,13 +4,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef enum {
+typedef enum
+{
   PHASE_WORK,
   PHASE_SHORT_BREAK,
   PHASE_LONG_BREAK
 } pomodoro_phase_t;
 
-typedef enum {
+typedef enum
+{
   PRESET_A = 0,
   PRESET_B,
   PRESET_C,
@@ -19,7 +21,8 @@ typedef enum {
 
 #define POMODORO_MAX_ROUNDS 10
 
-typedef struct {
+typedef struct
+{
   uint32_t work_duration;        /* seconds */
   uint32_t short_break_duration; /* seconds */
   uint32_t long_break_duration;  /* seconds */
@@ -27,7 +30,8 @@ typedef struct {
       long_break_interval; /* long break after every N focus rounds (2–10) */
 } pomodoro_preset_t;
 
-typedef struct {
+typedef struct
+{
   pomodoro_phase_t phase;
   int current_round;
   bool completed[POMODORO_MAX_ROUNDS];
@@ -44,6 +48,12 @@ typedef struct {
   bool smart_dim;
   bool power_nap_mode;
   bool custom_bg;
+  bool date_source_ntp;  /* true = NTP, false = manual */
+  uint16_t manual_year;  /* manual date: year          */
+  uint8_t manual_month;  /* manual date: month (1-12)  */
+  uint8_t manual_day;    /* manual date: day   (1-31)  */
+  uint8_t manual_hour;   /* manual time: hour  (0-23)  */
+  uint8_t manual_minute; /* manual time: minute (0-59) */
   pomodoro_preset_id_t active_preset;
   pomodoro_preset_t presets[PRESET_COUNT];
   uint32_t total_focus_minutes;
@@ -98,6 +108,20 @@ void pomodoro_set_power_nap_mode(bool val);
 
 bool pomodoro_get_custom_bg(void);
 void pomodoro_set_custom_bg(bool val);
+
+bool pomodoro_get_date_source_ntp(void);
+void pomodoro_set_date_source_ntp(bool val);
+uint16_t pomodoro_get_manual_year(void);
+void pomodoro_set_manual_year(uint16_t val);
+uint8_t pomodoro_get_manual_month(void);
+void pomodoro_set_manual_month(uint8_t val);
+uint8_t pomodoro_get_manual_day(void);
+void pomodoro_set_manual_day(uint8_t val);
+uint8_t pomodoro_get_manual_hour(void);
+void pomodoro_set_manual_hour(uint8_t val);
+uint8_t pomodoro_get_manual_minute(void);
+void pomodoro_set_manual_minute(uint8_t val);
+void pomodoro_apply_manual_time(void);
 
 bool pomodoro_get_ran_out_waiting(void);
 void pomodoro_clear_ran_out_waiting(void);

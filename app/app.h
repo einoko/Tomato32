@@ -12,7 +12,8 @@ typedef void (*app_brightness_provider_t)(uint8_t percent);
 typedef void (*app_bell_volume_provider_t)(uint8_t percent);
 typedef void (*app_power_off_provider_t)(void);
 
-typedef enum {
+typedef enum
+{
   APP_SCREEN_TIMER,
   APP_SCREEN_SETTINGS,
   APP_SCREEN_STATS,
@@ -21,6 +22,8 @@ typedef enum {
 
 typedef const char *(*app_debug_str_provider_t)(void);
 typedef uint32_t (*app_free_heap_provider_t)(void);
+
+typedef void (*app_ntp_sync_provider_t)(void);
 
 void app_init(lv_display_t *display);
 void app_show_timer_screen(void);
@@ -43,6 +46,8 @@ void app_set_wifi_ssid_provider(app_debug_str_provider_t provider);
 void app_set_wifi_pass_provider(app_debug_str_provider_t provider);
 void app_set_ip_addr_provider(app_debug_str_provider_t provider);
 void app_set_free_heap_provider(app_free_heap_provider_t provider);
+void app_set_ntp_sync_provider(app_ntp_sync_provider_t provider);
+void app_request_ntp_sync(void);
 const char *app_get_wifi_ssid(void);
 const char *app_get_wifi_pass(void);
 const char *app_get_ip_addr(void);

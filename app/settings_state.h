@@ -12,11 +12,15 @@
 #define SETTINGS_RIGHT_W (SETTINGS_DISPLAY_W - SETTINGS_LEFT_W)
 
 /* System subview navigation. */
-typedef enum {
+typedef enum
+{
   SYSTEM_SUBVIEW_ROOT = 0,
-  SYSTEM_SUBVIEW_UI,
-  SYSTEM_SUBVIEW_SOUND,
-  SYSTEM_SUBVIEW_BRIGHTNESS
+  SYSTEM_SUBVIEW_DISPLAY,     /* Display intermediate menu */
+  SYSTEM_SUBVIEW_UI,          /* Appearance */
+  SYSTEM_SUBVIEW_BRIGHTNESS,  /* Brightness */
+  SYSTEM_SUBVIEW_SOUND,       /* Sound */
+  SYSTEM_SUBVIEW_SYSTEM_MENU, /* System intermediate menu */
+  SYSTEM_SUBVIEW_DATETIME,    /* Date & time */
 } system_subview_t;
 
 /* Top-level screen and views. */
@@ -25,9 +29,12 @@ extern lv_obj_t *view_main;
 extern lv_obj_t *view_edit;
 extern lv_obj_t *view_system;
 extern lv_obj_t *view_system_root;
+extern lv_obj_t *view_system_display;
 extern lv_obj_t *view_system_ui;
 extern lv_obj_t *view_system_sound;
 extern lv_obj_t *view_system_brightness;
+extern lv_obj_t *view_system_system_menu;
+extern lv_obj_t *view_system_datetime;
 extern lv_obj_t *main_divider;
 
 /* Main view: preset tabs. */
@@ -69,6 +76,30 @@ extern lv_obj_t *lbl_system_sound_menu;
 extern lv_obj_t *lbl_system_sound_menu_chevron;
 extern lv_obj_t *lbl_system_brightness_menu;
 extern lv_obj_t *lbl_system_brightness_menu_chevron;
+
+/* System view: display subview rows (Appearance, Brightness). */
+extern lv_obj_t *lbl_system_appearance;
+extern lv_obj_t *lbl_system_appearance_chevron;
+extern lv_obj_t *lbl_system_brightness_sub;
+extern lv_obj_t *lbl_system_brightness_sub_chevron;
+
+/* System view: system menu subview rows. */
+extern lv_obj_t *lbl_system_datetime_menu;
+extern lv_obj_t *lbl_system_datetime_menu_chevron;
+
+/* System view: date & time subview rows. */
+extern lv_obj_t *lbl_system_date_source;
+extern lv_obj_t *system_date_source_seg_container;
+extern lv_obj_t *system_date_source_ntp_btn;
+extern lv_obj_t *system_date_source_manual_btn;
+extern lv_obj_t *system_dt_set_date_row;
+extern lv_obj_t *lbl_system_set_date;
+extern lv_obj_t *lbl_system_set_date_value;
+extern lv_obj_t *lbl_system_set_date_chevron;
+extern lv_obj_t *system_dt_set_time_row;
+extern lv_obj_t *lbl_system_set_time;
+extern lv_obj_t *lbl_system_set_time_value;
+extern lv_obj_t *lbl_system_set_time_chevron;
 
 /* System view: UI subview rows. */
 extern lv_obj_t *lbl_system_theme;

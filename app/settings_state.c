@@ -5,9 +5,12 @@ lv_obj_t *view_main;
 lv_obj_t *view_edit;
 lv_obj_t *view_system;
 lv_obj_t *view_system_root;
+lv_obj_t *view_system_display;
 lv_obj_t *view_system_ui;
 lv_obj_t *view_system_sound;
 lv_obj_t *view_system_brightness;
+lv_obj_t *view_system_system_menu;
+lv_obj_t *view_system_datetime;
 lv_obj_t *main_divider;
 
 lv_obj_t *tab_btns[PRESET_COUNT];
@@ -41,6 +44,27 @@ lv_obj_t *lbl_system_sound_menu;
 lv_obj_t *lbl_system_sound_menu_chevron;
 lv_obj_t *lbl_system_brightness_menu;
 lv_obj_t *lbl_system_brightness_menu_chevron;
+
+lv_obj_t *lbl_system_appearance;
+lv_obj_t *lbl_system_appearance_chevron;
+lv_obj_t *lbl_system_brightness_sub;
+lv_obj_t *lbl_system_brightness_sub_chevron;
+
+lv_obj_t *lbl_system_datetime_menu;
+lv_obj_t *lbl_system_datetime_menu_chevron;
+
+lv_obj_t *lbl_system_date_source;
+lv_obj_t *system_date_source_seg_container;
+lv_obj_t *system_date_source_ntp_btn;
+lv_obj_t *system_date_source_manual_btn;
+lv_obj_t *system_dt_set_date_row;
+lv_obj_t *lbl_system_set_date;
+lv_obj_t *lbl_system_set_date_value;
+lv_obj_t *lbl_system_set_date_chevron;
+lv_obj_t *system_dt_set_time_row;
+lv_obj_t *lbl_system_set_time;
+lv_obj_t *lbl_system_set_time_value;
+lv_obj_t *lbl_system_set_time_chevron;
 
 lv_obj_t *lbl_system_theme;
 lv_obj_t *lbl_system_visual;
