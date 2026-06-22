@@ -9,12 +9,12 @@ set -euo pipefail
 # Flashing requires esptool on the host: pip install esptool
 #
 # Usage:
-#   ./build.sh                       # Build only
-#   ./build.sh flash [/dev/cu.xxx]   # Build then flash from host
-#   ./build.sh flash-app [/dev/cu.xxx] # Build then flash app partition only (preserves SPIFFS)
-#   ./build.sh monitor [/dev/cu.xxx] # Build, flash, and monitor from host
-#   ./build.sh monitor-app [/dev/cu.xxx] # Build, app-only flash, and monitor from host
-#   ./build.sh clean                 # Clean build artifacts
+#   ./build.sh                            # Build only
+#   ./build.sh flash [/dev/cu.xxx]        # Build then flash from host
+#   ./build.sh flash-app [/dev/cu.xxx]    # Build then flash app partition only (preserves SPIFFS)
+#   ./build.sh monitor [/dev/cu.xxx]      # Build, flash, and monitor from host
+#   ./build.sh monitor-app [/dev/cu.xxx]  # Build, app-only flash, and monitor from host
+#   ./build.sh clean                      # Clean build artifacts
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -102,7 +102,6 @@ docker run --rm -i ${TTY_FLAG} \
 	"${IMAGE}" \
 	bash -c "
         set -e
-        export IDF_CCACHE_ENABLE=1
 
         if ${DO_CLEAN}; then
             echo '=> Cleaning build...'
@@ -114,6 +113,9 @@ docker run --rm -i ${TTY_FLAG} \
         if [ ! -d build ] || [ ! -f build/config/sdkconfig.h ]; then
             echo '=> Setting target esp32s3...'
             idf.py set-target esp32s3
+        else
+            echo '=> Forcing fresh CMake configure...'
+            rm -rf build/CMakeCache.txt build/CMakeFiles build/cmake_install.cmake
         fi
 
         echo '=> Building...'
