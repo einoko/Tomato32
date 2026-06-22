@@ -28,8 +28,7 @@ static char s_runtime_tz[64] = {0};
 static char s_ip_str[24] = {0};
 
 void wifi_sync_set_credentials(const char *ssid, const char *pass,
-                               const char *tz)
-{
+                               const char *tz) {
   if (ssid)
     strlcpy(s_runtime_ssid, ssid, sizeof(s_runtime_ssid));
   if (pass)
@@ -46,11 +45,9 @@ void wifi_sync_set_credentials(const char *ssid, const char *pass,
 static uint32_t s_reconnect_delay_ms = WIFI_RECONNECT_DELAY_MIN_MS;
 static esp_timer_handle_t s_reconnect_timer = NULL;
 
-static void reconnect_timer_cb(void *arg)
-{
+static void reconnect_timer_cb(void *arg) {
   (void)arg;
-  if (s_keep_wifi_running)
-  {
+  if (s_keep_wifi_running) {
     esp_wifi_connect();
   }
 }
@@ -60,19 +57,14 @@ static void reconnect_timer_cb(void *arg)
 #endif
 
 static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data)
-{
+                          int32_t event_id, void *event_data) {
   (void)arg;
-  if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-  {
+  if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
     esp_wifi_connect();
-  }
-  else if (event_base == WIFI_EVENT &&
-           event_id == WIFI_EVENT_STA_DISCONNECTED)
-  {
+  } else if (event_base == WIFI_EVENT &&
+             event_id == WIFI_EVENT_STA_DISCONNECTED) {
     xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-    if (!s_keep_wifi_running)
-    {
+    if (!s_keep_wifi_running) {
       ESP_LOGI(TAG, "Wi-Fi disconnected (intentional stop)");
       return;
     }
@@ -83,9 +75,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     s_reconnect_delay_ms = s_reconnect_delay_ms < WIFI_RECONNECT_DELAY_MAX_MS
                                ? s_reconnect_delay_ms * 2
                                : WIFI_RECONNECT_DELAY_MAX_MS;
-  }
-  else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-  {
+  } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     /* Successful connection — reset backoff for the next sync cycle. */
     s_reconnect_delay_ms = WIFI_RECONNECT_DELAY_MIN_MS;
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
@@ -101,37 +91,30 @@ static void event_handler(void *arg, esp_event_base_t event_base,
   }
 }
 
-static void wifi_sync_stop_for_power_saving(void)
-{
+static void wifi_sync_stop_for_power_saving(void) {
   s_keep_wifi_running = false;
   s_reconnect_delay_ms = WIFI_RECONNECT_DELAY_MIN_MS; /* reset for next cycle */
-  if (s_reconnect_timer)
-  {
+  if (s_reconnect_timer) {
     esp_timer_stop(s_reconnect_timer); /* cancel any pending retry */
   }
   esp_sntp_stop();
 
   esp_err_t err = esp_wifi_disconnect();
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     ESP_LOGW(TAG, "esp_wifi_disconnect failed (%d)", err);
   }
 
   err = esp_wifi_stop();
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     ESP_LOGW(TAG, "esp_wifi_stop failed (%d)", err);
-  }
-  else
-  {
+  } else {
     s_wifi_started = false;
     xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     ESP_LOGI(TAG, "Wi-Fi stopped for battery savings");
   }
 }
 
-static void time_sync_notification_cb(struct timeval *tv)
-{
+static void time_sync_notification_cb(struct timeval *tv) {
   (void)tv;
   ESP_LOGI(TAG, "NTP sync received");
 
@@ -139,8 +122,7 @@ static void time_sync_notification_cb(struct timeval *tv)
   struct tm timeinfo;
   localtime_r(&now, &timeinfo);
 
-  if (rtc_pcf85063_set_time(&timeinfo))
-  {
+  if (rtc_pcf85063_set_time(&timeinfo)) {
     ESP_LOGI(TAG, "RTC updated from NTP");
   }
 
@@ -151,16 +133,14 @@ static void time_sync_notification_cb(struct timeval *tv)
 #endif
 }
 
-void wifi_sync_init(void)
-{
+void wifi_sync_init(void) {
   s_wifi_event_group = xEventGroupCreate();
 
   const char *ssid = s_runtime_ssid;
   const char *pass = s_runtime_pass;
   const char *tz = (s_runtime_tz[0] != '\0') ? s_runtime_tz : "UTC0";
 
-  if (strlen(ssid) == 0 || strlen(pass) == 0)
-  {
+  if (strlen(ssid) == 0 || strlen(pass) == 0) {
     ESP_LOGW(TAG, "Wi-Fi credentials not configured. Set WIFI_SSID and "
                   "WIFI_PASS in TOMATO32_CONFIG.conf on the TOMATO32 drive.");
     s_wifi_config_valid = false;
@@ -208,8 +188,7 @@ void wifi_sync_init(void)
   ESP_LOGI(TAG, "Wi-Fi STA init done (idle, on-demand sync only)");
 }
 
-bool wifi_sync_wait_for_ntp(int timeout_ms)
-{
+bool wifi_sync_wait_for_ntp(int timeout_ms) {
   EventBits_t bits = xEventGroupWaitBits(
       s_wifi_event_group, WIFI_CONNECTED_BIT | NTP_SYNCED_BIT, pdFALSE, pdTRUE,
       pdMS_TO_TICKS(timeout_ms));
@@ -217,15 +196,12 @@ bool wifi_sync_wait_for_ntp(int timeout_ms)
          (WIFI_CONNECTED_BIT | NTP_SYNCED_BIT);
 }
 
-bool wifi_sync_request_sync(int timeout_ms)
-{
-  if (!s_wifi_event_group)
-  {
+bool wifi_sync_request_sync(int timeout_ms) {
+  if (!s_wifi_event_group) {
     return false;
   }
 
-  if (!s_wifi_config_valid)
-  {
+  if (!s_wifi_config_valid) {
     ESP_LOGW(TAG, "NTP sync skipped: Wi-Fi is not configured");
     return false;
   }
@@ -234,21 +210,16 @@ bool wifi_sync_request_sync(int timeout_ms)
   s_keep_wifi_running = true;
   s_reconnect_delay_ms = WIFI_RECONNECT_DELAY_MIN_MS; /* fresh attempt */
 
-  if (!s_wifi_started)
-  {
+  if (!s_wifi_started) {
     esp_err_t err = esp_wifi_start();
-    if (err != ESP_OK)
-    {
+    if (err != ESP_OK) {
       ESP_LOGE(TAG, "esp_wifi_start failed (%d)", err);
       return false;
     }
     s_wifi_started = true;
-  }
-  else
-  {
+  } else {
     esp_err_t err = esp_wifi_connect();
-    if (err != ESP_OK)
-    {
+    if (err != ESP_OK) {
       ESP_LOGW(TAG, "esp_wifi_connect returned %d", err);
     }
   }
@@ -256,8 +227,7 @@ bool wifi_sync_request_sync(int timeout_ms)
   bool synced = wifi_sync_wait_for_ntp(timeout_ms);
 
 #if !WIFI_SYNC_KEEP_CONNECTED_AFTER_NTP
-  if (!synced)
-  {
+  if (!synced) {
     wifi_sync_stop_for_power_saving();
   }
 #endif

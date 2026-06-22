@@ -2,8 +2,7 @@
 
 #include <stdbool.h>
 
-typedef struct
-{
+typedef struct {
   char wifi_ssid[64];
   char wifi_pass[64];
   char tz[64];
