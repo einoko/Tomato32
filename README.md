@@ -122,7 +122,7 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 
 ### System settings
 
-#### UI
+#### Display → Appearance
 
 | Setting         | Options      | Description                                                                                    |
 | --------------- | ------------ | ---------------------------------------------------------------------------------------------- |
@@ -130,14 +130,7 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 | Visual pulse    | On / Off     | Pulsing background color when the timer ends.                                                  |
 | Custom backdrop | On / Off     | Shows a custom background on the timer screen (see [Custom Backgrounds](#custom-backgrounds)). |
 
-#### Sound
-
-| Setting | Options  | Description                     |
-| ------- | -------- | ------------------------------- |
-| Sound   | On / Off | Chime at the end of each phase. |
-| Volume  | 0–100 %  | Chime volume.                   |
-
-#### Screen
+#### Display → Screen
 
 | Setting              | Options  | Description                                                                                               |
 | -------------------- | -------- | --------------------------------------------------------------------------------------------------------- |
@@ -146,6 +139,21 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 | Visual pulse opacity | 0–100 %  | Opacity of the visual pulse color.                                                                        |
 | Smart dim            | On / Off | Dims to the smart dim level after 60 seconds of inactivity while the timer runs. Tap anywhere to restore. |
 | Smart sleep          | On / Off | Turns the screen off after 60 seconds of inactivity instead of dimming. Tap to wake up.                   |
+
+#### Sound
+
+| Setting | Options  | Description                     |
+| ------- | -------- | ------------------------------- |
+| Sound   | On / Off | Chime at the end of each phase. |
+| Volume  | 0–100 %  | Chime volume.                   |
+
+#### System → Date & time
+
+| Setting     | Options      | Description                                                                                                                                                                                    |
+| :---------- | :----------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date source | NTP / Manual | Select between synchronizing time via NTP or setting it manually. NTP requires Wi-Fi credentials to be set up (see [Wi-Fi credentials via config drive](#wi-fi-credentials-via-config-drive)). |
+| Set date    | -            | If Date source is set to Manual, set the date.                                                                                                                                                 |
+| Set time    | -            | If Date source is set to Manual, set the time.                                                                                                                                                 |
 
 ## Special Screens
 
