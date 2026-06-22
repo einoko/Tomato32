@@ -62,31 +62,26 @@ pip install -r requirements.txt
 > [!NOTE]
 > Replace `/dev/cu.usbmodem101` with the actual serial port of your ESP32 board. Run `ls /dev/cu.*` before and after plugging in the board to identify the correct port.
 
-### Boot modes
+### How to boot?
 
 Tomato32 has two boot modes you can enter:
 
-| Mode            | How to enter                                                                                                                                                   | What happens                                                          |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| **Normal**      | Hold the **PWR** button until you see the Tomato32 splash screen                                                                                               | Normal timer functionality. No USB activity.                          |
-| **Config mode** | Hold the **PWR** button for one second. While still holding **PWR**, immediately press and hold the **BOOT** button until the Tomato32 splash screen displays. | A drive will appear over USB. The startup screen shows _Config mode_. |
-
-Config mode is the only mode where the USB drive and serial monitor are available. In normal operation no USB peripheral is active, which keeps battery draw low.
+| Mode            | How to enter                                                                                                                                                   |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Normal**      | Hold the **PWR** button until you see the Tomato32 splash screen.                                                                                              |
+| **Config mode** | Hold the **PWR** button for one second. While still holding **PWR**, immediately press and hold the **BOOT** button until the Tomato32 splash screen displays. |
 
 ### Serial monitor
 
-The serial monitor is available in **config mode only**. Hold BOOT while powering on, then:
+The serial monitor is available in **config mode only**.
 
 ```sh
 ./build.sh monitor /dev/cu.usbmodem101
 ```
 
-> [!NOTE]
-> The CDC serial port is assigned by the OS and may differ from the port used for flashing. Run `ls /dev/cu.*` while the board is connected to find the right one.
-
 ### Wi-Fi credentials via config drive
 
-Enter **config mode** (see instructions in [Boot modes](#boot-modes)). If you connect the device to your computer with a USB-C cable, a drive will appear on your computer. Open `⁠TOMATO32_CONFIG.txt` on that drive and fill in your credentials:
+Enter **config mode** (see instructions in [How to boot?](#how-to-boot)). Connect the device to your computer with a USB-C cable, a drive will appear on your computer. Open `⁠TOMATO32_CONFIG.txt` on that drive and fill in your credentials:
 
 ```
 WIFI_SSID=your_network
