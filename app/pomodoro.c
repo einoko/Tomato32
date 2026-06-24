@@ -210,6 +210,8 @@ void pomodoro_tick(void) {
       state.running = false;
       state.ran_out_waiting = true;
     }
+
+    pomodoro_save();
   }
 }
 
