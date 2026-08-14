@@ -3,6 +3,7 @@
 #include "driver/i2c_master.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include <time.h>
 
 #define RTC_I2C_PORT I2C_NUM_0
 #define RTC_SCL_PIN GPIO_NUM_48
@@ -77,8 +78,14 @@ bool rtc_pcf85063_init(void) {
     return false;
   }
 
-  /* Ensure oscillator is running (clear STOP bit in Control_1) */
-  uint8_t ctrl1 = 0x00;
+  /* Ensure oscillator is running and select 24-hour mode, preserving the
+   * crystal capacitor setting. */
+  uint8_t ctrl1 = 0;
+  if (rtc_read_reg(PCF85063_REG_CTRL1, &ctrl1, 1) != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to read Control_1");
+    return false;
+  }
+  ctrl1 &= (uint8_t)~(0x20 | 0x02); /* STOP and 12_24 */
   if (rtc_write_reg(PCF85063_REG_CTRL1, &ctrl1, 1) != ESP_OK) {
     ESP_LOGE(TAG, "Failed to write Control_1");
     return false;
@@ -95,6 +102,11 @@ bool rtc_pcf85063_get_time(struct tm *timeinfo) {
 
   uint8_t buf[7];
   if (rtc_read_reg(PCF85063_REG_SC, buf, 7) != ESP_OK) {
+    return false;
+  }
+
+  if (buf[0] & 0x80) {
+    ESP_LOGW(TAG, "RTC oscillator-stop flag is set; time is invalid");
     return false;
   }
 
@@ -123,7 +135,24 @@ bool rtc_pcf85063_set_time(const struct tm *timeinfo) {
   buf[5] = dec2bcd(timeinfo->tm_mon + 1) & 0x1F;
   buf[6] = dec2bcd(timeinfo->tm_year + 1900 - 2000);
 
+  /* Stop the divider while programming the calendar, then restart it. */
+  uint8_t ctrl1 = 0;
+  if (rtc_read_reg(PCF85063_REG_CTRL1, &ctrl1, 1) != ESP_OK) {
+    return false;
+  }
+  uint8_t ctrl1_stop = ctrl1 | 0x20;
+  if (rtc_write_reg(PCF85063_REG_CTRL1, &ctrl1_stop, 1) != ESP_OK) {
+    return false;
+  }
+
   if (rtc_write_reg(PCF85063_REG_SC, buf, 7) != ESP_OK) {
+    uint8_t ctrl1_run = ctrl1 & (uint8_t)~0x20;
+    (void)rtc_write_reg(PCF85063_REG_CTRL1, &ctrl1_run, 1);
+    return false;
+  }
+
+  uint8_t ctrl1_run = ctrl1 & (uint8_t)~0x20;
+  if (rtc_write_reg(PCF85063_REG_CTRL1, &ctrl1_run, 1) != ESP_OK) {
     return false;
   }
 
@@ -139,5 +168,9 @@ bool rtc_pcf85063_is_running(void) {
   if (rtc_read_reg(PCF85063_REG_CTRL1, &ctrl1, 1) != ESP_OK) {
     return false;
   }
-  return (ctrl1 & 0x20) == 0; /* STOP bit is bit 5 */
+  uint8_t seconds = 0;
+  if (rtc_read_reg(PCF85063_REG_SC, &seconds, 1) != ESP_OK) {
+    return false;
+  }
+  return (ctrl1 & 0x20) == 0 && (seconds & 0x80) == 0;
 }

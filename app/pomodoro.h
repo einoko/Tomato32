@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 typedef enum {
   PHASE_WORK,
@@ -118,6 +119,8 @@ void pomodoro_set_manual_hour(uint8_t val);
 uint8_t pomodoro_get_manual_minute(void);
 void pomodoro_set_manual_minute(uint8_t val);
 void pomodoro_apply_manual_time(void);
+typedef void (*pomodoro_time_set_provider_t)(time_t epoch);
+void pomodoro_set_time_set_provider(pomodoro_time_set_provider_t provider);
 
 bool pomodoro_get_ran_out_waiting(void);
 void pomodoro_clear_ran_out_waiting(void);

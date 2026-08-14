@@ -136,7 +136,7 @@ static void toggle_date_source_cb(lv_event_t *e) {
   /* Do NOT call pomodoro_apply_manual_time() here: the stored manual fields
      may still hold defaults (2024-01-01) and would corrupt the system clock.
      Manual time is only applied when the user explicitly adjusts it via the
-     stepper, or at boot when Manual mode is already saved. */
+     stepper, or as a fallback when boot could not restore a valid RTC time. */
   settings_screen_update();
   pomodoro_save();
 }

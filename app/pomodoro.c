@@ -6,6 +6,8 @@
 #include <sys/time.h>
 #include <time.h>
 
+static pomodoro_time_set_provider_t time_set_provider;
+
 #ifndef PERSIST_PATH
 #define PERSIST_PATH ".pomodoro_state"
 #endif
@@ -111,8 +113,19 @@ void pomodoro_init(void) {
 
   pomodoro_load();
   refresh_today_focus_bucket();
+  /* The platform restores the system clock from the external RTC before
+   * app_init() is called.  Manual fields represent the last value explicitly
+   * chosen by the user; applying them unconditionally would rewind a valid RTC
+   * every time the device boots.  Use them only as a fallback when the RTC did
+   * not establish a valid clock. */
   if (!state.date_source_ntp) {
-    pomodoro_apply_manual_time();
+    time_t now = time(NULL);
+    struct tm tm_now;
+    bool system_time_valid =
+        localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024;
+    if (!system_time_valid) {
+      pomodoro_apply_manual_time();
+    }
   }
 }
 
@@ -671,4 +684,11 @@ void pomodoro_apply_manual_time(void) {
   tv.tv_sec = epoch;
   tv.tv_usec = 0;
   settimeofday(&tv, NULL);
+  if (time_set_provider) {
+    time_set_provider(epoch);
+  }
+}
+
+void pomodoro_set_time_set_provider(pomodoro_time_set_provider_t provider) {
+  time_set_provider = provider;
 }

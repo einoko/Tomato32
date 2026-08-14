@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "driver/gpio.h"
 #include "esp_heap_caps.h"
@@ -317,6 +318,14 @@ static uint32_t debug_free_heap(void) {
   return (uint32_t)heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
 }
 
+static void rtc_set_from_epoch(time_t epoch) {
+  struct tm utc_time;
+  if (gmtime_r(&epoch, &utc_time) == NULL ||
+      !rtc_pcf85063_set_time(&utc_time)) {
+    ESP_LOGE(TAG, "Failed to persist system time to RTC");
+  }
+}
+
 static void power_off_handler(void) {
   ESP_LOGI(TAG, "Auto-shutdown: 15 min inactivity with no timer running");
   if (display_power_off()) {
@@ -374,14 +383,7 @@ void app_main(void) {
   app_set_free_heap_provider(debug_free_heap);
   app_set_ntp_sync_provider(ntp_resync_request);
 
-  /* Try to restore system time from RTC before Wi-Fi comes up */
-  struct tm rtc_time = {0};
-  if (rtc_pcf85063_get_time(&rtc_time)) {
-    time_t t = mktime(&rtc_time);
-    struct timeval tv = {.tv_sec = t};
-    settimeofday(&tv, NULL);
-    ESP_LOGI(TAG, "System time restored from RTC");
-  }
+  pomodoro_set_time_set_provider(rtc_set_from_epoch);
 
   /* Config drive: read TOMATO32_CONFIG.conf and start TinyUSB CDC + MSC.
    * This must run before wifi_sync_init() so runtime credentials are
@@ -390,6 +392,24 @@ void app_main(void) {
   config_drive_init();
   const config_drive_config_t *cfg = config_drive_get_config();
   wifi_sync_set_credentials(cfg->wifi_ssid, cfg->wifi_pass, cfg->tz);
+
+  /* The external RTC stores UTC. Set the local timezone before restoring it. */
+  setenv("TZ", cfg->tz[0] != '\0' ? cfg->tz : "UTC0", 1);
+  tzset();
+
+  /* Try to restore system time from the UTC RTC before Wi-Fi comes up. */
+  struct tm rtc_time = {0};
+  if (rtc_pcf85063_get_time(&rtc_time)) {
+    time_t t = timegm(&rtc_time);
+    struct timeval tv = {.tv_sec = t, .tv_usec = 0};
+    if (settimeofday(&tv, NULL) == 0) {
+      ESP_LOGI(TAG, "System time restored from UTC RTC");
+    } else {
+      ESP_LOGE(TAG, "Failed to restore system time from RTC");
+    }
+  } else {
+    ESP_LOGW(TAG, "RTC time unavailable; waiting for NTP");
+  }
 
   lv_display_t *disp = display_init();
   assert(disp);

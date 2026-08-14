@@ -120,10 +120,12 @@ static void time_sync_notification_cb(struct timeval *tv) {
 
   time_t now = time(NULL);
   struct tm timeinfo;
-  localtime_r(&now, &timeinfo);
+  gmtime_r(&now, &timeinfo);
 
   if (rtc_pcf85063_set_time(&timeinfo)) {
-    ESP_LOGI(TAG, "RTC updated from NTP");
+    ESP_LOGI(TAG, "RTC updated from NTP (UTC)");
+  } else {
+    ESP_LOGE(TAG, "NTP updated system clock, but RTC update failed");
   }
 
   xEventGroupSetBits(s_wifi_event_group, NTP_SYNCED_BIT);
