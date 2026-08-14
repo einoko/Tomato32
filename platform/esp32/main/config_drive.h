@@ -1,10 +1,20 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
+
+#define CONFIG_DRIVE_MAX_WIFI_NETWORKS 8
+#define CONFIG_DRIVE_WIFI_SSID_SIZE 64
+#define CONFIG_DRIVE_WIFI_PASS_SIZE 64
 
 typedef struct {
-  char wifi_ssid[64];
-  char wifi_pass[64];
+  char ssid[CONFIG_DRIVE_WIFI_SSID_SIZE];
+  char pass[CONFIG_DRIVE_WIFI_PASS_SIZE];
+} config_drive_wifi_network_t;
+
+typedef struct {
+  config_drive_wifi_network_t wifi_networks[CONFIG_DRIVE_MAX_WIFI_NETWORKS];
+  size_t wifi_network_count;
   char tz[64];
 } config_drive_config_t;
 
@@ -26,6 +36,6 @@ bool config_drive_usb_active(void);
 
 /*
  * Return the parsed config values. Valid after config_drive_init() returns.
- * Empty strings mean "not configured".
+ * Only complete SSID/password pairs are included in wifi_networks.
  */
 const config_drive_config_t *config_drive_get_config(void);

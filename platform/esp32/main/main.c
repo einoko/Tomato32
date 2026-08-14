@@ -12,6 +12,7 @@
 #include "nvs_flash.h"
 
 #include "app/app.h"
+#include "app/pomodoro.h"
 #include "audio.h"
 #include "battery.h"
 #include "config_drive.h"
@@ -306,13 +307,9 @@ static void wifi_resync_task(void *arg) {
   }
 }
 
-static const char *debug_wifi_ssid(void) {
-  return config_drive_get_config()->wifi_ssid;
-}
+static const char *debug_wifi_ssid(void) { return wifi_sync_get_ssid(); }
 
-static const char *debug_wifi_pass(void) {
-  return config_drive_get_config()->wifi_pass;
-}
+static const char *debug_wifi_pass(void) { return wifi_sync_get_pass(); }
 
 static uint32_t debug_free_heap(void) {
   return (uint32_t)heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
@@ -324,6 +321,27 @@ static void rtc_set_from_epoch(time_t epoch) {
       !rtc_pcf85063_set_time(&utc_time)) {
     ESP_LOGE(TAG, "Failed to persist system time to RTC");
   }
+}
+
+/* Convert a UTC broken-down time to Unix time without relying on the
+ * non-standard timegm() declaration, which is not exposed by ESP-IDF's libc.
+ */
+static time_t utc_tm_to_epoch(const struct tm *utc) {
+  int64_t year = utc->tm_year + 1900;
+  unsigned month = (unsigned)utc->tm_mon + 1;
+  unsigned day = (unsigned)utc->tm_mday;
+
+  year -= month <= 2;
+  int64_t era = (year >= 0 ? year : year - 399) / 400;
+  unsigned year_of_era = (unsigned)(year - era * 400);
+  unsigned march_based_month = month > 2 ? month - 3 : month + 9;
+  unsigned day_of_year = (153 * march_based_month + 2) / 5 + day - 1;
+  unsigned day_of_era =
+      year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+  int64_t days_since_epoch = era * 146097 + day_of_era - 719468;
+  int64_t seconds = days_since_epoch * 86400 + utc->tm_hour * 3600 +
+                    utc->tm_min * 60 + utc->tm_sec;
+  return (time_t)seconds;
 }
 
 static void power_off_handler(void) {
@@ -391,7 +409,7 @@ void app_main(void) {
    * before LVGL starts touching shared resources. */
   config_drive_init();
   const config_drive_config_t *cfg = config_drive_get_config();
-  wifi_sync_set_credentials(cfg->wifi_ssid, cfg->wifi_pass, cfg->tz);
+  wifi_sync_set_credentials(cfg);
 
   /* The external RTC stores UTC. Set the local timezone before restoring it. */
   setenv("TZ", cfg->tz[0] != '\0' ? cfg->tz : "UTC0", 1);
@@ -400,7 +418,7 @@ void app_main(void) {
   /* Try to restore system time from the UTC RTC before Wi-Fi comes up. */
   struct tm rtc_time = {0};
   if (rtc_pcf85063_get_time(&rtc_time)) {
-    time_t t = timegm(&rtc_time);
+    time_t t = utc_tm_to_epoch(&rtc_time);
     struct timeval tv = {.tv_sec = t, .tv_usec = 0};
     if (settimeofday(&tv, NULL) == 0) {
       ESP_LOGI(TAG, "System time restored from UTC RTC");

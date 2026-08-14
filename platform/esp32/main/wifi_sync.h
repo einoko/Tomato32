@@ -1,15 +1,14 @@
 #ifndef WIFI_SYNC_H
 #define WIFI_SYNC_H
 
+#include "config_drive.h"
 #include <stdbool.h>
 
 /*
- * Override Wi-Fi credentials and timezone at runtime (e.g. from config drive).
- * Call before wifi_sync_init(). Overrides compile-time values from
- * TOMATO32_CONFIG.conf at runtime. Pass NULL to leave a value unchanged.
+ * Copy Wi-Fi credentials and timezone at runtime (e.g. from the config drive).
+ * Call before wifi_sync_init().
  */
-void wifi_sync_set_credentials(const char *ssid, const char *pass,
-                               const char *tz);
+void wifi_sync_set_credentials(const config_drive_config_t *config);
 
 /*
  * Initialize Wi-Fi/NTP stack in STA mode without connecting.
@@ -34,5 +33,9 @@ bool wifi_sync_request_sync(int timeout_ms);
  * string if Wi-Fi has not yet connected. Valid after wifi_sync_init().
  */
 const char *wifi_sync_get_ip_str(void);
+
+/* Returns the configured/selected network shown on the debug screen. */
+const char *wifi_sync_get_ssid(void);
+const char *wifi_sync_get_pass(void);
 
 #endif

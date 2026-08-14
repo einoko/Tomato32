@@ -11,6 +11,7 @@
 #include "tinyusb_msc.h"
 #include "wear_levelling.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const char *TAG = "config_drive";
@@ -40,20 +41,41 @@ static void write_default_config(void) {
     ESP_LOGE(TAG, "Could not create %s", CONFIG_FILE);
     return;
   }
-  fprintf(f, "# Tomato32 configuration\n"
-             "# Edit this file, safely eject the drive, then power-cycle to "
-             "apply.\n"
-             "#\n"
-             "# POSIX TZ format examples:\n"
-             "#   UTC0\n"
-             "#   JST-9\n"
-             "#   CET-1CEST,M3.5.0/2,M10.5.0/3\n"
-             "\n"
-             "WIFI_SSID=\n"
-             "WIFI_PASS=\n"
-             "TZ=UTC0\n");
+  fprintf(f,
+          "# Tomato32 configuration\n"
+          "# Edit this file, safely eject the drive, then power-cycle to "
+          "apply.\n"
+          "#\n"
+          "# POSIX TZ format examples:\n"
+          "#   UTC0\n"
+          "#   JST-9\n"
+          "#   CET-1CEST,M3.5.0/2,M10.5.0/3\n"
+          "\n"
+          "# Up to 8 Wi-Fi networks can be configured.\n"
+          "# Legacy WIFI_SSID/WIFI_PASS keys are also supported as network 1.\n"
+          "WIFI_SSID_1=\n"
+          "WIFI_PASS_1=\n"
+          "TZ=UTC0\n");
   fclose(f);
   ESP_LOGI(TAG, "Wrote default config file");
+}
+
+static int parse_wifi_key_index(const char *key, const char *prefix) {
+  size_t prefix_len = strlen(prefix);
+  if (strcmp(key, prefix) == 0) {
+    return 0;
+  }
+  if (strncmp(key, prefix, prefix_len) != 0 || key[prefix_len] != '_') {
+    return -1;
+  }
+
+  char *end = NULL;
+  long number = strtol(key + prefix_len + 1, &end, 10);
+  if (end == key + prefix_len + 1 || *end != '\0' || number < 1 ||
+      number > CONFIG_DRIVE_MAX_WIFI_NETWORKS) {
+    return -1;
+  }
+  return (int)number - 1;
 }
 
 static void parse_config(void) {
@@ -76,17 +98,41 @@ static void parse_config(void) {
     *eq = '\0';
     const char *key = line;
     const char *val = eq + 1;
-    if (strcmp(key, "WIFI_SSID") == 0) {
-      strlcpy(s_config.wifi_ssid, val, sizeof(s_config.wifi_ssid));
-    } else if (strcmp(key, "WIFI_PASS") == 0) {
-      strlcpy(s_config.wifi_pass, val, sizeof(s_config.wifi_pass));
+    int ssid_index = parse_wifi_key_index(key, "WIFI_SSID");
+    int pass_index = parse_wifi_key_index(key, "WIFI_PASS");
+    if (ssid_index >= 0) {
+      strlcpy(s_config.wifi_networks[ssid_index].ssid, val,
+              sizeof(s_config.wifi_networks[ssid_index].ssid));
+    } else if (pass_index >= 0) {
+      strlcpy(s_config.wifi_networks[pass_index].pass, val,
+              sizeof(s_config.wifi_networks[pass_index].pass));
     } else if (strcmp(key, "TZ") == 0) {
       strlcpy(s_config.tz, val, sizeof(s_config.tz));
     }
   }
   fclose(f);
-  ESP_LOGI(TAG, "Config loaded: SSID='%s' TZ='%s'", s_config.wifi_ssid,
-           s_config.tz);
+
+  /* Compact complete pairs so a missing numbered entry does not create a
+   * misleading gap for the Wi-Fi sync task. */
+  size_t valid_count = 0;
+  for (size_t i = 0; i < CONFIG_DRIVE_MAX_WIFI_NETWORKS; i++) {
+    config_drive_wifi_network_t *network = &s_config.wifi_networks[i];
+    if (network->ssid[0] == '\0' || network->pass[0] == '\0') {
+      continue;
+    }
+    if (valid_count != i) {
+      s_config.wifi_networks[valid_count] = *network;
+      memset(network, 0, sizeof(*network));
+    }
+    valid_count++;
+  }
+  s_config.wifi_network_count = valid_count;
+  if (valid_count > 0) {
+    ESP_LOGI(TAG, "Config loaded: %u Wi-Fi network(s), TZ='%s'",
+             (unsigned)valid_count, s_config.tz);
+  } else {
+    ESP_LOGI(TAG, "Config loaded: no Wi-Fi networks, TZ='%s'", s_config.tz);
+  }
 }
 
 bool config_drive_usb_active(void) { return s_usb_active; }

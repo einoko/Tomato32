@@ -84,10 +84,18 @@ The serial monitor is available in **config mode only**.
 Enter **config mode** (see instructions in [How to boot?](#how-to-boot)). Connect the device to your computer with a USB-C cable, a drive will appear on your computer. Open `⁠TOMATO32_CONFIG.conf` on that drive and fill in your credentials:
 
 ```
-WIFI_SSID=your_network
-WIFI_PASS=your_password
+WIFI_SSID_1=your_network
+WIFI_PASS_1=your_password
+WIFI_SSID_2=another_network
+WIFI_PASS_2=another_password
 TZ=UTC0
 ```
+
+Up to eight Wi-Fi networks can be configured using numbered `WIFI_SSID_N` and
+`WIFI_PASS_N` pairs. At startup and during the daily NTP sync, Tomato32 scans
+for the configured networks, tries the strongest visible network first, and
+falls back to other matching networks if the connection fails. Existing
+`WIFI_SSID` and `WIFI_PASS` keys are still accepted as network 1.
 
 See [TZ format examples](https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html) (`JST-9`, `CET-1CEST,M3.5.0/2,M10.5.0/3`, etc.).
 
