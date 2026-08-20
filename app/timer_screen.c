@@ -10,9 +10,21 @@
 
 #define DEBUG_TAP_COUNT 10
 #define DEBUG_TAP_WINDOW_MS 5000
+#define MINIMAL_ENTER_TIME_MS 420
+#define MINIMAL_REVEAL_TIME_MS 360
+#define MINIMAL_CHROME_SHIFT 12
+
+typedef enum {
+  TIMER_LAYOUT_NORMAL,
+  TIMER_LAYOUT_ENTERING_MINIMAL,
+  TIMER_LAYOUT_MINIMAL,
+  TIMER_LAYOUT_REVEALING_NORMAL,
+} timer_layout_state_t;
 
 static lv_obj_t *scr;
 static lv_obj_t *bg_glow;
+static lv_obj_t *normal_chrome;
+static lv_obj_t *timer_stage;
 static lv_obj_t *lbl_phase;
 static lv_obj_t *lbl_timer;
 static lv_obj_t *btn_start_pause;
@@ -31,6 +43,108 @@ static bool is_blinking = false;
 static int debug_tap_count = 0;
 static uint32_t debug_first_tap_ms = 0;
 static uint32_t phase_press_start_ms = 0;
+static lv_anim_t presentation_anim;
+static timer_layout_state_t layout_state = TIMER_LAYOUT_NORMAL;
+static bool presentation_to_minimal;
+static int32_t normal_timer_x;
+static int32_t normal_timer_y;
+static int32_t minimal_timer_x;
+static int32_t minimal_timer_y;
+static int32_t presentation_from_x;
+static int32_t presentation_from_y;
+static int32_t presentation_from_shift;
+static int32_t presentation_to_x;
+static int32_t presentation_to_y;
+static int32_t presentation_to_shift;
+static lv_opa_t presentation_from_opa;
+static lv_opa_t presentation_to_opa;
+
+static void timer_screen_update_layout(void);
+static void timer_screen_update_presentation(void);
+static void timer_screen_toggle_layout(void);
+
+static void presentation_anim_cb(void *var, int32_t value) {
+  (void)var;
+  int32_t x = presentation_from_x +
+              (presentation_to_x - presentation_from_x) * value / 1000;
+  int32_t y = presentation_from_y +
+              (presentation_to_y - presentation_from_y) * value / 1000;
+  int32_t shift =
+      presentation_from_shift +
+      (presentation_to_shift - presentation_from_shift) * value / 1000;
+  lv_opa_t opa =
+      (lv_opa_t)(presentation_from_opa +
+                 (presentation_to_opa - presentation_from_opa) * value / 1000);
+
+  lv_obj_set_pos(lbl_timer, x, y);
+  lv_obj_set_style_translate_x(normal_chrome, shift, 0);
+  lv_obj_set_style_opa(normal_chrome, opa, 0);
+}
+
+static void presentation_anim_completed_cb(lv_anim_t *anim) {
+  (void)anim;
+  if (presentation_to_minimal) {
+    layout_state = TIMER_LAYOUT_MINIMAL;
+    lv_obj_add_flag(normal_chrome, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(normal_chrome, LV_OPA_COVER, 0);
+    lv_obj_set_style_translate_x(normal_chrome, 0, 0);
+    lv_obj_set_pos(lbl_timer, minimal_timer_x, minimal_timer_y);
+  } else {
+    layout_state = TIMER_LAYOUT_NORMAL;
+    lv_obj_remove_flag(normal_chrome, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(normal_chrome, LV_OPA_COVER, 0);
+    lv_obj_set_style_translate_x(normal_chrome, 0, 0);
+    lv_obj_set_pos(lbl_timer, normal_timer_x, normal_timer_y);
+    timer_screen_update_presentation();
+  }
+}
+
+static void start_presentation_animation(bool to_minimal) {
+  lv_anim_del(scr, presentation_anim_cb);
+
+  if (to_minimal) {
+    lv_obj_remove_flag(normal_chrome, LV_OBJ_FLAG_HIDDEN);
+  } else {
+    if (layout_state == TIMER_LAYOUT_MINIMAL) {
+      lv_obj_set_style_opa(normal_chrome, LV_OPA_TRANSP, 0);
+      lv_obj_set_style_translate_x(normal_chrome, MINIMAL_CHROME_SHIFT, 0);
+    }
+    lv_obj_remove_flag(normal_chrome, LV_OBJ_FLAG_HIDDEN);
+  }
+
+  presentation_to_minimal = to_minimal;
+  presentation_from_x = lv_obj_get_x(lbl_timer);
+  presentation_from_y = lv_obj_get_y(lbl_timer);
+  presentation_from_shift =
+      lv_obj_get_style_translate_x(normal_chrome, LV_PART_MAIN);
+  presentation_from_opa = lv_obj_get_style_opa(normal_chrome, LV_PART_MAIN);
+  presentation_to_x = to_minimal ? minimal_timer_x : normal_timer_x;
+  presentation_to_y = to_minimal ? minimal_timer_y : normal_timer_y;
+  presentation_to_shift = to_minimal ? MINIMAL_CHROME_SHIFT : 0;
+  presentation_to_opa = to_minimal ? LV_OPA_TRANSP : LV_OPA_COVER;
+
+  layout_state = to_minimal ? TIMER_LAYOUT_ENTERING_MINIMAL
+                            : TIMER_LAYOUT_REVEALING_NORMAL;
+
+  lv_anim_init(&presentation_anim);
+  lv_anim_set_var(&presentation_anim, scr);
+  lv_anim_set_values(&presentation_anim, 0, 1000);
+  lv_anim_set_time(&presentation_anim,
+                   to_minimal ? MINIMAL_ENTER_TIME_MS : MINIMAL_REVEAL_TIME_MS);
+  lv_anim_set_path_cb(&presentation_anim, to_minimal ? lv_anim_path_ease_in_out
+                                                     : lv_anim_path_ease_out);
+  lv_anim_set_exec_cb(&presentation_anim, presentation_anim_cb);
+  lv_anim_set_completed_cb(&presentation_anim, presentation_anim_completed_cb);
+  lv_anim_start(&presentation_anim);
+}
+
+static void reveal_normal_layout(void) {
+  if (layout_state == TIMER_LAYOUT_NORMAL ||
+      layout_state == TIMER_LAYOUT_REVEALING_NORMAL) {
+    return;
+  }
+  start_presentation_animation(false);
+}
 
 static void phase_press_cb(lv_event_t *e) {
   (void)e;
@@ -48,6 +162,18 @@ static void phase_pressing_cb(lv_event_t *e) {
 
 static void timer_tap_cb(lv_event_t *e) {
   (void)e;
+  if (pomodoro_is_running()) {
+    bool was_sleeping = app_is_display_sleeping();
+    app_notify_user_activity();
+    if (was_sleeping) {
+      return;
+    }
+
+    timer_screen_toggle_layout();
+    timer_screen_update();
+    return;
+  }
+
   uint32_t now = lv_tick_get();
   if (debug_tap_count == 0 ||
       (now - debug_first_tap_ms) > DEBUG_TAP_WINDOW_MS) {
@@ -137,23 +263,43 @@ lv_obj_t *timer_screen_create(void) {
   scr = lv_obj_create(NULL);
   theme_apply_scr(scr);
   theme_apply_custom_bg(scr);
+  lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollbar_mode(scr, LV_SCROLLBAR_MODE_OFF);
 
   bg_glow = lv_obj_create(scr);
   lv_obj_remove_style_all(bg_glow);
   lv_obj_set_size(bg_glow, DISPLAY_W, DISPLAY_H);
   lv_obj_set_style_bg_opa(bg_glow, 0, 0);
 
-  /* --- LEFT PANEL: Timer + Dots --- */
-  lv_obj_t *left = lv_obj_create(scr);
+  normal_chrome = lv_obj_create(scr);
+  lv_obj_remove_style_all(normal_chrome);
+  lv_obj_set_size(normal_chrome, DISPLAY_W, DISPLAY_H);
+  lv_obj_set_pos(normal_chrome, 0, 0);
+  lv_obj_set_style_bg_opa(normal_chrome, LV_OPA_TRANSP, 0);
+  lv_obj_set_style_opa(normal_chrome, LV_OPA_COVER, 0);
+  lv_obj_set_style_translate_x(normal_chrome, 0, 0);
+  lv_obj_remove_flag(normal_chrome, LV_OBJ_FLAG_SCROLLABLE);
+
+  /* --- LEFT PANEL: Dots --- */
+  lv_obj_t *left = lv_obj_create(normal_chrome);
   lv_obj_remove_style_all(left);
   lv_obj_set_size(left, LEFT_W, DISPLAY_H);
   lv_obj_set_pos(left, 0, 0);
   lv_obj_set_style_bg_opa(left, LV_OPA_TRANSP, 0);
   lv_obj_remove_flag(left, LV_OBJ_FLAG_SCROLLABLE);
 
-  lbl_timer = lv_label_create(left);
+  /* The timer lives on a full-screen stage so it can travel to the exact
+   * center without changing the normal left-panel layout. */
+  timer_stage = lv_obj_create(scr);
+  lv_obj_remove_style_all(timer_stage);
+  lv_obj_set_size(timer_stage, DISPLAY_W, DISPLAY_H);
+  lv_obj_set_pos(timer_stage, 0, 0);
+  lv_obj_set_style_bg_opa(timer_stage, LV_OPA_TRANSP, 0);
+  lv_obj_remove_flag(timer_stage, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_remove_flag(timer_stage, LV_OBJ_FLAG_SCROLLABLE);
+
+  lbl_timer = lv_label_create(timer_stage);
   theme_apply_label_large(lbl_timer);
-  lv_obj_align(lbl_timer, LV_ALIGN_CENTER, 18, -12);
   lv_label_set_text(lbl_timer, "25:00");
   lv_obj_add_flag(lbl_timer, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_event_cb(lbl_timer, timer_tap_cb, LV_EVENT_CLICKED, NULL);
@@ -180,8 +326,9 @@ lv_obj_t *timer_screen_create(void) {
       lv_obj_add_flag(dots[i], LV_OBJ_FLAG_HIDDEN);
   }
 
-  /* Transparent overlay to stop pulse when tapping the left pane */
-  pulse_stop_overlay = lv_obj_create(left);
+  /* Transparent overlay to stop pulse when tapping the left pane. It is a
+   * sibling of the timer stage so it remains above the timer while pulsing. */
+  pulse_stop_overlay = lv_obj_create(scr);
   lv_obj_remove_style_all(pulse_stop_overlay);
   lv_obj_set_size(pulse_stop_overlay, LEFT_W, DISPLAY_H);
   lv_obj_set_pos(pulse_stop_overlay, 0, 0);
@@ -193,7 +340,7 @@ lv_obj_t *timer_screen_create(void) {
   lv_obj_add_flag(pulse_stop_overlay, LV_OBJ_FLAG_HIDDEN);
 
   /* --- RIGHT PANEL: Phase label + Controls --- */
-  lv_obj_t *right = lv_obj_create(scr);
+  lv_obj_t *right = lv_obj_create(normal_chrome);
   lv_obj_remove_style_all(right);
   lv_obj_set_size(right, RIGHT_W, DISPLAY_H);
   lv_obj_set_pos(right, LEFT_W, 0);
@@ -236,7 +383,42 @@ lv_obj_t *timer_screen_create(void) {
 
   btn_skip = create_circle_btn(btn_cont, LV_SYMBOL_NEXT, btn_skip_cb, 48);
 
+  lv_obj_update_layout(scr);
+  timer_screen_update_layout();
+
   return scr;
+}
+
+static void timer_screen_update_layout(void) {
+  lv_obj_update_layout(scr);
+  int32_t timer_w = lv_obj_get_width(lbl_timer);
+  int32_t timer_h = lv_obj_get_height(lbl_timer);
+
+  normal_timer_x = (LEFT_W - timer_w) / 2 + 18;
+  normal_timer_y = (DISPLAY_H - timer_h) / 2 - 12;
+  minimal_timer_x = (DISPLAY_W - timer_w) / 2;
+  minimal_timer_y = (DISPLAY_H - timer_h) / 2;
+
+  if (layout_state == TIMER_LAYOUT_NORMAL) {
+    lv_obj_set_pos(lbl_timer, normal_timer_x, normal_timer_y);
+  } else if (layout_state == TIMER_LAYOUT_MINIMAL) {
+    lv_obj_set_pos(lbl_timer, minimal_timer_x, minimal_timer_y);
+  }
+}
+
+static void timer_screen_update_presentation(void) {
+  if (!pomodoro_is_running() && layout_state != TIMER_LAYOUT_NORMAL &&
+      layout_state != TIMER_LAYOUT_REVEALING_NORMAL) {
+    /* A manually stopped phase can end while minimal mode is active. Make
+     * the controls available again without requiring a blind tap. */
+    reveal_normal_layout();
+  }
+}
+
+static void timer_screen_toggle_layout(void) {
+  bool to_minimal = layout_state == TIMER_LAYOUT_NORMAL ||
+                    layout_state == TIMER_LAYOUT_REVEALING_NORMAL;
+  start_presentation_animation(to_minimal);
 }
 
 void timer_screen_update(void) {
@@ -266,6 +448,7 @@ void timer_screen_update(void) {
   lv_snprintf(buf, sizeof(buf), "%02" LV_PRIu32 ":%02" LV_PRIu32, minutes,
               seconds);
   lv_label_set_text(lbl_timer, buf);
+  timer_screen_update_layout();
 
   bool should_blink =
       pomodoro_get_ran_out_waiting() && pomodoro_get_visual_pulse();
@@ -343,6 +526,8 @@ void timer_screen_update(void) {
       lv_obj_add_style(dots[i], &theme.dot_empty, 0);
     }
   }
+
+  timer_screen_update_presentation();
 }
 
 void timer_screen_refresh_theme(void) {

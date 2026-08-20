@@ -29,10 +29,12 @@ static app_ntp_sync_provider_t ntp_sync_provider;
 static app_screen_t active_screen = APP_SCREEN_TIMER;
 static uint8_t s_last_brightness_percent = 0;
 static bool s_last_brightness_valid = false;
+static bool s_display_sleeping = false;
 
 #define SMART_DIM_TIMEOUT_MS (60 * 1000U)
 
 static void apply_screen_brightness(uint8_t brightness_percent) {
+  s_display_sleeping = brightness_provider && brightness_percent == 0;
   if (brightness_provider) {
     if (s_last_brightness_valid &&
         s_last_brightness_percent == brightness_percent) {
@@ -244,6 +246,8 @@ bool app_is_battery_charging(void) {
 
   return false;
 }
+
+bool app_is_display_sleeping(void) { return s_display_sleeping; }
 
 void app_timer_toggle(void) {
   bool was_running = pomodoro_is_running();
