@@ -38,6 +38,12 @@ extern lv_font_t inter_20;
 #define BUFF_SIZE (LCD_H_RES * LCD_V_RES * BYTES_PER_PIXEL)
 #define DMA_BUFF_LEN (LCD_H_RES * 64 * 2)
 
+/* 60 MHz is the next conservative step above the original 40 MHz setting.
+ * Lower this to 40 MHz if the panel shows transfer artifacts. */
+#ifndef TOMATO32_LCD_PCLK_HZ
+#define TOMATO32_LCD_PCLK_HZ (60 * 1000 * 1000)
+#endif
+
 #define TOUCH_SCL GPIO_NUM_18
 #define TOUCH_SDA GPIO_NUM_17
 #define TOUCH_ADDR 0x3B
@@ -49,6 +55,7 @@ extern lv_font_t inter_20;
 #define LVGL_TICK_PERIOD_MS 5
 #define LVGL_TASK_MAX_DELAY_MS 500
 #define LVGL_TASK_MIN_DELAY_MS 10
+#define LVGL_TASK_ANIM_MIN_DELAY_MS 2
 #define LVGL_TASK_STACK_SIZE (8 * 1024)
 #define LVGL_TASK_PRIORITY 4
 
@@ -365,8 +372,16 @@ static void example_lvgl_port_task(void *arg) {
     }
     if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS) {
       task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-    } else if (task_delay_ms < LVGL_TASK_MIN_DELAY_MS) {
-      task_delay_ms = LVGL_TASK_MIN_DELAY_MS;
+    } else {
+      /* LVGL animations need tighter handler pacing than idle operation.
+       * Keep the 10 ms idle floor for power, but avoid adding a fixed 10 ms
+       * gap between animation frames. */
+      uint32_t min_delay_ms = lv_anim_count_running()
+                                  ? LVGL_TASK_ANIM_MIN_DELAY_MS
+                                  : LVGL_TASK_MIN_DELAY_MS;
+      if (task_delay_ms < min_delay_ms) {
+        task_delay_ms = min_delay_ms;
+      }
     }
     vTaskDelay(pdMS_TO_TICKS(task_delay_ms));
   }
@@ -696,7 +711,7 @@ lv_display_t *display_init(void) {
       .cs_gpio_num = PIN_LCD_CS,
       .dc_gpio_num = -1,
       .spi_mode = 3,
-      .pclk_hz = 40 * 1000 * 1000,
+      .pclk_hz = TOMATO32_LCD_PCLK_HZ,
       .trans_queue_depth = 10,
       .on_color_trans_done = example_notify_lvgl_flush_ready,
       .lcd_cmd_bits = 32,
