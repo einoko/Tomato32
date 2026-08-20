@@ -52,6 +52,22 @@ extern lv_font_t inter_20;
 #define LVGL_TASK_STACK_SIZE (8 * 1024)
 #define LVGL_TASK_PRIORITY 4
 
+/* LVGL can render directly in the byte order required by the panel.  This
+ * removes one byte-swap operation per pixel from the flush path without
+ * changing the amount of data sent over QSPI or the power-management policy.
+ * Set to 0 only when testing a platform/driver that does not support the
+ * swapped RGB565 draw target. */
+#ifndef TOMATO32_DISPLAY_USE_SWAPPED_RGB565
+#define TOMATO32_DISPLAY_USE_SWAPPED_RGB565 1
+#endif
+
+/* Optional one-second display timing report.  Enable with
+ * -DTOMATO32_DISPLAY_PERF=1 for hardware profiling; the default build has no
+ * timing calls or logging overhead. */
+#ifndef TOMATO32_DISPLAY_PERF
+#define TOMATO32_DISPLAY_PERF 0
+#endif
+
 static const char *TAG = "display";
 
 #define KEY_INPUT_CANDIDATE_MASK                                               \
@@ -75,12 +91,68 @@ static lv_obj_t *s_startup_scr = NULL;
 static lv_obj_t *s_startup_title_lbl = NULL;
 static lv_obj_t *s_startup_subtitle_lbl = NULL;
 
+#if TOMATO32_DISPLAY_PERF
+typedef struct {
+  int64_t last_flush_done_us;
+  int64_t report_start_us;
+  uint64_t flush_time_us;
+  uint32_t frame_count;
+  uint32_t deadline_misses;
+  uint32_t max_flush_us;
+} display_perf_state_t;
+
+static display_perf_state_t s_display_perf;
+#endif
+
 static const axs15231b_lcd_init_cmd_t lcd_init_cmds[] = {
     {0x11, (uint8_t[]){0x00}, 0, 100},
     {0x29, (uint8_t[]){0x00}, 0, 100},
 };
 
-/* Fused 90° CW rotation + RGB565 byte-swap for one SPI chunk.
+#if TOMATO32_DISPLAY_PERF
+static int64_t display_perf_flush_start(void) { return esp_timer_get_time(); }
+
+static void display_perf_flush_done(int64_t start_us) {
+  int64_t now_us = esp_timer_get_time();
+  uint32_t flush_us = (uint32_t)(now_us - start_us);
+
+  if (s_display_perf.report_start_us == 0) {
+    s_display_perf.report_start_us = now_us;
+  }
+  if (s_display_perf.last_flush_done_us != 0 &&
+      now_us - s_display_perf.last_flush_done_us > 16000) {
+    s_display_perf.deadline_misses++;
+  }
+  s_display_perf.last_flush_done_us = now_us;
+  s_display_perf.flush_time_us += flush_us;
+  s_display_perf.frame_count++;
+  if (flush_us > s_display_perf.max_flush_us) {
+    s_display_perf.max_flush_us = flush_us;
+  }
+
+  if (now_us - s_display_perf.report_start_us >= 1000000) {
+    uint32_t avg_flush_us = s_display_perf.frame_count
+                                ? (uint32_t)(s_display_perf.flush_time_us /
+                                             s_display_perf.frame_count)
+                                : 0;
+    ESP_LOGI(TAG,
+             "perf: frames=%" PRIu32 " avg_flush=%" PRIu32
+             "us max_flush=%" PRIu32 "us deadline_misses=%" PRIu32,
+             s_display_perf.frame_count, avg_flush_us,
+             s_display_perf.max_flush_us, s_display_perf.deadline_misses);
+    s_display_perf.report_start_us = now_us;
+    s_display_perf.flush_time_us = 0;
+    s_display_perf.frame_count = 0;
+    s_display_perf.deadline_misses = 0;
+    s_display_perf.max_flush_us = 0;
+  }
+}
+#else
+static int64_t display_perf_flush_start(void) { return 0; }
+static void display_perf_flush_done(int64_t start_us) { (void)start_us; }
+#endif
+
+/* Fused 90° CW rotation and optional RGB565 byte-swap for one SPI chunk.
  *
  * The naive lv_draw_sw_rotate90 reads the source column-by-column, causing
  * one SPIRAM cache miss per pixel (≈110 k misses × 150 ns ≈ 16 ms) plus a
@@ -107,7 +179,9 @@ static IRAM_ATTR void rotate90_swap_chunk(const uint16_t *src, uint16_t *dst,
     const uint16_t *srow = src + (src_y * src_w);
     for (int32_t src_x = x_start; src_x <= x_end; src_x++) {
       uint16_t px = srow[src_x];
+#if !TOMATO32_DISPLAY_USE_SWAPPED_RGB565
       px = (uint16_t)((px >> 8) | (px << 8));
+#endif
       dst[((src_w - 1 - src_x) - row_start) * src_h + src_y] = px;
     }
   }
@@ -124,6 +198,7 @@ example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io,
 
 static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
                                   uint8_t *color_p) {
+  int64_t perf_start_us = display_perf_flush_start();
   esp_lcd_panel_handle_t panel =
       (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
 
@@ -131,8 +206,10 @@ static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
 
   if (rotation != LV_DISPLAY_ROTATION_90) {
     /* Non-rotated fallback: byte-swap in place and send in chunks. */
+#if !TOMATO32_DISPLAY_USE_SWAPPED_RGB565
     lv_draw_sw_rgb565_swap(color_p,
                            lv_area_get_width(area) * lv_area_get_height(area));
+#endif
     int32_t tx_w = lv_area_get_width(area);
     size_t bytes_per_line = (size_t)tx_w * BYTES_PER_PIXEL;
     int32_t lpc = (int32_t)(DMA_BUFF_LEN / bytes_per_line);
@@ -153,6 +230,7 @@ static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
       map += chunk_bytes;
     }
     xSemaphoreTake(flush_done_semaphore, portMAX_DELAY);
+    display_perf_flush_done(perf_start_us);
     lv_disp_flush_ready(disp);
     return;
   }
@@ -196,6 +274,7 @@ static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
   if (spi_pending) {
     xSemaphoreTake(flush_done_semaphore, portMAX_DELAY);
   }
+  display_perf_flush_done(perf_start_us);
   lv_disp_flush_ready(disp);
 }
 
@@ -644,6 +723,9 @@ lv_display_t *display_init(void) {
   ESP_LOGI(TAG, "Initialize LVGL");
   lv_init();
   lv_display_t *disp = lv_display_create(LCD_H_RES, LCD_V_RES);
+#if TOMATO32_DISPLAY_USE_SWAPPED_RGB565
+  lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565_SWAPPED);
+#endif
   lv_display_set_flush_cb(disp, example_lvgl_flush_cb);
 
   uint8_t *buf1 = heap_caps_malloc(BUFF_SIZE, MALLOC_CAP_SPIRAM);
@@ -655,6 +737,9 @@ lv_display_t *display_init(void) {
   lv_display_set_buffers(disp, buf1, buf2, BUFF_SIZE,
                          LV_DISPLAY_RENDER_MODE_FULL);
   lv_display_set_user_data(disp, panel_handle);
+  /* Keep rotation in the flush path.  The AXS15231B QSPI driver does not
+   * provide a reliable drop-in hardware axis swap for this board, and the
+   * software path also keeps the existing touch coordinate mapping intact. */
   lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
 
   /* Push a clean black frame before enabling backlight to avoid power-on
