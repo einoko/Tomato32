@@ -194,6 +194,27 @@ void settings_screen_update(void) {
                                 inactive_text, 0);
   }
 
+  /* Update persist timer segmented control */
+  if (pomodoro_get_persist_timer()) {
+    lv_obj_set_style_bg_opa(system_persist_timer_on, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(system_persist_timer_on, active_bg, 0);
+    lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_on, 0),
+                                active_text, 0);
+
+    lv_obj_set_style_bg_opa(system_persist_timer_off, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_off, 0),
+                                inactive_text, 0);
+  } else {
+    lv_obj_set_style_bg_opa(system_persist_timer_off, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(system_persist_timer_off, active_bg, 0);
+    lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_off, 0),
+                                active_text, 0);
+
+    lv_obj_set_style_bg_opa(system_persist_timer_on, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_on, 0),
+                                inactive_text, 0);
+  }
+
   /* Update date source segmented control */
   if (pomodoro_get_date_source_ntp()) {
     lv_obj_set_style_bg_opa(system_date_source_ntp_btn, LV_OPA_COVER, 0);
@@ -385,6 +406,8 @@ void settings_screen_refresh_theme(void) {
                             0);
   lv_obj_set_style_bg_color(system_power_nap_seg_container, theme_get_seg_bg(),
                             0);
+  lv_obj_set_style_bg_color(system_persist_timer_seg_container,
+                            theme_get_seg_bg(), 0);
   /* New subview labels */
   lv_obj_set_style_text_color(lbl_system_appearance, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_appearance_chevron,
@@ -395,6 +418,7 @@ void settings_screen_refresh_theme(void) {
   lv_obj_set_style_text_color(lbl_system_datetime_menu, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_datetime_menu_chevron,
                               theme_get_text_muted(), 0);
+  lv_obj_set_style_text_color(lbl_system_persist_timer, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_date_source, theme_get_text(), 0);
   lv_obj_set_style_bg_color(system_date_source_seg_container,
                             theme_get_seg_bg(), 0);

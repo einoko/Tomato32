@@ -32,6 +32,7 @@ static void toggle_custom_bg_cb(lv_event_t *e);
 static void toggle_sound_cb(lv_event_t *e);
 static void toggle_smart_dim_cb(lv_event_t *e);
 static void toggle_power_nap_cb(lv_event_t *e);
+static void toggle_persist_timer_cb(lv_event_t *e);
 static void toggle_date_source_cb(lv_event_t *e);
 
 static void system_back_cb(lv_event_t *e) {
@@ -193,6 +194,13 @@ static void toggle_smart_dim_cb(lv_event_t *e) {
 static void toggle_power_nap_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_power_nap_mode(!pomodoro_get_power_nap_mode());
+  settings_screen_update();
+  pomodoro_save();
+}
+
+static void toggle_persist_timer_cb(lv_event_t *e) {
+  (void)e;
+  pomodoro_set_persist_timer(!pomodoro_get_persist_timer());
   settings_screen_update();
   pomodoro_save();
 }
@@ -813,6 +821,57 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_text_color(lbl_system_datetime_menu_chevron,
                               theme_get_text_muted(), 0);
   lv_obj_align(lbl_system_datetime_menu_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
+
+  /* System menu row 2: Remember timer */
+  lv_obj_t *row_persist_timer = lv_obj_create(view_system_system_menu);
+  lv_obj_remove_style_all(row_persist_timer);
+  lv_obj_set_size(row_persist_timer, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_persist_timer, 0, 57);
+  lv_obj_remove_flag(row_persist_timer, LV_OBJ_FLAG_SCROLLABLE);
+
+  lbl_system_persist_timer = lv_label_create(row_persist_timer);
+  lv_label_set_text(lbl_system_persist_timer, "Remember timer");
+  lv_obj_set_style_text_font(lbl_system_persist_timer, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_system_persist_timer, theme_get_text(), 0);
+  lv_obj_align(lbl_system_persist_timer, LV_ALIGN_LEFT_MID, 24, 0);
+
+  system_persist_timer_seg_container = lv_obj_create(row_persist_timer);
+  lv_obj_remove_style_all(system_persist_timer_seg_container);
+  lv_obj_set_size(system_persist_timer_seg_container, 146, 40);
+  lv_obj_set_style_radius(system_persist_timer_seg_container, 20, 0);
+  lv_obj_set_style_bg_color(system_persist_timer_seg_container,
+                            theme_get_seg_bg(), 0);
+  lv_obj_set_style_bg_opa(system_persist_timer_seg_container, LV_OPA_COVER, 0);
+  lv_obj_set_style_pad_all(system_persist_timer_seg_container, 2, 0);
+  lv_obj_remove_flag(system_persist_timer_seg_container,
+                     LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_align(system_persist_timer_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
+
+  system_persist_timer_on = lv_btn_create(system_persist_timer_seg_container);
+  lv_obj_remove_style_all(system_persist_timer_on);
+  lv_obj_set_size(system_persist_timer_on, 62, 36);
+  lv_obj_set_style_radius(system_persist_timer_on, 18, 0);
+  lv_obj_add_event_cb(system_persist_timer_on, toggle_persist_timer_cb,
+                      LV_EVENT_CLICKED, NULL);
+  lv_obj_set_pos(system_persist_timer_on, 0, 0);
+
+  lv_obj_t *lbl_persist_timer_on = lv_label_create(system_persist_timer_on);
+  lv_label_set_text(lbl_persist_timer_on, "On");
+  lv_obj_set_style_text_font(lbl_persist_timer_on, &inter_16, 0);
+  lv_obj_align(lbl_persist_timer_on, LV_ALIGN_CENTER, 0, -1);
+
+  system_persist_timer_off = lv_btn_create(system_persist_timer_seg_container);
+  lv_obj_remove_style_all(system_persist_timer_off);
+  lv_obj_set_size(system_persist_timer_off, 78, 36);
+  lv_obj_set_style_radius(system_persist_timer_off, 18, 0);
+  lv_obj_add_event_cb(system_persist_timer_off, toggle_persist_timer_cb,
+                      LV_EVENT_CLICKED, NULL);
+  lv_obj_set_pos(system_persist_timer_off, 64, 0);
+
+  lv_obj_t *lbl_persist_timer_off = lv_label_create(system_persist_timer_off);
+  lv_label_set_text(lbl_persist_timer_off, "Off");
+  lv_obj_set_style_text_font(lbl_persist_timer_off, &inter_16, 0);
+  lv_obj_align(lbl_persist_timer_off, LV_ALIGN_CENTER, 0, -1);
 
   /* ── Date & time subview ── */
   view_system_datetime = lv_obj_create(right);

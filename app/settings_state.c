@@ -52,6 +52,7 @@ lv_obj_t *lbl_system_brightness_sub_chevron;
 
 lv_obj_t *lbl_system_datetime_menu;
 lv_obj_t *lbl_system_datetime_menu_chevron;
+lv_obj_t *lbl_system_persist_timer;
 
 lv_obj_t *lbl_system_date_source;
 lv_obj_t *system_date_source_seg_container;
@@ -99,6 +100,9 @@ lv_obj_t *system_smart_dim_off;
 lv_obj_t *system_power_nap_seg_container;
 lv_obj_t *system_power_nap_on;
 lv_obj_t *system_power_nap_off;
+lv_obj_t *system_persist_timer_seg_container;
+lv_obj_t *system_persist_timer_on;
+lv_obj_t *system_persist_timer_off;
 
 lv_obj_t *btn_system_back;
 lv_obj_t *system_divider;

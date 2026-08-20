@@ -202,6 +202,7 @@ static void btn_reset_cb(lv_event_t *e) {
   (void)e;
   app_invalidate_pause_state();
   pomodoro_reset();
+  pomodoro_save();
   timer_screen_update();
 }
 
@@ -209,6 +210,7 @@ static void btn_skip_cb(lv_event_t *e) {
   (void)e;
   app_invalidate_pause_state();
   pomodoro_skip_to_next();
+  pomodoro_save();
   timer_screen_update();
 }
 
@@ -216,6 +218,7 @@ static void dot_click_cb(lv_event_t *e) {
   int round = (int)(intptr_t)lv_event_get_user_data(e);
   app_invalidate_pause_state();
   pomodoro_jump_to_round(round);
+  pomodoro_save();
   timer_screen_update();
 }
 
@@ -223,6 +226,7 @@ static void stop_pulse_cb(lv_event_t *e) {
   (void)e;
   if (pomodoro_get_ran_out_waiting()) {
     pomodoro_clear_ran_out_waiting();
+    pomodoro_save();
     timer_screen_update();
   }
 }

@@ -82,6 +82,7 @@ void pomodoro_init(void) {
   state.smart_dim_brightness = 10;
   state.smart_dim = true;
   state.power_nap_mode = false;
+  state.persist_timer = false;
   state.custom_bg = false;
   state.date_source_ntp = true;
   {
@@ -353,13 +354,13 @@ void pomodoro_save(void) {
   if (!f)
     return;
 
-  fprintf(f, "%d %d %d %d %u %u %d %d %d %u %u\n", (int)state.active_preset,
+  fprintf(f, "%d %d %d %d %u %u %d %d %d %u %u %d\n", (int)state.active_preset,
           state.auto_advance ? 1 : 0, state.visual_pulse ? 1 : 0,
           state.sound ? 1 : 0, (unsigned)state.bell_volume,
           (unsigned)state.default_brightness, state.smart_dim ? 1 : 0,
           state.power_nap_mode ? 1 : 0, state.custom_bg ? 1 : 0,
           (unsigned)state.smart_dim_brightness,
-          (unsigned)state.visual_pulse_opacity);
+          (unsigned)state.visual_pulse_opacity, state.persist_timer ? 1 : 0);
   for (int i = 0; i < PRESET_COUNT; i++) {
     pomodoro_preset_t *p = &state.presets[i];
     fprintf(f, "%" PRIu32 " %" PRIu32 " %" PRIu32 " %u\n", p->work_duration,
@@ -373,6 +374,12 @@ void pomodoro_save(void) {
           (unsigned)state.manual_year, (unsigned)state.manual_month,
           (unsigned)state.manual_day, (unsigned)state.manual_hour,
           (unsigned)state.manual_minute);
+  fprintf(f, "%d %d %" PRIu32 " %d", (int)state.phase, state.current_round,
+          state.remaining, state.ran_out_waiting ? 1 : 0);
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+    fprintf(f, " %d", state.completed[i] ? 1 : 0);
+  }
+  fputc('\n', f);
   fclose(f);
 }
 
@@ -398,11 +405,12 @@ static bool pomodoro_load(void) {
   int custom_bg = 0;
   unsigned int smart_dim_brightness = 10;
   unsigned int visual_pulse_opacity = 60;
+  int persist_timer = 0;
   int parsed =
-      sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u", &active_preset,
+      sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u %d", &active_preset,
              &auto_adv, &visual_pulse, &sound, &bell_volume,
              &default_brightness, &smart_dim, &power_nap_mode, &custom_bg,
-             &smart_dim_brightness, &visual_pulse_opacity);
+             &smart_dim_brightness, &visual_pulse_opacity, &persist_timer);
   if (parsed < 4 || active_preset < 0 || active_preset >= PRESET_COUNT ||
       (visual_pulse != 0 && visual_pulse != 1) || (sound != 0 && sound != 1)) {
     fclose(f);
@@ -428,6 +436,9 @@ static bool pomodoro_load(void) {
   }
   if (parsed <= 10) {
     visual_pulse_opacity = 60;
+  }
+  if (parsed <= 11) {
+    persist_timer = 0;
   }
 
   pomodoro_preset_t tmp_presets[PRESET_COUNT];
@@ -461,6 +472,26 @@ static bool pomodoro_load(void) {
   unsigned m_year = 2024, m_month = 1, m_day = 1, m_hour = 0, m_min = 0;
   (void)fscanf(f, "%d %u %u %u %u %u", &date_ntp, &m_year, &m_month, &m_day,
                &m_hour, &m_min);
+
+  int snapshot_phase = 0;
+  int snapshot_round = 0;
+  uint32_t snapshot_remaining = 0;
+  int snapshot_waiting = 0;
+  int snapshot_completed[POMODORO_MAX_ROUNDS] = {0};
+  bool snapshot_valid = false;
+  if (fscanf(f, "%d %d %" SCNu32 " %d", &snapshot_phase, &snapshot_round,
+             &snapshot_remaining, &snapshot_waiting) == 4) {
+    snapshot_valid = true;
+    for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+      if (fscanf(f, "%d", &snapshot_completed[i]) != 1) {
+        snapshot_valid = false;
+        break;
+      }
+      if (snapshot_completed[i] != 0 && snapshot_completed[i] != 1) {
+        snapshot_valid = false;
+      }
+    }
+  }
 
   fclose(f);
 
@@ -509,6 +540,7 @@ static bool pomodoro_load(void) {
   state.visual_pulse_opacity = (uint8_t)visual_pulse_opacity;
   state.smart_dim = smart_dim ? true : false;
   state.power_nap_mode = power_nap_mode ? true : false;
+  state.persist_timer = persist_timer ? true : false;
   state.custom_bg = custom_bg ? true : false;
   state.active_preset = (pomodoro_preset_id_t)active_preset;
   state.phase = PHASE_WORK;
@@ -517,6 +549,34 @@ static bool pomodoro_load(void) {
   state.remaining = state.presets[state.active_preset].work_duration;
   state.running = false;
   state.ran_out_waiting = false;
+
+  if (state.persist_timer && snapshot_valid && snapshot_phase >= PHASE_WORK &&
+      snapshot_phase <= PHASE_LONG_BREAK && snapshot_round >= 0 &&
+      snapshot_round < state.presets[state.active_preset].long_break_interval &&
+      (snapshot_waiting == 0 || snapshot_waiting == 1)) {
+    uint32_t phase_duration = 0;
+    switch ((pomodoro_phase_t)snapshot_phase) {
+    case PHASE_WORK:
+      phase_duration = state.presets[state.active_preset].work_duration;
+      break;
+    case PHASE_SHORT_BREAK:
+      phase_duration = state.presets[state.active_preset].short_break_duration;
+      break;
+    case PHASE_LONG_BREAK:
+      phase_duration = state.presets[state.active_preset].long_break_duration;
+      break;
+    }
+
+    if (snapshot_remaining > 0 && snapshot_remaining <= phase_duration) {
+      state.phase = (pomodoro_phase_t)snapshot_phase;
+      state.current_round = snapshot_round;
+      state.remaining = snapshot_remaining;
+      state.ran_out_waiting = snapshot_waiting != 0;
+      for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+        state.completed[i] = snapshot_completed[i] != 0;
+      }
+    }
+  }
   state.total_focus_minutes = total_focus_minutes;
   state.last_focus_day_key = last_focus_day_key;
   state.today_focus_minutes = today_focus_minutes;
@@ -604,6 +664,10 @@ void pomodoro_set_smart_dim_brightness(uint8_t val) {
 bool pomodoro_get_power_nap_mode(void) { return state.power_nap_mode; }
 
 void pomodoro_set_power_nap_mode(bool val) { state.power_nap_mode = val; }
+
+bool pomodoro_get_persist_timer(void) { return state.persist_timer; }
+
+void pomodoro_set_persist_timer(bool val) { state.persist_timer = val; }
 
 bool pomodoro_get_custom_bg(void) { return state.custom_bg; }
 

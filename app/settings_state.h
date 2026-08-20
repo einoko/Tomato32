@@ -85,6 +85,7 @@ extern lv_obj_t *lbl_system_brightness_sub_chevron;
 /* System view: system menu subview rows. */
 extern lv_obj_t *lbl_system_datetime_menu;
 extern lv_obj_t *lbl_system_datetime_menu_chevron;
+extern lv_obj_t *lbl_system_persist_timer;
 
 /* System view: date & time subview rows. */
 extern lv_obj_t *lbl_system_date_source;
@@ -137,6 +138,9 @@ extern lv_obj_t *system_smart_dim_off;
 extern lv_obj_t *system_power_nap_seg_container;
 extern lv_obj_t *system_power_nap_on;
 extern lv_obj_t *system_power_nap_off;
+extern lv_obj_t *system_persist_timer_seg_container;
+extern lv_obj_t *system_persist_timer_on;
+extern lv_obj_t *system_persist_timer_off;
 
 /* System view: back button and divider. */
 extern lv_obj_t *btn_system_back;

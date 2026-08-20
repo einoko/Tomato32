@@ -129,6 +129,7 @@ static void handle_settings_release(TickType_t now, button_state_t *button) {
   if (press_ms >= button->long_press_ms) {
     ESP_LOGI(TAG, "Physical key long press (%" PRIu32 "ms) -> power off",
              press_ms);
+    pomodoro_save();
     if (display_power_off()) {
       for (;;) {
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -346,6 +347,7 @@ static time_t utc_tm_to_epoch(const struct tm *utc) {
 
 static void power_off_handler(void) {
   ESP_LOGI(TAG, "Auto-shutdown: 15 min inactivity with no timer running");
+  pomodoro_save();
   if (display_power_off()) {
     /* Release the LVGL mutex before spinning: power_off_handler is called from
      * tick_cb which runs inside lv_timer_handler under display_lock. Without

@@ -30,6 +30,7 @@ static app_screen_t active_screen = APP_SCREEN_TIMER;
 static uint8_t s_last_brightness_percent = 0;
 static bool s_last_brightness_valid = false;
 static bool s_display_sleeping = false;
+static uint32_t timer_checkpoint_seconds = 0;
 
 #define SMART_DIM_TIMEOUT_MS (60 * 1000U)
 
@@ -97,6 +98,13 @@ static void tick_cb(lv_timer_t *timer) {
 
   pomodoro_tick();
 
+  if (!pomodoro_get_persist_timer() || !pomodoro_is_running()) {
+    timer_checkpoint_seconds = 0;
+  } else if (++timer_checkpoint_seconds >= 60) {
+    pomodoro_save();
+    timer_checkpoint_seconds = 0;
+  }
+
   bool phase_just_completed = false;
   if (was_running) {
     uint32_t after_remaining = pomodoro_get_remaining();
@@ -133,6 +141,7 @@ void app_init(lv_display_t *display) {
   active_screen = APP_SCREEN_TIMER;
 
   tick_timer = lv_timer_create(tick_cb, 1000, NULL);
+  timer_checkpoint_seconds = 0;
   (void)display;
   apply_screen_brightness(pomodoro_get_default_brightness());
   apply_bell_volume(pomodoro_get_bell_volume());
@@ -275,6 +284,8 @@ void app_timer_toggle(void) {
     pause_elapsed_in_second = (elapsed < 1000) ? elapsed : 0;
     pause_elapsed_valid = true;
   }
+
+  pomodoro_save();
 }
 
 void app_invalidate_pause_state(void) { pause_elapsed_valid = false; }

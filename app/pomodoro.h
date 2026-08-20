@@ -44,6 +44,7 @@ typedef struct {
   uint8_t smart_dim_brightness;
   bool smart_dim;
   bool power_nap_mode;
+  bool persist_timer;
   bool custom_bg;
   bool date_source_ntp;  /* true = NTP, false = manual */
   uint16_t manual_year;  /* manual date: year          */
@@ -102,6 +103,9 @@ void pomodoro_set_smart_dim(bool val);
 
 bool pomodoro_get_power_nap_mode(void);
 void pomodoro_set_power_nap_mode(bool val);
+
+bool pomodoro_get_persist_timer(void);
+void pomodoro_set_persist_timer(bool val);
 
 bool pomodoro_get_custom_bg(void);
 void pomodoro_set_custom_bg(bool val);

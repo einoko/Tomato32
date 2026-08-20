@@ -155,6 +155,12 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 | Sound   | On / Off | Chime at the end of each phase. |
 | Volume  | 0–100 %  | Chime volume.                   |
 
+#### System → Timer
+
+| Setting       | Options  | Description                                                                                         |
+| ------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| Remember timer | On / Off | Restores the current phase, round, and remaining time after restart or power-off. Restored timers start paused. |
+
 #### System → Date & time
 
 | Setting     | Options      | Description                                                                                                                                                                                    |
