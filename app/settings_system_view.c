@@ -19,6 +19,7 @@ static void system_back_cb(lv_event_t *e);
 static void system_display_menu_cb(lv_event_t *e);
 static void system_sound_menu_cb(lv_event_t *e);
 static void system_system_menu_cb(lv_event_t *e);
+static void system_battery_menu_cb(lv_event_t *e);
 static void system_appearance_menu_cb(lv_event_t *e);
 static void system_brightness_sub_menu_cb(lv_event_t *e);
 static void system_datetime_menu_cb(lv_event_t *e);
@@ -30,9 +31,12 @@ static void toggle_theme_cb(lv_event_t *e);
 static void toggle_visual_pulse_cb(lv_event_t *e);
 static void toggle_custom_bg_cb(lv_event_t *e);
 static void toggle_sound_cb(lv_event_t *e);
+static void test_sound_cb(lv_event_t *e);
 static void toggle_smart_dim_cb(lv_event_t *e);
 static void toggle_power_nap_cb(lv_event_t *e);
 static void toggle_persist_timer_cb(lv_event_t *e);
+static void toggle_low_battery_indicator_cb(lv_event_t *e);
+static void toggle_full_battery_indicator_cb(lv_event_t *e);
 static void toggle_date_source_cb(lv_event_t *e);
 
 static void system_back_cb(lv_event_t *e) {
@@ -50,6 +54,9 @@ static void system_back_cb(lv_event_t *e) {
     break;
   case SYSTEM_SUBVIEW_SYSTEM_MENU:
     settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
+    break;
+  case SYSTEM_SUBVIEW_BATTERY:
+    settings_system_view_set_subview(SYSTEM_SUBVIEW_SYSTEM_MENU);
     break;
   case SYSTEM_SUBVIEW_DATETIME:
     settings_system_view_set_subview(SYSTEM_SUBVIEW_SYSTEM_MENU);
@@ -75,6 +82,11 @@ static void system_system_menu_cb(lv_event_t *e) {
   settings_system_view_set_subview(SYSTEM_SUBVIEW_SYSTEM_MENU);
 }
 
+static void system_battery_menu_cb(lv_event_t *e) {
+  (void)e;
+  settings_system_view_set_subview(SYSTEM_SUBVIEW_BATTERY);
+}
+
 static void system_appearance_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_UI);
@@ -98,6 +110,13 @@ static void default_brightness_menu_cb(lv_event_t *e) {
 static void sound_volume_menu_cb(lv_event_t *e) {
   (void)e;
   settings_edit_view_show(5);
+}
+
+static void test_sound_cb(lv_event_t *e) {
+  (void)e;
+  if (app_play_test_sound()) {
+    settings_screen_update();
+  }
 }
 
 static void set_date_cb(lv_event_t *e) {
@@ -201,6 +220,20 @@ static void toggle_power_nap_cb(lv_event_t *e) {
 static void toggle_persist_timer_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_persist_timer(!pomodoro_get_persist_timer());
+  settings_screen_update();
+  pomodoro_save();
+}
+
+static void toggle_low_battery_indicator_cb(lv_event_t *e) {
+  (void)e;
+  pomodoro_set_low_battery_indicator(!pomodoro_get_low_battery_indicator());
+  settings_screen_update();
+  pomodoro_save();
+}
+
+static void toggle_full_battery_indicator_cb(lv_event_t *e) {
+  (void)e;
+  pomodoro_set_full_battery_indicator(!pomodoro_get_full_battery_indicator());
   settings_screen_update();
   pomodoro_save();
 }
@@ -599,6 +632,35 @@ void settings_system_view_build(lv_obj_t *parent) {
                               theme_get_text_muted(), 0);
   lv_obj_align(lbl_system_sound_volume_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 
+  /* Sound row 3: Test sound */
+  lv_obj_t *row_sound_test = lv_obj_create(view_system_sound);
+  lv_obj_remove_style_all(row_sound_test);
+  lv_obj_set_size(row_sound_test, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_sound_test, 0, 114);
+  lv_obj_remove_flag(row_sound_test, LV_OBJ_FLAG_SCROLLABLE);
+
+  lbl_system_sound_test = lv_label_create(row_sound_test);
+  lv_label_set_text(lbl_system_sound_test, "Test sound");
+  lv_obj_set_style_text_font(lbl_system_sound_test, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_system_sound_test, theme_get_text(), 0);
+  lv_obj_align(lbl_system_sound_test, LV_ALIGN_LEFT_MID, 24, 0);
+
+  btn_system_sound_test = lv_btn_create(row_sound_test);
+  lv_obj_remove_style_all(btn_system_sound_test);
+  lv_obj_set_size(btn_system_sound_test, 78, 36);
+  lv_obj_set_style_radius(btn_system_sound_test, 18, 0);
+  lv_obj_set_style_bg_color(btn_system_sound_test, theme_get_seg_bg(), 0);
+  lv_obj_set_style_bg_opa(btn_system_sound_test, LV_OPA_COVER, 0);
+  lv_obj_set_style_text_color(btn_system_sound_test, theme_get_text(), 0);
+  lv_obj_add_event_cb(btn_system_sound_test, test_sound_cb, LV_EVENT_CLICKED,
+                      NULL);
+  lv_obj_align(btn_system_sound_test, LV_ALIGN_RIGHT_MID, -24, 0);
+
+  lv_obj_t *lbl_sound_test_button = lv_label_create(btn_system_sound_test);
+  lv_label_set_text(lbl_sound_test_button, "Play");
+  lv_obj_set_style_text_font(lbl_sound_test_button, &inter_16, 0);
+  lv_obj_center(lbl_sound_test_button);
+
   /* Brightness subview */
   view_system_brightness = lv_obj_create(right);
   lv_obj_remove_style_all(view_system_brightness);
@@ -873,6 +935,148 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_text_font(lbl_persist_timer_off, &inter_16, 0);
   lv_obj_align(lbl_persist_timer_off, LV_ALIGN_CENTER, 0, -1);
 
+  /* System menu row 3: Battery */
+  lv_obj_t *row_battery_menu = lv_obj_create(view_system_system_menu);
+  lv_obj_remove_style_all(row_battery_menu);
+  lv_obj_set_size(row_battery_menu, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_battery_menu, 0, 114);
+  lv_obj_remove_flag(row_battery_menu, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_flag(row_battery_menu, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(row_battery_menu, system_battery_menu_cb,
+                      LV_EVENT_CLICKED, NULL);
+
+  lbl_system_battery_menu = lv_label_create(row_battery_menu);
+  lv_label_set_text(lbl_system_battery_menu, "Battery");
+  lv_obj_set_style_text_font(lbl_system_battery_menu, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_system_battery_menu, theme_get_text(), 0);
+  lv_obj_align(lbl_system_battery_menu, LV_ALIGN_LEFT_MID, 24, 0);
+
+  lbl_system_battery_menu_chevron = lv_label_create(row_battery_menu);
+  lv_label_set_text(lbl_system_battery_menu_chevron, LV_SYMBOL_RIGHT);
+  lv_obj_set_style_text_font(lbl_system_battery_menu_chevron,
+                             &lv_font_montserrat_16, 0);
+  lv_obj_set_style_text_color(lbl_system_battery_menu_chevron,
+                              theme_get_text_muted(), 0);
+  lv_obj_align(lbl_system_battery_menu_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
+
+  /* Battery subview */
+  view_system_battery = lv_obj_create(right);
+  lv_obj_remove_style_all(view_system_battery);
+  lv_obj_set_size(view_system_battery, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
+  lv_obj_set_pos(view_system_battery, 0, 0);
+  lv_obj_set_style_bg_opa(view_system_battery, LV_OPA_TRANSP, 0);
+  lv_obj_remove_flag(view_system_battery, LV_OBJ_FLAG_SCROLLABLE);
+
+  lv_obj_t *row_low_battery = lv_obj_create(view_system_battery);
+  lv_obj_remove_style_all(row_low_battery);
+  lv_obj_set_size(row_low_battery, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_low_battery, 0, 0);
+  lv_obj_remove_flag(row_low_battery, LV_OBJ_FLAG_SCROLLABLE);
+
+  lbl_system_low_battery_indicator = lv_label_create(row_low_battery);
+  lv_label_set_text(lbl_system_low_battery_indicator, "Low battery");
+  lv_obj_set_style_text_font(lbl_system_low_battery_indicator, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_system_low_battery_indicator,
+                              theme_get_text(), 0);
+  lv_obj_align(lbl_system_low_battery_indicator, LV_ALIGN_LEFT_MID, 24, 0);
+
+  system_low_battery_indicator_seg_container = lv_obj_create(row_low_battery);
+  lv_obj_remove_style_all(system_low_battery_indicator_seg_container);
+  lv_obj_set_size(system_low_battery_indicator_seg_container, 146, 40);
+  lv_obj_set_style_radius(system_low_battery_indicator_seg_container, 20, 0);
+  lv_obj_set_style_bg_color(system_low_battery_indicator_seg_container,
+                            theme_get_seg_bg(), 0);
+  lv_obj_set_style_bg_opa(system_low_battery_indicator_seg_container,
+                          LV_OPA_COVER, 0);
+  lv_obj_set_style_pad_all(system_low_battery_indicator_seg_container, 2, 0);
+  lv_obj_remove_flag(system_low_battery_indicator_seg_container,
+                     LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_align(system_low_battery_indicator_seg_container, LV_ALIGN_RIGHT_MID,
+               -24, 0);
+
+  system_low_battery_indicator_on =
+      lv_btn_create(system_low_battery_indicator_seg_container);
+  lv_obj_remove_style_all(system_low_battery_indicator_on);
+  lv_obj_set_size(system_low_battery_indicator_on, 62, 36);
+  lv_obj_set_style_radius(system_low_battery_indicator_on, 18, 0);
+  lv_obj_add_event_cb(system_low_battery_indicator_on,
+                      toggle_low_battery_indicator_cb, LV_EVENT_CLICKED, NULL);
+  lv_obj_set_pos(system_low_battery_indicator_on, 0, 0);
+  lv_obj_t *lbl_low_battery_on =
+      lv_label_create(system_low_battery_indicator_on);
+  lv_label_set_text(lbl_low_battery_on, "On");
+  lv_obj_set_style_text_font(lbl_low_battery_on, &inter_16, 0);
+  lv_obj_align(lbl_low_battery_on, LV_ALIGN_CENTER, 0, -1);
+
+  system_low_battery_indicator_off =
+      lv_btn_create(system_low_battery_indicator_seg_container);
+  lv_obj_remove_style_all(system_low_battery_indicator_off);
+  lv_obj_set_size(system_low_battery_indicator_off, 78, 36);
+  lv_obj_set_style_radius(system_low_battery_indicator_off, 18, 0);
+  lv_obj_add_event_cb(system_low_battery_indicator_off,
+                      toggle_low_battery_indicator_cb, LV_EVENT_CLICKED, NULL);
+  lv_obj_set_pos(system_low_battery_indicator_off, 64, 0);
+  lv_obj_t *lbl_low_battery_off =
+      lv_label_create(system_low_battery_indicator_off);
+  lv_label_set_text(lbl_low_battery_off, "Off");
+  lv_obj_set_style_text_font(lbl_low_battery_off, &inter_16, 0);
+  lv_obj_align(lbl_low_battery_off, LV_ALIGN_CENTER, 0, -1);
+
+  lv_obj_t *row_full_battery = lv_obj_create(view_system_battery);
+  lv_obj_remove_style_all(row_full_battery);
+  lv_obj_set_size(row_full_battery, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_full_battery, 0, 57);
+  lv_obj_remove_flag(row_full_battery, LV_OBJ_FLAG_SCROLLABLE);
+
+  lbl_system_full_battery_indicator = lv_label_create(row_full_battery);
+  lv_label_set_text(lbl_system_full_battery_indicator, "Full battery");
+  lv_obj_set_style_text_font(lbl_system_full_battery_indicator, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_system_full_battery_indicator,
+                              theme_get_text(), 0);
+  lv_obj_align(lbl_system_full_battery_indicator, LV_ALIGN_LEFT_MID, 24, 0);
+
+  system_full_battery_indicator_seg_container = lv_obj_create(row_full_battery);
+  lv_obj_remove_style_all(system_full_battery_indicator_seg_container);
+  lv_obj_set_size(system_full_battery_indicator_seg_container, 146, 40);
+  lv_obj_set_style_radius(system_full_battery_indicator_seg_container, 20, 0);
+  lv_obj_set_style_bg_color(system_full_battery_indicator_seg_container,
+                            theme_get_seg_bg(), 0);
+  lv_obj_set_style_bg_opa(system_full_battery_indicator_seg_container,
+                          LV_OPA_COVER, 0);
+  lv_obj_set_style_pad_all(system_full_battery_indicator_seg_container, 2, 0);
+  lv_obj_remove_flag(system_full_battery_indicator_seg_container,
+                     LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_align(system_full_battery_indicator_seg_container, LV_ALIGN_RIGHT_MID,
+               -24, 0);
+
+  system_full_battery_indicator_on =
+      lv_btn_create(system_full_battery_indicator_seg_container);
+  lv_obj_remove_style_all(system_full_battery_indicator_on);
+  lv_obj_set_size(system_full_battery_indicator_on, 62, 36);
+  lv_obj_set_style_radius(system_full_battery_indicator_on, 18, 0);
+  lv_obj_add_event_cb(system_full_battery_indicator_on,
+                      toggle_full_battery_indicator_cb, LV_EVENT_CLICKED, NULL);
+  lv_obj_set_pos(system_full_battery_indicator_on, 0, 0);
+  lv_obj_t *lbl_full_battery_on =
+      lv_label_create(system_full_battery_indicator_on);
+  lv_label_set_text(lbl_full_battery_on, "On");
+  lv_obj_set_style_text_font(lbl_full_battery_on, &inter_16, 0);
+  lv_obj_align(lbl_full_battery_on, LV_ALIGN_CENTER, 0, -1);
+
+  system_full_battery_indicator_off =
+      lv_btn_create(system_full_battery_indicator_seg_container);
+  lv_obj_remove_style_all(system_full_battery_indicator_off);
+  lv_obj_set_size(system_full_battery_indicator_off, 78, 36);
+  lv_obj_set_style_radius(system_full_battery_indicator_off, 18, 0);
+  lv_obj_add_event_cb(system_full_battery_indicator_off,
+                      toggle_full_battery_indicator_cb, LV_EVENT_CLICKED, NULL);
+  lv_obj_set_pos(system_full_battery_indicator_off, 64, 0);
+  lv_obj_t *lbl_full_battery_off =
+      lv_label_create(system_full_battery_indicator_off);
+  lv_label_set_text(lbl_full_battery_off, "Off");
+  lv_obj_set_style_text_font(lbl_full_battery_off, &inter_16, 0);
+  lv_obj_align(lbl_full_battery_off, LV_ALIGN_CENTER, 0, -1);
+
   /* ── Date & time subview ── */
   view_system_datetime = lv_obj_create(right);
   lv_obj_remove_style_all(view_system_datetime);
@@ -1015,6 +1219,7 @@ void settings_system_view_set_subview(system_subview_t subview) {
   lv_obj_add_flag(view_system_sound, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(view_system_brightness, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(view_system_system_menu, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(view_system_battery, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(view_system_datetime, LV_OBJ_FLAG_HIDDEN);
 
   switch (subview) {
@@ -1037,6 +1242,10 @@ void settings_system_view_set_subview(system_subview_t subview) {
   case SYSTEM_SUBVIEW_SYSTEM_MENU:
     lv_label_set_text(lbl_system_title, "System");
     lv_obj_remove_flag(view_system_system_menu, LV_OBJ_FLAG_HIDDEN);
+    break;
+  case SYSTEM_SUBVIEW_BATTERY:
+    lv_label_set_text(lbl_system_title, "Battery");
+    lv_obj_remove_flag(view_system_battery, LV_OBJ_FLAG_HIDDEN);
     break;
   case SYSTEM_SUBVIEW_DATETIME:
     lv_label_set_text(lbl_system_title, "Date & time");

@@ -19,6 +19,7 @@ typedef enum {
   SYSTEM_SUBVIEW_BRIGHTNESS,  /* Brightness */
   SYSTEM_SUBVIEW_SOUND,       /* Sound */
   SYSTEM_SUBVIEW_SYSTEM_MENU, /* System intermediate menu */
+  SYSTEM_SUBVIEW_BATTERY,     /* Battery */
   SYSTEM_SUBVIEW_DATETIME,    /* Date & time */
 } system_subview_t;
 
@@ -33,6 +34,7 @@ extern lv_obj_t *view_system_ui;
 extern lv_obj_t *view_system_sound;
 extern lv_obj_t *view_system_brightness;
 extern lv_obj_t *view_system_system_menu;
+extern lv_obj_t *view_system_battery;
 extern lv_obj_t *view_system_datetime;
 extern lv_obj_t *main_divider;
 
@@ -86,6 +88,8 @@ extern lv_obj_t *lbl_system_brightness_sub_chevron;
 extern lv_obj_t *lbl_system_datetime_menu;
 extern lv_obj_t *lbl_system_datetime_menu_chevron;
 extern lv_obj_t *lbl_system_persist_timer;
+extern lv_obj_t *lbl_system_battery_menu;
+extern lv_obj_t *lbl_system_battery_menu_chevron;
 
 /* System view: date & time subview rows. */
 extern lv_obj_t *lbl_system_date_source;
@@ -111,6 +115,18 @@ extern lv_obj_t *lbl_system_sound;
 extern lv_obj_t *lbl_system_sound_volume;
 extern lv_obj_t *lbl_system_sound_volume_value;
 extern lv_obj_t *lbl_system_sound_volume_chevron;
+extern lv_obj_t *lbl_system_sound_test;
+extern lv_obj_t *btn_system_sound_test;
+
+/* System view: battery subview rows. */
+extern lv_obj_t *lbl_system_low_battery_indicator;
+extern lv_obj_t *system_low_battery_indicator_seg_container;
+extern lv_obj_t *system_low_battery_indicator_on;
+extern lv_obj_t *system_low_battery_indicator_off;
+extern lv_obj_t *lbl_system_full_battery_indicator;
+extern lv_obj_t *system_full_battery_indicator_seg_container;
+extern lv_obj_t *system_full_battery_indicator_on;
+extern lv_obj_t *system_full_battery_indicator_off;
 
 /* System view: brightness subview rows. */
 extern lv_obj_t *lbl_system_default_brightness;

@@ -83,6 +83,8 @@ void pomodoro_init(void) {
   state.smart_dim = true;
   state.power_nap_mode = false;
   state.persist_timer = false;
+  state.low_battery_indicator = true;
+  state.full_battery_indicator = true;
   state.custom_bg = false;
   state.date_source_ntp = true;
   {
@@ -354,13 +356,15 @@ void pomodoro_save(void) {
   if (!f)
     return;
 
-  fprintf(f, "%d %d %d %d %u %u %d %d %d %u %u %d\n", (int)state.active_preset,
-          state.auto_advance ? 1 : 0, state.visual_pulse ? 1 : 0,
-          state.sound ? 1 : 0, (unsigned)state.bell_volume,
-          (unsigned)state.default_brightness, state.smart_dim ? 1 : 0,
-          state.power_nap_mode ? 1 : 0, state.custom_bg ? 1 : 0,
-          (unsigned)state.smart_dim_brightness,
-          (unsigned)state.visual_pulse_opacity, state.persist_timer ? 1 : 0);
+  fprintf(f, "%d %d %d %d %u %u %d %d %d %u %u %d %d %d\n",
+          (int)state.active_preset, state.auto_advance ? 1 : 0,
+          state.visual_pulse ? 1 : 0, state.sound ? 1 : 0,
+          (unsigned)state.bell_volume, (unsigned)state.default_brightness,
+          state.smart_dim ? 1 : 0, state.power_nap_mode ? 1 : 0,
+          state.custom_bg ? 1 : 0, (unsigned)state.smart_dim_brightness,
+          (unsigned)state.visual_pulse_opacity, state.persist_timer ? 1 : 0,
+          state.low_battery_indicator ? 1 : 0,
+          state.full_battery_indicator ? 1 : 0);
   for (int i = 0; i < PRESET_COUNT; i++) {
     pomodoro_preset_t *p = &state.presets[i];
     fprintf(f, "%" PRIu32 " %" PRIu32 " %" PRIu32 " %u\n", p->work_duration,
@@ -406,11 +410,14 @@ static bool pomodoro_load(void) {
   unsigned int smart_dim_brightness = 10;
   unsigned int visual_pulse_opacity = 60;
   int persist_timer = 0;
+  int low_battery_indicator = 1;
+  int full_battery_indicator = 1;
   int parsed =
-      sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u %d", &active_preset,
-             &auto_adv, &visual_pulse, &sound, &bell_volume,
+      sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u %d %d %d",
+             &active_preset, &auto_adv, &visual_pulse, &sound, &bell_volume,
              &default_brightness, &smart_dim, &power_nap_mode, &custom_bg,
-             &smart_dim_brightness, &visual_pulse_opacity, &persist_timer);
+             &smart_dim_brightness, &visual_pulse_opacity, &persist_timer,
+             &low_battery_indicator, &full_battery_indicator);
   if (parsed < 4 || active_preset < 0 || active_preset >= PRESET_COUNT ||
       (visual_pulse != 0 && visual_pulse != 1) || (sound != 0 && sound != 1)) {
     fclose(f);
@@ -439,6 +446,12 @@ static bool pomodoro_load(void) {
   }
   if (parsed <= 11) {
     persist_timer = 0;
+  }
+  if (parsed <= 12) {
+    low_battery_indicator = 1;
+  }
+  if (parsed <= 13) {
+    full_battery_indicator = 1;
   }
 
   pomodoro_preset_t tmp_presets[PRESET_COUNT];
@@ -541,6 +554,8 @@ static bool pomodoro_load(void) {
   state.smart_dim = smart_dim ? true : false;
   state.power_nap_mode = power_nap_mode ? true : false;
   state.persist_timer = persist_timer ? true : false;
+  state.low_battery_indicator = low_battery_indicator ? true : false;
+  state.full_battery_indicator = full_battery_indicator ? true : false;
   state.custom_bg = custom_bg ? true : false;
   state.active_preset = (pomodoro_preset_id_t)active_preset;
   state.phase = PHASE_WORK;
@@ -668,6 +683,22 @@ void pomodoro_set_power_nap_mode(bool val) { state.power_nap_mode = val; }
 bool pomodoro_get_persist_timer(void) { return state.persist_timer; }
 
 void pomodoro_set_persist_timer(bool val) { state.persist_timer = val; }
+
+bool pomodoro_get_low_battery_indicator(void) {
+  return state.low_battery_indicator;
+}
+
+void pomodoro_set_low_battery_indicator(bool val) {
+  state.low_battery_indicator = val;
+}
+
+bool pomodoro_get_full_battery_indicator(void) {
+  return state.full_battery_indicator;
+}
+
+void pomodoro_set_full_battery_indicator(bool val) {
+  state.full_battery_indicator = val;
+}
 
 bool pomodoro_get_custom_bg(void) { return state.custom_bg; }
 

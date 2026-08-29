@@ -20,6 +20,8 @@ static app_battery_percent_provider_t battery_provider;
 static app_battery_charging_provider_t battery_charging_provider;
 static app_brightness_provider_t brightness_provider;
 static app_bell_volume_provider_t bell_volume_provider;
+static app_sound_test_provider_t sound_test_provider;
+static app_sound_test_status_provider_t sound_test_status_provider;
 static app_power_off_provider_t power_off_provider;
 static app_debug_str_provider_t wifi_ssid_provider;
 static app_debug_str_provider_t wifi_pass_provider;
@@ -192,6 +194,26 @@ void app_set_brightness_provider(app_brightness_provider_t provider) {
 void app_set_bell_volume_provider(app_bell_volume_provider_t provider) {
   bell_volume_provider = provider;
   apply_bell_volume(pomodoro_get_bell_volume());
+}
+
+void app_set_sound_test_provider(app_sound_test_provider_t provider) {
+  sound_test_provider = provider;
+}
+
+void app_set_sound_test_status_provider(
+    app_sound_test_status_provider_t provider) {
+  sound_test_status_provider = provider;
+}
+
+bool app_play_test_sound(void) {
+  if (!sound_test_provider || app_is_test_sound_playing()) {
+    return false;
+  }
+  return sound_test_provider(pomodoro_get_bell_volume());
+}
+
+bool app_is_test_sound_playing(void) {
+  return sound_test_status_provider && sound_test_status_provider();
 }
 
 void app_set_power_off_provider(app_power_off_provider_t provider) {

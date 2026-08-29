@@ -32,6 +32,7 @@ static lv_obj_t *lbl_start_pause;
 static lv_obj_t *btn_reset;
 static lv_obj_t *btn_skip;
 static lv_obj_t *dots[POMODORO_MAX_ROUNDS];
+static lv_obj_t *battery_status_dot;
 static lv_obj_t *pulse_stop_overlay;
 
 static lv_style_t style_circle_btn;
@@ -59,8 +60,58 @@ static int32_t presentation_to_shift;
 static lv_opa_t presentation_from_opa;
 static lv_opa_t presentation_to_opa;
 
+typedef enum {
+  BATTERY_STATUS_NONE,
+  BATTERY_STATUS_LOW,
+  BATTERY_STATUS_FULL,
+} battery_status_t;
+
+static battery_status_t battery_status = BATTERY_STATUS_NONE;
+
 static void timer_screen_update_layout(void);
 static void timer_screen_update_presentation(void);
+
+static void timer_screen_update_battery_status(void) {
+  int battery_percent = app_get_battery_percent();
+  bool low_enabled = pomodoro_get_low_battery_indicator();
+  bool full_enabled = pomodoro_get_full_battery_indicator();
+
+  if (battery_percent < 0 || battery_percent > 100) {
+    battery_status = BATTERY_STATUS_NONE;
+  } else {
+    switch (battery_status) {
+    case BATTERY_STATUS_LOW:
+      if (!low_enabled || battery_percent > 23) {
+        battery_status = BATTERY_STATUS_NONE;
+      }
+      break;
+    case BATTERY_STATUS_FULL:
+      if (!full_enabled || battery_percent < 95) {
+        battery_status = BATTERY_STATUS_NONE;
+      }
+      break;
+    case BATTERY_STATUS_NONE:
+      if (low_enabled && battery_percent <= 20) {
+        battery_status = BATTERY_STATUS_LOW;
+      } else if (full_enabled && battery_percent >= 98) {
+        battery_status = BATTERY_STATUS_FULL;
+      }
+      break;
+    }
+  }
+
+  if (battery_status == BATTERY_STATUS_LOW) {
+    lv_obj_set_style_bg_color(battery_status_dot, theme_get_battery_low_color(),
+                              0);
+    lv_obj_clear_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+  } else if (battery_status == BATTERY_STATUS_FULL) {
+    lv_obj_set_style_bg_color(battery_status_dot,
+                              theme_get_battery_full_color(), 0);
+    lv_obj_clear_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+  } else {
+    lv_obj_add_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+  }
+}
 static void timer_screen_toggle_layout(void);
 
 static void presentation_anim_cb(void *var, int32_t value) {
@@ -275,6 +326,15 @@ lv_obj_t *timer_screen_create(void) {
   lv_obj_set_size(bg_glow, DISPLAY_W, DISPLAY_H);
   lv_obj_set_style_bg_opa(bg_glow, 0, 0);
 
+  battery_status_dot = lv_obj_create(scr);
+  lv_obj_remove_style_all(battery_status_dot);
+  lv_obj_set_size(battery_status_dot, 10, 10);
+  lv_obj_set_pos(battery_status_dot, 10, 10);
+  lv_obj_set_style_bg_opa(battery_status_dot, LV_OPA_COVER, 0);
+  lv_obj_set_style_radius(battery_status_dot, LV_RADIUS_CIRCLE, 0);
+  lv_obj_add_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_remove_flag(battery_status_dot, LV_OBJ_FLAG_CLICKABLE);
+
   normal_chrome = lv_obj_create(scr);
   lv_obj_remove_style_all(normal_chrome);
   lv_obj_set_size(normal_chrome, DISPLAY_W, DISPLAY_H);
@@ -453,6 +513,7 @@ void timer_screen_update(void) {
               seconds);
   lv_label_set_text(lbl_timer, buf);
   timer_screen_update_layout();
+  timer_screen_update_battery_status();
 
   bool should_blink =
       pomodoro_get_ran_out_waiting() && pomodoro_get_visual_pulse();

@@ -154,12 +154,24 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 | ------- | -------- | ------------------------------- |
 | Sound   | On / Off | Chime at the end of each phase. |
 | Volume  | 0–100 %  | Chime volume.                   |
+| Test sound | Play | Plays the chime using the current volume. |
 
 #### System → Timer
 
 | Setting       | Options  | Description                                                                                         |
 | ------------- | -------- | --------------------------------------------------------------------------------------------------- |
 | Remember timer | On / Off | Restores the current phase, round, and remaining time after restart or power-off. Restored timers start paused. |
+
+#### System → Battery
+
+| Setting | Options | Description |
+| ------- | ------- | ----------- |
+| Low battery | On / Off | Shows a red status dot when the battery is at or below 20%. |
+| Full battery | On / Off | Shows a green status dot when the battery is effectively full. |
+
+The battery status indicator uses the measured battery percentage. The green
+indicator means that the battery is full; it does not confirm that a USB-C
+cable is connected.
 
 #### System → Date & time
 

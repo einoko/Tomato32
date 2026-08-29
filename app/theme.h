@@ -49,6 +49,8 @@ void theme_apply_label_large(lv_obj_t *label);
 void theme_apply_label_normal(lv_obj_t *label);
 void theme_apply_label_muted(lv_obj_t *label);
 lv_color_t theme_get_preset_color(int preset_index);
+lv_color_t theme_get_battery_low_color(void);
+lv_color_t theme_get_battery_full_color(void);
 
 /* Theme mode */
 bool theme_is_dark(void);

@@ -153,6 +153,19 @@ void settings_screen_update(void) {
   lv_label_set_text_fmt(lbl_system_sound_volume_value, "%u%%",
                         (unsigned)pomodoro_get_bell_volume());
 
+  bool test_sound_playing = app_is_test_sound_playing();
+  lv_label_set_text(lv_obj_get_child(btn_system_sound_test, 0),
+                    test_sound_playing ? "Playing" : "Play");
+  if (test_sound_playing) {
+    lv_obj_add_state(btn_system_sound_test, LV_STATE_DISABLED);
+    lv_obj_remove_flag(btn_system_sound_test, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_opa(btn_system_sound_test, LV_OPA_50, 0);
+  } else {
+    lv_obj_clear_state(btn_system_sound_test, LV_STATE_DISABLED);
+    lv_obj_add_flag(btn_system_sound_test, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_opa(btn_system_sound_test, LV_OPA_COVER, 0);
+  }
+
   if (pomodoro_get_smart_dim()) {
     lv_obj_set_style_bg_opa(system_smart_dim_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_smart_dim_on, active_bg, 0);
@@ -215,6 +228,48 @@ void settings_screen_update(void) {
                                 inactive_text, 0);
   }
 
+  /* Update low-battery indicator segmented control */
+  if (pomodoro_get_low_battery_indicator()) {
+    lv_obj_set_style_bg_opa(system_low_battery_indicator_on, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(system_low_battery_indicator_on, active_bg, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_low_battery_indicator_on, 0), active_text, 0);
+    lv_obj_set_style_bg_opa(system_low_battery_indicator_off, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_low_battery_indicator_off, 0), inactive_text,
+        0);
+  } else {
+    lv_obj_set_style_bg_opa(system_low_battery_indicator_off, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(system_low_battery_indicator_off, active_bg, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_low_battery_indicator_off, 0), active_text, 0);
+    lv_obj_set_style_bg_opa(system_low_battery_indicator_on, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_low_battery_indicator_on, 0), inactive_text, 0);
+  }
+
+  /* Update full-battery indicator segmented control */
+  if (pomodoro_get_full_battery_indicator()) {
+    lv_obj_set_style_bg_opa(system_full_battery_indicator_on, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(system_full_battery_indicator_on, active_bg, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_full_battery_indicator_on, 0), active_text, 0);
+    lv_obj_set_style_bg_opa(system_full_battery_indicator_off, LV_OPA_TRANSP,
+                            0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_full_battery_indicator_off, 0), inactive_text,
+        0);
+  } else {
+    lv_obj_set_style_bg_opa(system_full_battery_indicator_off, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(system_full_battery_indicator_off, active_bg, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_full_battery_indicator_off, 0), active_text, 0);
+    lv_obj_set_style_bg_opa(system_full_battery_indicator_on, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_text_color(
+        lv_obj_get_child(system_full_battery_indicator_on, 0), inactive_text,
+        0);
+  }
+
   /* Update date source segmented control */
   if (pomodoro_get_date_source_ntp()) {
     lv_obj_set_style_bg_opa(system_date_source_ntp_btn, LV_OPA_COVER, 0);
@@ -270,15 +325,9 @@ void settings_screen_update(void) {
 
   /* Update battery percentage */
   int battery_percent = app_get_battery_percent();
-  bool battery_charging = app_is_battery_charging();
   if (battery_percent >= 0 && battery_percent <= 100) {
-    if (battery_charging) {
-      if (battery_percent >= 98) {
-        lv_label_set_text(lbl_system_hours, "Charged 100%");
-      } else {
-        lv_label_set_text_fmt(lbl_system_hours, "Charging %d%%",
-                              battery_percent);
-      }
+    if (battery_percent >= 98) {
+      lv_label_set_text(lbl_system_hours, "Full 100%");
     } else {
       lv_label_set_text_fmt(lbl_system_hours, "Battery %d%%", battery_percent);
     }
@@ -391,6 +440,10 @@ void settings_screen_refresh_theme(void) {
                               theme_get_text_muted(), 0);
   lv_obj_set_style_text_color(lbl_system_sound_volume_chevron,
                               theme_get_text_muted(), 0);
+  lv_obj_set_style_text_color(lbl_system_sound_test, theme_get_text(), 0);
+  lv_obj_set_style_bg_color(btn_system_sound_test, theme_get_seg_bg(), 0);
+  lv_obj_set_style_text_color(lv_obj_get_child(btn_system_sound_test, 0),
+                              theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_default_brightness, theme_get_text(),
                               0);
   lv_obj_set_style_text_color(lbl_system_default_brightness_chevron,
@@ -408,6 +461,10 @@ void settings_screen_refresh_theme(void) {
                             0);
   lv_obj_set_style_bg_color(system_persist_timer_seg_container,
                             theme_get_seg_bg(), 0);
+  lv_obj_set_style_bg_color(system_low_battery_indicator_seg_container,
+                            theme_get_seg_bg(), 0);
+  lv_obj_set_style_bg_color(system_full_battery_indicator_seg_container,
+                            theme_get_seg_bg(), 0);
   /* New subview labels */
   lv_obj_set_style_text_color(lbl_system_appearance, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_appearance_chevron,
@@ -419,6 +476,13 @@ void settings_screen_refresh_theme(void) {
   lv_obj_set_style_text_color(lbl_system_datetime_menu_chevron,
                               theme_get_text_muted(), 0);
   lv_obj_set_style_text_color(lbl_system_persist_timer, theme_get_text(), 0);
+  lv_obj_set_style_text_color(lbl_system_battery_menu, theme_get_text(), 0);
+  lv_obj_set_style_text_color(lbl_system_battery_menu_chevron,
+                              theme_get_text_muted(), 0);
+  lv_obj_set_style_text_color(lbl_system_low_battery_indicator,
+                              theme_get_text(), 0);
+  lv_obj_set_style_text_color(lbl_system_full_battery_indicator,
+                              theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_date_source, theme_get_text(), 0);
   lv_obj_set_style_bg_color(system_date_source_seg_container,
                             theme_get_seg_bg(), 0);

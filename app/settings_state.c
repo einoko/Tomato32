@@ -10,6 +10,7 @@ lv_obj_t *view_system_ui;
 lv_obj_t *view_system_sound;
 lv_obj_t *view_system_brightness;
 lv_obj_t *view_system_system_menu;
+lv_obj_t *view_system_battery;
 lv_obj_t *view_system_datetime;
 lv_obj_t *main_divider;
 
@@ -53,6 +54,8 @@ lv_obj_t *lbl_system_brightness_sub_chevron;
 lv_obj_t *lbl_system_datetime_menu;
 lv_obj_t *lbl_system_datetime_menu_chevron;
 lv_obj_t *lbl_system_persist_timer;
+lv_obj_t *lbl_system_battery_menu;
+lv_obj_t *lbl_system_battery_menu_chevron;
 
 lv_obj_t *lbl_system_date_source;
 lv_obj_t *system_date_source_seg_container;
@@ -75,6 +78,17 @@ lv_obj_t *lbl_system_sound;
 lv_obj_t *lbl_system_sound_volume;
 lv_obj_t *lbl_system_sound_volume_value;
 lv_obj_t *lbl_system_sound_volume_chevron;
+lv_obj_t *lbl_system_sound_test;
+lv_obj_t *btn_system_sound_test;
+
+lv_obj_t *lbl_system_low_battery_indicator;
+lv_obj_t *system_low_battery_indicator_seg_container;
+lv_obj_t *system_low_battery_indicator_on;
+lv_obj_t *system_low_battery_indicator_off;
+lv_obj_t *lbl_system_full_battery_indicator;
+lv_obj_t *system_full_battery_indicator_seg_container;
+lv_obj_t *system_full_battery_indicator_on;
+lv_obj_t *system_full_battery_indicator_off;
 
 lv_obj_t *lbl_system_default_brightness;
 lv_obj_t *lbl_system_default_brightness_value;

@@ -282,3 +282,14 @@ void audio_play_bell(void) {
     ESP_LOGE(TAG, "Failed to create playback task");
   }
 }
+
+bool audio_play_test_sound(uint8_t volume_percent) {
+  if (!audio_ready || !playback_dev || playback_task_handle != NULL) {
+    return false;
+  }
+  audio_set_bell_volume(volume_percent);
+  audio_play_bell();
+  return playback_task_handle != NULL;
+}
+
+bool audio_is_bell_playing(void) { return playback_task_handle != NULL; }

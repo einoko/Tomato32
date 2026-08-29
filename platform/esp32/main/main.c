@@ -396,6 +396,8 @@ void app_main(void) {
   app_set_battery_charging_provider(battery_is_charging);
   app_set_brightness_provider(display_set_brightness);
   app_set_bell_volume_provider(audio_set_bell_volume);
+  app_set_sound_test_provider(audio_play_test_sound);
+  app_set_sound_test_status_provider(audio_is_bell_playing);
   app_set_power_off_provider(power_off_handler);
   app_set_wifi_ssid_provider(debug_wifi_ssid);
   app_set_wifi_pass_provider(debug_wifi_pass);

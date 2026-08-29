@@ -176,6 +176,10 @@ lv_color_t theme_get_preset_color(int preset_index) {
   }
 }
 
+lv_color_t theme_get_battery_low_color(void) { return lv_color_hex(0xE53935); }
+
+lv_color_t theme_get_battery_full_color(void) { return lv_color_hex(0x43A047); }
+
 bool theme_is_dark(void) { return dark_mode; }
 
 void theme_set_dark(bool dark) { dark_mode = dark; }

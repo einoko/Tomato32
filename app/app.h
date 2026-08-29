@@ -10,6 +10,8 @@ typedef int (*app_battery_percent_provider_t)(void);
 typedef bool (*app_battery_charging_provider_t)(void);
 typedef void (*app_brightness_provider_t)(uint8_t percent);
 typedef void (*app_bell_volume_provider_t)(uint8_t percent);
+typedef bool (*app_sound_test_provider_t)(uint8_t volume_percent);
+typedef bool (*app_sound_test_status_provider_t)(void);
 typedef void (*app_power_off_provider_t)(void);
 
 typedef enum {
@@ -35,7 +37,12 @@ void app_set_battery_charging_provider(
     app_battery_charging_provider_t provider);
 void app_set_brightness_provider(app_brightness_provider_t provider);
 void app_set_bell_volume_provider(app_bell_volume_provider_t provider);
+void app_set_sound_test_provider(app_sound_test_provider_t provider);
+void app_set_sound_test_status_provider(
+    app_sound_test_status_provider_t provider);
 void app_set_power_off_provider(app_power_off_provider_t provider);
+bool app_play_test_sound(void);
+bool app_is_test_sound_playing(void);
 int app_get_battery_percent(void);
 bool app_is_battery_charging(void);
 bool app_is_display_sleeping(void);
