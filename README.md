@@ -162,12 +162,12 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 | ------------- | -------- | --------------------------------------------------------------------------------------------------- |
 | Remember timer | On / Off | Restores the current phase, round, and remaining time after restart or power-off. Restored timers start paused. |
 
-#### System → Battery
+#### System → Battery indicators
 
 | Setting | Options | Description |
 | ------- | ------- | ----------- |
-| Low battery | On / Off | Shows a red status dot when the battery is at or below 20%. |
-| Full battery | On / Off | Shows a green status dot when the battery is effectively full. |
+| Low battery  | On / Off | Shows a red status dot when the battery is at or below 20%. |
+| Fully charged | On / Off | Shows a green status dot when the battery is effectively full. |
 
 The battery status indicator uses the measured battery percentage. The green
 indicator means that the battery is full; it does not confirm that a USB-C

@@ -935,7 +935,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_text_font(lbl_persist_timer_off, &inter_16, 0);
   lv_obj_align(lbl_persist_timer_off, LV_ALIGN_CENTER, 0, -1);
 
-  /* System menu row 3: Battery */
+  /* System menu row 3: Battery indicators */
   lv_obj_t *row_battery_menu = lv_obj_create(view_system_system_menu);
   lv_obj_remove_style_all(row_battery_menu);
   lv_obj_set_size(row_battery_menu, SETTINGS_RIGHT_W, 57);
@@ -946,7 +946,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                       LV_EVENT_CLICKED, NULL);
 
   lbl_system_battery_menu = lv_label_create(row_battery_menu);
-  lv_label_set_text(lbl_system_battery_menu, "Battery");
+  lv_label_set_text(lbl_system_battery_menu, "Battery indicators");
   lv_obj_set_style_text_font(lbl_system_battery_menu, &inter_24, 0);
   lv_obj_set_style_text_color(lbl_system_battery_menu, theme_get_text(), 0);
   lv_obj_align(lbl_system_battery_menu, LV_ALIGN_LEFT_MID, 24, 0);
@@ -1029,7 +1029,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_flag(row_full_battery, LV_OBJ_FLAG_SCROLLABLE);
 
   lbl_system_full_battery_indicator = lv_label_create(row_full_battery);
-  lv_label_set_text(lbl_system_full_battery_indicator, "Full battery");
+  lv_label_set_text(lbl_system_full_battery_indicator, "Fully charged");
   lv_obj_set_style_text_font(lbl_system_full_battery_indicator, &inter_24, 0);
   lv_obj_set_style_text_color(lbl_system_full_battery_indicator,
                               theme_get_text(), 0);
@@ -1244,7 +1244,7 @@ void settings_system_view_set_subview(system_subview_t subview) {
     lv_obj_remove_flag(view_system_system_menu, LV_OBJ_FLAG_HIDDEN);
     break;
   case SYSTEM_SUBVIEW_BATTERY:
-    lv_label_set_text(lbl_system_title, "Battery");
+    lv_label_set_text(lbl_system_title, "Battery indicators");
     lv_obj_remove_flag(view_system_battery, LV_OBJ_FLAG_HIDDEN);
     break;
   case SYSTEM_SUBVIEW_DATETIME:
