@@ -11,6 +11,7 @@
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_log.h"
+#include "esp_pm.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -49,11 +50,6 @@ extern lv_font_t inter_20;
 #define TOUCH_SDA GPIO_NUM_17
 #define TOUCH_ADDR 0x3B
 
-/* Tick resolution kept at 5 ms for accurate indev/gesture timing.
- * With CONFIG_PM_ENABLE the CPU still light-sleeps between wakeups; the
- * incremental gain from a larger tick period does not justify the loss of
- * touch-timing accuracy in LVGL's indev state machine. */
-#define LVGL_TICK_PERIOD_MS 5
 #define LVGL_TASK_MAX_DELAY_MS 500
 #define LVGL_TASK_MIN_DELAY_MS 10
 #define LVGL_TASK_ANIM_MIN_DELAY_MS 2
@@ -63,6 +59,11 @@ extern lv_font_t inter_20;
 #define FLUSH_TASK_PRIORITY 4
 #define FLUSH_TASK_CORE 1
 #define TOUCH_RELEASE_DEBOUNCE_MS 30
+/* Touch is polled over I2C; slow polling once the UI has been idle so the
+ * CPU can stay in light sleep longer. */
+#define TOUCH_POLL_ACTIVE_MS LV_DEF_REFR_PERIOD
+#define TOUCH_POLL_IDLE_MS 50
+#define TOUCH_POLL_IDLE_AFTER_MS 3000
 
 /* LVGL can render directly in the byte order required by the panel.  This
  * removes one byte-swap operation per pixel from the flush path without
@@ -87,6 +88,10 @@ static const char *TAG = "display";
    IO_EXPANDER_PIN_NUM_4 | IO_EXPANDER_PIN_NUM_5)
 
 static SemaphoreHandle_t lvgl_mux = NULL;
+/* Held while rendering/flushing so DFS doesn't drop to 80 MHz mid-frame. */
+static esp_pm_lock_handle_t s_cpu_max_lock = NULL;
+static lv_display_t *s_disp = NULL;
+static bool s_backlight_off = false;
 
 typedef struct
 {
@@ -349,6 +354,8 @@ static void flush_task(void *arg)
   for (;;)
   {
     xQueueReceive(s_flush_queue, &job, portMAX_DELAY);
+    if (s_cpu_max_lock)
+      esp_pm_lock_acquire(s_cpu_max_lock);
     DISPLAY_PERF_SET(s_flush_stage, FLUSH_STAGE_WAIT_CHIP);
     xSemaphoreTake(s_panel_chip_mutex, portMAX_DELAY);
     int64_t perf_start_us = display_perf_flush_start();
@@ -364,6 +371,8 @@ static void flush_task(void *arg)
     xSemaphoreGive(s_panel_chip_mutex);
     DISPLAY_PERF_SET(s_flush_stage, FLUSH_STAGE_IDLE);
     s_flush_in_flight = false;
+    if (s_cpu_max_lock)
+      esp_pm_lock_release(s_cpu_max_lock);
     xSemaphoreGive(s_frame_done_semaphore);
   }
 }
@@ -459,9 +468,8 @@ static void touch_report_released(lv_indev_data_t *data)
   data->state = LV_INDEV_STATE_RELEASED;
 }
 
-static void touch_input_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
+static void touch_read(lv_indev_data_t *data)
 {
-  (void)indev;
   uint8_t read_touchpad_cmd[11] = {0xb5, 0xab, 0xa5, 0x5a, 0x0, 0x0,
                                    0x0, 0x0e, 0x0, 0x0, 0x0};
   uint8_t buff[32] = {0};
@@ -547,9 +555,23 @@ static void touch_input_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
   }
 }
 
-static void example_increase_lvgl_tick(void *arg)
+static void touch_input_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
 {
-  lv_tick_inc(LVGL_TICK_PERIOD_MS);
+  touch_read(data);
+
+  bool active = data->state == LV_INDEV_STATE_PRESSED ||
+                lv_display_get_inactive_time(NULL) < TOUCH_POLL_IDLE_AFTER_MS;
+  lv_timer_t *read_timer = lv_indev_get_read_timer(indev);
+  if (read_timer)
+  {
+    lv_timer_set_period(read_timer,
+                        active ? TOUCH_POLL_ACTIVE_MS : TOUCH_POLL_IDLE_MS);
+  }
+}
+
+static uint32_t lvgl_tick_get_cb(void)
+{
+  return (uint32_t)(esp_timer_get_time() / 1000);
 }
 
 bool display_lock(int timeout_ms)
@@ -568,7 +590,11 @@ static void example_lvgl_port_task(void *arg)
   {
     if (display_lock(-1))
     {
+      if (s_cpu_max_lock)
+        esp_pm_lock_acquire(s_cpu_max_lock);
       task_delay_ms = lv_timer_handler();
+      if (s_cpu_max_lock)
+        esp_pm_lock_release(s_cpu_max_lock);
       DISPLAY_PERF_SET(s_lvgl_last_run_us, esp_timer_get_time());
       display_unlock();
     }
@@ -610,6 +636,8 @@ static void lcd_bl_init(void)
       .timer_sel = LEDC_TIMER_3,
       .duty = 0xFF,
       .hpoint = 0,
+      /* Keep PWM running through automatic light sleep. */
+      .sleep_mode = LEDC_SLEEP_MODE_KEEP_ALIVE,
   };
   ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_timer_config(&timer_conf));
   ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&ledc_conf));
@@ -647,6 +675,19 @@ void display_set_brightness(uint8_t percent)
       ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty));
   ESP_ERROR_CHECK_WITHOUT_ABORT(
       ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1));
+
+  /* Nothing is visible with the backlight off, so stop rendering and QSPI
+   * transfers entirely; repaint the whole screen on wake. */
+  bool off = percent == 0;
+  if (s_disp && off != s_backlight_off)
+  {
+    lv_display_enable_invalidation(s_disp, !off);
+    if (!off)
+    {
+      lv_obj_invalidate(lv_display_get_screen_active(s_disp));
+    }
+  }
+  s_backlight_off = off;
 }
 
 static void lcd_reset(void)
@@ -985,6 +1026,12 @@ lv_display_t *display_init(void)
 
   ESP_LOGI(TAG, "Initialize LVGL");
   lv_init();
+  lv_tick_set_cb(lvgl_tick_get_cb);
+  if (esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "lvgl", &s_cpu_max_lock) !=
+      ESP_OK)
+  {
+    s_cpu_max_lock = NULL;
+  }
   lv_display_t *disp = lv_display_create(LCD_H_RES, LCD_V_RES);
 #if TOMATO32_DISPLAY_USE_SWAPPED_RGB565
   lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565_SWAPPED);
@@ -1026,16 +1073,7 @@ lv_display_t *display_init(void)
   lv_indev_set_read_cb(touch_indev, touch_input_read_cb);
   lv_indev_set_display(touch_indev, disp);
 
-  /* Tick timer */
-  esp_timer_create_args_t tick_args = {
-      .callback = &example_increase_lvgl_tick,
-      .name = "lvgl_tick",
-  };
-  esp_timer_handle_t tick_timer = NULL;
-  ESP_ERROR_CHECK(esp_timer_create(&tick_args, &tick_timer));
-  ESP_ERROR_CHECK(
-      esp_timer_start_periodic(tick_timer, LVGL_TICK_PERIOD_MS * 1000));
-
+  s_disp = disp;
   lvgl_mux = xSemaphoreCreateMutex();
   assert(lvgl_mux);
   xTaskCreatePinnedToCore(example_lvgl_port_task, "LVGL", LVGL_TASK_STACK_SIZE,
