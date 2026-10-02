@@ -34,3 +34,11 @@ LVGL is vendored in this repository under the `lvgl/` directory.
 ### Light mode
 
 - Photo by [Alex Machado](https://unsplash.com/@alexmachado) on [Unsplash](https://unsplash.com/photos/cloudy-sky-80sv993lUKI)
+
+## Browser installer
+
+- [Inter](https://github.com/rsms/inter), self-hosted via `@fontsource-variable/inter` version 5.3.0 — SIL Open Font License 1.1.
+- [esptool-js](https://github.com/espressif/esptool-js), version 0.6.1 — Apache License 2.0.
+- [JSZip](https://github.com/Stuk/jszip), version 3.10.2 — MIT License (also offered under GPL-3.0-or-later).
+- Browser runtime dependencies: [atob-lite](https://github.com/hughsk/atob-lite) (MIT), [pako](https://github.com/nodeca/pako) (MIT and Zlib), [tslib](https://github.com/microsoft/tslib) (0BSD), [lie](https://github.com/calvinmetcalf/lie) (MIT), [readable-stream](https://github.com/nodejs/readable-stream) (MIT), and [setimmediate](https://github.com/YuzuJS/setImmediate) (MIT).
+- Exact dependency versions are recorded in `web/installer/package-lock.json`.

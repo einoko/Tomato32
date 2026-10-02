@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Install or update Tomato32 on the Waveshare ESP32-S3-Touch-LCD-3.49."
+    />
+    <meta name="theme-color" content="#050607" />
+    <title>Tomato32 Firmware</title>
+  </head>
+  <body>
+    <main class="page-shell" id="top">
+      <header class="topbar">
+        <a class="brand" href="#top">Tomato32</a>
+        <a class="top-link" href="https://github.com/einoko/Tomato32/releases" target="_blank" rel="noreferrer">Releases</a>
+      </header>
+
+      <section class="page-intro" aria-labelledby="page-title">
+        <div class="browser-status" id="browser-status" role="status" aria-live="polite">
+          <strong id="browser-status-title">Checking browser support…</strong>
+          <p id="browser-status-detail"></p>
+        </div>
+        <h1 id="page-title">Install Tomato32</h1>
+        <p>Requires the <a href="https://www.waveshare.com/esp32-s3-touch-lcd-3.49.htm" target="_blank" rel="noreferrer">Waveshare ESP32-S3-Touch-LCD-3.49</a>.</p>
+      </section>
+
+      <section class="installer-card" aria-label="Firmware installer">
+        <div class="configuration-grid">
+          <section class="control-group" aria-labelledby="release-heading">
+            <label class="field-label" id="release-heading" for="release-select">Firmware version</label>
+            <select id="release-select" disabled>
+              <option>Loading releases…</option>
+            </select>
+            <p class="release-note" id="release-note" aria-live="polite">Loading firmware…</p>
+            <a class="text-link release-link" id="selected-release-link" href="https://github.com/einoko/Tomato32/releases" target="_blank" rel="noreferrer">Release notes</a>
+          </section>
+
+          <section class="control-group">
+            <fieldset class="mode-options">
+              <legend class="field-label" id="mode-heading">Installation type</legend>
+              <label class="mode-option selected" for="mode-install">
+                <input id="mode-install" type="radio" name="install-mode" value="fullInstall" checked />
+                <span class="radio-mark" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <strong>New install or repair</strong>
+                  <small class="mode-impact">Resets timer settings, theme, and stats. Keeps Wi-Fi and timezone.</small>
+                </span>
+              </label>
+              <label class="mode-option" for="mode-update">
+                <input id="mode-update" type="radio" name="install-mode" value="appUpdate" />
+                <span class="radio-mark" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <strong>Update Tomato32</strong>
+                  <small>Updates the app and keeps saved settings.</small>
+                </span>
+              </label>
+            </fieldset>
+          </section>
+        </div>
+
+        <section class="device-connection" aria-labelledby="device-heading">
+          <div class="connection-heading">
+            <div>
+              <h2 id="device-heading">Device</h2>
+              <p>Connect the device to your computer with a USB-C data cable.</p>
+            </div>
+          </div>
+          <div class="connection-row">
+            <div class="connection-state" id="connection-state" role="status" aria-live="polite">
+              <span class="connection-indicator" aria-hidden="true"></span>
+              <span>No device connected</span>
+            </div>
+            <button class="button button-secondary" id="connect-button" type="button" disabled>Connect</button>
+          </div>
+          <div class="boot-help">
+            <button class="disclosure-button" id="connection-help-button" type="button" aria-expanded="false" aria-controls="connection-help-panel">
+              Connection help <span class="disclosure-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="boot-help-panel" id="connection-help-panel" aria-hidden="true" inert>
+              <div class="boot-help-inner">
+              <p>If the board does not connect, enter download mode:</p>
+              <ol>
+                <li>Hold <strong>BOOT</strong>.</li>
+                <li>Press and release <strong>RESET</strong>.</li>
+                <li>Release <strong>BOOT</strong>, then connect again.</li>
+              </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="flash-panel" id="flash-panel" hidden>
+          <div class="flash-actions">
+            <button class="button button-primary" id="flash-button" type="button" disabled>Install firmware</button>
+          </div>
+          <div class="progress-wrap" id="progress-wrap" hidden>
+            <div class="progress-meta"><span id="progress-label">Preparing…</span><span id="progress-percent">0%</span></div>
+            <progress id="flash-progress" max="100" value="0">0%</progress>
+          </div>
+        </div>
+
+        <div class="result-banner" id="result-banner" hidden role="status" aria-live="polite">
+          <div>
+            <strong id="result-title">Tomato32 is installed</strong>
+            <p id="result-message">Your device is restarting.</p>
+            <a class="text-link" id="result-followup" href="https://github.com/einoko/Tomato32#wi-fi-credentials-via-config-drive" hidden>Wi-Fi and timezone setup</a>
+          </div>
+        </div>
+
+        <section class="log-panel" aria-labelledby="log-heading">
+          <h2 id="log-heading">Flash log</h2>
+          <pre id="flash-log" aria-live="polite"></pre>
+        </section>
+      </section>
+
+      <footer class="page-footer">
+        <a href="https://github.com/einoko/Tomato32#esp32-build-and-flash">CLI instructions</a>
+        <a href="https://github.com/einoko/Tomato32" target="_blank" rel="noreferrer">Tomato32 on GitHub</a>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

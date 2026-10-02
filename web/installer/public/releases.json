@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "tag": "v0.0.0",
+      "name": "Local build ff5f9b9",
+      "published_at": null,
+      "assetPath": "firmware/tomato32-firmware-v0.0.0.zip",
+      "assetSha256": "0b6a683a3f98a0fb3a5d8d1c79fde4dd68e480ae196273054f3aa5034424c5bb",
+      "assetSize": 3831036,
+      "local": true
+    }
+  ]
+}

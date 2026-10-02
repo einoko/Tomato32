@@ -46,6 +46,10 @@ cmake --build build
 ./build/platform/simulator/pomodoro_sim
 ```
 
+## Browser Installer
+
+You can install or update Tomato32 using the [Tomato32 Browser Installer](https://einoko.github.io/Tomato32/). It runs in Chrome or Edge and connects directly to the Waveshare ESP32-S3-Touch-LCD-3.49 over USB-C.
+
 ## ESP32 Build and Flash
 
 ### Build and flash
@@ -150,23 +154,23 @@ Tomato32 has three presets (A, B, C). Pick one on the left, tap **Edit durations
 
 #### Sound
 
-| Setting | Options  | Description                     |
-| ------- | -------- | ------------------------------- |
-| Sound   | On / Off | Chime at the end of each phase. |
-| Volume  | 0–100 %  | Chime volume.                   |
-| Test sound | Play | Plays the chime using the current volume. |
+| Setting    | Options  | Description                               |
+| ---------- | -------- | ----------------------------------------- |
+| Sound      | On / Off | Chime at the end of each phase.           |
+| Volume     | 0–100 %  | Chime volume.                             |
+| Test sound | Play     | Plays the chime using the current volume. |
 
 #### System → Timer
 
-| Setting       | Options  | Description                                                                                         |
-| ------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| Setting        | Options  | Description                                                                                                     |
+| -------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
 | Remember timer | On / Off | Restores the current phase, round, and remaining time after restart or power-off. Restored timers start paused. |
 
 #### System → Battery indicators
 
-| Setting | Options | Description |
-| ------- | ------- | ----------- |
-| Low battery  | On / Off | Shows a red status dot when the battery is at or below 20%. |
+| Setting       | Options  | Description                                                    |
+| ------------- | -------- | -------------------------------------------------------------- |
+| Low battery   | On / Off | Shows a red status dot when the battery is at or below 20%.    |
 | Fully charged | On / Off | Shows a green status dot when the battery is effectively full. |
 
 The battery status indicator uses the measured battery percentage. The green
