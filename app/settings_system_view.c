@@ -1,5 +1,9 @@
 #include "settings_system_view.h"
 
+#ifndef TOMATO32_VERSION
+#define TOMATO32_VERSION "0.0.0-dev"
+#endif
+
 #include "app.h"
 #include "pomodoro.h"
 #include "settings_edit_view.h"
@@ -275,7 +279,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lbl_system_version = lv_label_create(left);
   lv_obj_set_style_text_font(lbl_system_version, &inter_16, 0);
   lv_obj_set_style_text_color(lbl_system_version, theme_get_text_muted(), 0);
-  lv_label_set_text(lbl_system_version, "Version 1.0");
+  lv_label_set_text_fmt(lbl_system_version, "Version %s", TOMATO32_VERSION);
   lv_obj_align(lbl_system_version, LV_ALIGN_TOP_MID, 0, 42);
 
   /* Battery percentage */

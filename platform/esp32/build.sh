@@ -101,6 +101,7 @@ docker run --rm -i ${TTY_FLAG} \
 	-v "${PROJECT_ROOT}:${PROJECT_ROOT}" \
 	-w "${ESP32_DIR}" \
 	-e "TERM=${TERM:-xterm-256color}" \
+	-e "TOMATO32_VERSION=${TOMATO32_VERSION:-}" \
 	-e "TOMATO32_DISPLAY_PERF=${TOMATO32_DISPLAY_PERF:-}" \
 	"${IMAGE}" \
 	bash -c "

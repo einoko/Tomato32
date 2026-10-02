@@ -68,9 +68,15 @@ if(ESP_PLATFORM)
         target_sources(${COMPONENT_LIB} PRIVATE ${BG_GEN_SOURCES})
         target_include_directories(${COMPONENT_LIB} PRIVATE "${BG_GEN_DIR}")
     endif()
+    set(TOMATO32_VERSION "$ENV{TOMATO32_VERSION}")
+    string(REGEX REPLACE "^v" "" TOMATO32_VERSION "${TOMATO32_VERSION}")
+    if(TOMATO32_VERSION STREQUAL "")
+        set(TOMATO32_VERSION "0.0.0-dev")
+    endif()
     target_compile_definitions(${COMPONENT_LIB} PRIVATE
         PERSIST_PATH="/spiffs/.pomodoro_state"
         THEME_PERSIST_PATH="/spiffs/.pomodoro_theme"
+        TOMATO32_VERSION="${TOMATO32_VERSION}"
     )
 else()
     add_library(app STATIC

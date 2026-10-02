@@ -20,6 +20,8 @@ jobs:
           fetch-depth: 0
 
       - name: Build firmware with ESP-IDF
+        env:
+          TOMATO32_VERSION: ${{ github.ref_name }}
         run: ./platform/esp32/build.sh
 
       - name: Package browser firmware bundle
