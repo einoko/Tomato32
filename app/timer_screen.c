@@ -32,7 +32,7 @@ static lv_obj_t *lbl_start_pause;
 static lv_obj_t *btn_reset;
 static lv_obj_t *btn_skip;
 static lv_obj_t *dots[POMODORO_MAX_ROUNDS];
-static lv_obj_t *battery_status_dot;
+static lv_obj_t *battery_icon;
 static lv_obj_t *pulse_stop_overlay;
 
 static lv_style_t style_circle_btn;
@@ -100,17 +100,36 @@ static void timer_screen_update_battery_status(void) {
     }
   }
 
+  const char *symbol;
+  lv_color_t color;
   if (battery_status == BATTERY_STATUS_LOW) {
-    lv_obj_set_style_bg_color(battery_status_dot, theme_get_battery_low_color(),
-                              0);
-    lv_obj_clear_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+    symbol = LV_SYMBOL_BATTERY_1;
+    color = theme_get_battery_low_color();
   } else if (battery_status == BATTERY_STATUS_FULL) {
-    lv_obj_set_style_bg_color(battery_status_dot,
-                              theme_get_battery_full_color(), 0);
-    lv_obj_clear_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+    symbol = LV_SYMBOL_BATTERY_FULL;
+    color = theme_get_battery_full_color();
+  } else if (pomodoro_get_battery_icon() && battery_percent >= 0 &&
+             battery_percent <= 100) {
+    if (battery_percent >= 90) {
+      symbol = LV_SYMBOL_BATTERY_FULL;
+    } else if (battery_percent >= 65) {
+      symbol = LV_SYMBOL_BATTERY_3;
+    } else if (battery_percent >= 40) {
+      symbol = LV_SYMBOL_BATTERY_2;
+    } else if (battery_percent >= 15) {
+      symbol = LV_SYMBOL_BATTERY_1;
+    } else {
+      symbol = LV_SYMBOL_BATTERY_EMPTY;
+    }
+    color = theme_get_text_muted();
   } else {
-    lv_obj_add_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(battery_icon, LV_OBJ_FLAG_HIDDEN);
+    return;
   }
+
+  lv_label_set_text_static(battery_icon, symbol);
+  lv_obj_set_style_text_color(battery_icon, color, 0);
+  lv_obj_clear_flag(battery_icon, LV_OBJ_FLAG_HIDDEN);
 }
 static void timer_screen_toggle_layout(void);
 
@@ -326,15 +345,6 @@ lv_obj_t *timer_screen_create(void) {
   lv_obj_set_size(bg_glow, DISPLAY_W, DISPLAY_H);
   lv_obj_set_style_bg_opa(bg_glow, 0, 0);
 
-  battery_status_dot = lv_obj_create(scr);
-  lv_obj_remove_style_all(battery_status_dot);
-  lv_obj_set_size(battery_status_dot, 10, 10);
-  lv_obj_set_pos(battery_status_dot, 10, 10);
-  lv_obj_set_style_bg_opa(battery_status_dot, LV_OPA_COVER, 0);
-  lv_obj_set_style_radius(battery_status_dot, LV_RADIUS_CIRCLE, 0);
-  lv_obj_add_flag(battery_status_dot, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_remove_flag(battery_status_dot, LV_OBJ_FLAG_CLICKABLE);
-
   normal_chrome = lv_obj_create(scr);
   lv_obj_remove_style_all(normal_chrome);
   lv_obj_set_size(normal_chrome, DISPLAY_W, DISPLAY_H);
@@ -343,6 +353,14 @@ lv_obj_t *timer_screen_create(void) {
   lv_obj_set_style_opa(normal_chrome, LV_OPA_COVER, 0);
   lv_obj_set_style_translate_x(normal_chrome, 0, 0);
   lv_obj_remove_flag(normal_chrome, LV_OBJ_FLAG_SCROLLABLE);
+
+  /* Battery icon lives in the chrome so it hides in minimal mode. */
+  battery_icon = lv_label_create(normal_chrome);
+  lv_obj_set_style_text_font(battery_icon, &lv_font_montserrat_16, 0);
+  lv_obj_set_pos(battery_icon, 10, 4);
+  lv_label_set_text_static(battery_icon, LV_SYMBOL_BATTERY_FULL);
+  lv_obj_add_flag(battery_icon, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_remove_flag(battery_icon, LV_OBJ_FLAG_CLICKABLE);
 
   /* --- LEFT PANEL: Dots --- */
   lv_obj_t *left = lv_obj_create(normal_chrome);
