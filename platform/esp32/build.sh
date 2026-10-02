@@ -15,6 +15,8 @@ set -euo pipefail
 #   ./build.sh monitor [/dev/cu.xxx]      # Build, flash, and monitor from host
 #   ./build.sh monitor-app [/dev/cu.xxx]  # Build, app-only flash, and monitor from host
 #   ./build.sh clean                      # Clean build artifacts
+#
+# Set TOMATO32_DISPLAY_PERF=1 to log display flush timing once per second.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -99,6 +101,7 @@ docker run --rm -i ${TTY_FLAG} \
 	-v "${PROJECT_ROOT}:${PROJECT_ROOT}" \
 	-w "${ESP32_DIR}" \
 	-e "TERM=${TERM:-xterm-256color}" \
+	-e "TOMATO32_DISPLAY_PERF=${TOMATO32_DISPLAY_PERF:-}" \
 	"${IMAGE}" \
 	bash -c "
         set -e
@@ -152,14 +155,33 @@ if $DO_FLASH; then
 		echo "Run a build first, then retry."
 		exit 1
 	fi
+	# watchdog-reset re-latches the strapping pins, so the chip leaves
+	# BOOT-button download mode; an RTS reset over USB-Serial/JTAG does not.
 	${ESPTOOL} --chip esp32s3 -p "${DEVICE}" -b 460800 \
-		--before default_reset --after hard_reset \
+		--before default-reset --after watchdog-reset \
 		write-flash @"${FLASH_ARGS_FILE}"
 	echo "=> Flash done."
 fi
 
 # Monitor from host
 if $DO_MONITOR; then
+	# The ROM's USB-Serial/JTAG port disappears on reset and the app's TinyUSB
+	# CDC port enumerates a few seconds later, possibly under a new name.
+	echo "=> Waiting for ${DEVICE} to re-enumerate..."
+	sleep 2
+	for _ in $(seq 1 30); do
+		[ -e "${DEVICE}" ] && break
+		NEW_DEVICE="$(ls /dev/cu.usbmodem* 2>/dev/null | head -n1 || true)"
+		if [ -n "${NEW_DEVICE}" ]; then
+			DEVICE="${NEW_DEVICE}"
+			break
+		fi
+		sleep 0.5
+	done
+	if [ ! -e "${DEVICE}" ]; then
+		echo "ERROR: ${DEVICE} did not come back after reset."
+		exit 1
+	fi
 	echo "=> Monitoring on ${DEVICE} (press Ctrl+] to exit)..."
 	ELF="${ESP32_DIR}/build/pomodoro.elf"
 	if python3 -m esp_idf_monitor --version &>/dev/null 2>&1; then
