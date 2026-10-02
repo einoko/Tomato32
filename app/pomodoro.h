@@ -47,6 +47,7 @@ typedef struct {
   bool persist_timer;
   bool low_battery_indicator;
   bool full_battery_indicator;
+  bool battery_icon;
   bool custom_bg;
   bool date_source_ntp;  /* true = NTP, false = manual */
   uint16_t manual_year;  /* manual date: year          */
@@ -114,6 +115,9 @@ void pomodoro_set_low_battery_indicator(bool val);
 
 bool pomodoro_get_full_battery_indicator(void);
 void pomodoro_set_full_battery_indicator(bool val);
+
+bool pomodoro_get_battery_icon(void);
+void pomodoro_set_battery_icon(bool val);
 
 bool pomodoro_get_custom_bg(void);
 void pomodoro_set_custom_bg(bool val);

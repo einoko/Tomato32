@@ -83,8 +83,8 @@ extern lv_font_t inter_20;
 
 static const char *TAG = "display";
 
-#define KEY_INPUT_CANDIDATE_MASK                                           \
-  (IO_EXPANDER_PIN_NUM_0 | IO_EXPANDER_PIN_NUM_2 | IO_EXPANDER_PIN_NUM_3 | \
+#define KEY_INPUT_CANDIDATE_MASK                                               \
+  (IO_EXPANDER_PIN_NUM_0 | IO_EXPANDER_PIN_NUM_2 | IO_EXPANDER_PIN_NUM_3 |     \
    IO_EXPANDER_PIN_NUM_4 | IO_EXPANDER_PIN_NUM_5)
 
 static SemaphoreHandle_t lvgl_mux = NULL;
@@ -93,8 +93,7 @@ static esp_pm_lock_handle_t s_cpu_max_lock = NULL;
 static lv_display_t *s_disp = NULL;
 static bool s_backlight_off = false;
 
-typedef struct
-{
+typedef struct {
   uint8_t *px_map;
   lv_area_t area;
   lv_area_t rotated_area;
@@ -125,8 +124,7 @@ static lv_obj_t *s_startup_title_lbl = NULL;
 static lv_obj_t *s_startup_subtitle_lbl = NULL;
 
 #if TOMATO32_DISPLAY_PERF
-typedef struct
-{
+typedef struct {
   int64_t last_flush_done_us;
   uint64_t flush_time_us;
   uint32_t frame_count;
@@ -134,8 +132,7 @@ typedef struct
   uint32_t max_flush_us;
 } display_perf_state_t;
 
-typedef enum
-{
+typedef enum {
   FLUSH_STAGE_IDLE,
   FLUSH_STAGE_WAIT_CHIP,
   FLUSH_STAGE_ROTATE,
@@ -167,35 +164,30 @@ static const axs15231b_lcd_init_cmd_t lcd_init_cmds[] = {
 #if TOMATO32_DISPLAY_PERF
 static int64_t display_perf_flush_start(void) { return esp_timer_get_time(); }
 
-static void display_perf_flush_done(int64_t start_us)
-{
+static void display_perf_flush_done(int64_t start_us) {
   int64_t now_us = esp_timer_get_time();
   uint32_t flush_us = (uint32_t)(now_us - start_us);
 
   taskENTER_CRITICAL(&s_display_perf_lock);
   if (s_display_perf.last_flush_done_us != 0 &&
-      now_us - s_display_perf.last_flush_done_us > 16000)
-  {
+      now_us - s_display_perf.last_flush_done_us > 16000) {
     s_display_perf.deadline_misses++;
   }
   s_display_perf.last_flush_done_us = now_us;
   s_display_perf.flush_time_us += flush_us;
   s_display_perf.frame_count++;
-  if (flush_us > s_display_perf.max_flush_us)
-  {
+  if (flush_us > s_display_perf.max_flush_us) {
     s_display_perf.max_flush_us = flush_us;
   }
   taskEXIT_CRITICAL(&s_display_perf_lock);
 }
 
 /* Reports even with no frames, so a stuck pipeline still shows its state. */
-static void display_perf_report_task(void *arg)
-{
+static void display_perf_report_task(void *arg) {
   (void)arg;
   static const char *const stage_names[] = {"idle", "wait_chip", "rotate",
                                             "draw", "drain"};
-  for (;;)
-  {
+  for (;;) {
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     taskENTER_CRITICAL(&s_display_perf_lock);
@@ -248,15 +240,12 @@ static void display_perf_flush_done(int64_t start_us) { (void)start_us; }
 static IRAM_ATTR void rotate90_swap_chunk(const uint16_t *src, uint16_t *dst,
                                           int32_t src_w, int32_t src_h,
                                           int32_t row_start,
-                                          int32_t chunk_lines)
-{
+                                          int32_t chunk_lines) {
   int32_t x_end = (src_w - 1) - row_start;
   int32_t x_start = x_end - (chunk_lines - 1);
-  for (int32_t src_y = 0; src_y < src_h; src_y++)
-  {
+  for (int32_t src_y = 0; src_y < src_h; src_y++) {
     const uint16_t *srow = src + (src_y * src_w);
-    for (int32_t src_x = x_start; src_x <= x_end; src_x++)
-    {
+    for (int32_t src_x = x_start; src_x <= x_end; src_x++) {
       uint16_t px = srow[src_x];
 #if !TOMATO32_DISPLAY_USE_SWAPPED_RGB565
       px = (uint16_t)((px >> 8) | (px << 8));
@@ -268,20 +257,17 @@ static IRAM_ATTR void rotate90_swap_chunk(const uint16_t *src, uint16_t *dst,
 
 /* esp_lcd drains queued color transfers before any new command, so a
  * command-less tx_param waits for the bus without counting ISR completions. */
-static void wait_transfers_done(void)
-{
+static void wait_transfers_done(void) {
   DISPLAY_PERF_SET(s_flush_stage, FLUSH_STAGE_DRAIN);
   esp_lcd_panel_io_tx_param(s_panel_io, -1, NULL, 0);
 }
 
-static void draw_chunk(int x1, int y1, int x2, int y2, const void *buf)
-{
+static void draw_chunk(int x1, int y1, int x2, int y2, const void *buf) {
   DISPLAY_PERF_SET(s_flush_stage, FLUSH_STAGE_DRAW);
   esp_lcd_panel_draw_bitmap(panel_handle, x1, y1, x2, y2, buf);
 }
 
-static void flush_send_unrotated(const flush_job_t *job)
-{
+static void flush_send_unrotated(const flush_job_t *job) {
   const lv_area_t *area = &job->area;
   /* Non-rotated fallback: byte-swap in place and send in chunks. */
 #if !TOMATO32_DISPLAY_USE_SWAPPED_RGB565
@@ -297,8 +283,7 @@ static void flush_send_unrotated(const flush_job_t *job)
   const uint8_t *map = job->px_map;
   uint16_t *bufs[2] = {trans_buf_1, trans_buf_2};
   int bi = 0;
-  while (y <= area->y2)
-  {
+  while (y <= area->y2) {
     int32_t remaining = area->y2 - y + 1;
     int32_t cl = remaining > lpc ? lpc : remaining;
     size_t chunk_bytes = bytes_per_line * (size_t)cl;
@@ -316,8 +301,7 @@ static void flush_send_unrotated(const flush_job_t *job)
  * in the old column-major approach).  Double-buffered so CPU rotation of
  * chunk N+1 overlaps with SPI transfer of chunk N; draw_chunk(N+1) waits for
  * chunk N inside esp_lcd, so a buffer is never refilled while in flight. */
-static void flush_send_rotated90(const flush_job_t *job)
-{
+static void flush_send_rotated90(const flush_job_t *job) {
   const lv_area_t *rotated_area = &job->rotated_area;
   int32_t src_w = lv_area_get_width(&job->area);
   int32_t src_h = lv_area_get_height(&job->area);
@@ -331,8 +315,7 @@ static void flush_send_rotated90(const flush_job_t *job)
   int bi = 0;
   int32_t row = rotated_area->y1;
 
-  while (row <= rotated_area->y2)
-  {
+  while (row <= rotated_area->y2) {
     int32_t remaining = rotated_area->y2 - row + 1;
     int32_t cl = remaining > lpc ? lpc : remaining;
 
@@ -347,24 +330,19 @@ static void flush_send_rotated90(const flush_job_t *job)
 
 /* Runs on the other core so LVGL can render the next frame into the second
  * draw buffer while this one is rotated and sent. */
-static void flush_task(void *arg)
-{
+static void flush_task(void *arg) {
   (void)arg;
   flush_job_t job;
-  for (;;)
-  {
+  for (;;) {
     xQueueReceive(s_flush_queue, &job, portMAX_DELAY);
     if (s_cpu_max_lock)
       esp_pm_lock_acquire(s_cpu_max_lock);
     DISPLAY_PERF_SET(s_flush_stage, FLUSH_STAGE_WAIT_CHIP);
     xSemaphoreTake(s_panel_chip_mutex, portMAX_DELAY);
     int64_t perf_start_us = display_perf_flush_start();
-    if (job.rotated)
-    {
+    if (job.rotated) {
       flush_send_rotated90(&job);
-    }
-    else
-    {
+    } else {
       flush_send_unrotated(&job);
     }
     display_perf_flush_done(perf_start_us);
@@ -378,16 +356,14 @@ static void flush_task(void *arg)
 }
 
 static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
-                                  uint8_t *color_p)
-{
+                                  uint8_t *color_p) {
   flush_job_t job = {
       .px_map = color_p,
       .area = *area,
       .rotated_area = *area,
       .rotated = lv_display_get_rotation(disp) == LV_DISPLAY_ROTATION_90,
   };
-  if (job.rotated)
-  {
+  if (job.rotated) {
     lv_display_rotate_area(disp, &job.rotated_area);
   }
   s_flush_in_flight = true;
@@ -396,8 +372,7 @@ static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
 
 /* LVGL clears its own flushing flag after this returns, so flush_task never
  * calls lv_display_flush_ready(). */
-static void example_lvgl_flush_wait_cb(lv_display_t *disp)
-{
+static void example_lvgl_flush_wait_cb(lv_display_t *disp) {
   (void)disp;
   DISPLAY_PERF_SET(s_lvgl_in_frame_wait, true);
   xSemaphoreTake(s_frame_done_semaphore, portMAX_DELAY);
@@ -406,27 +381,21 @@ static void example_lvgl_flush_wait_cb(lv_display_t *disp)
 
 /* Block until the in-flight frame reaches the panel, leaving the done signal
  * for LVGL's next flush_wait_cb. */
-static void display_wait_flush_idle(void)
-{
-  if (s_flush_in_flight)
-  {
+static void display_wait_flush_idle(void) {
+  if (s_flush_in_flight) {
     xSemaphoreTake(s_frame_done_semaphore, portMAX_DELAY);
     xSemaphoreGive(s_frame_done_semaphore);
   }
 }
 
-static void touch_report_pressed(lv_indev_data_t *data, int32_t x, int32_t y)
-{
+static void touch_report_pressed(lv_indev_data_t *data, int32_t x, int32_t y) {
 #if TOMATO32_DISPLAY_PERF
   int64_t now_us = esp_timer_get_time();
-  if (s_touch_pressed && s_touch_release_start_us != 0)
-  {
+  if (s_touch_pressed && s_touch_release_start_us != 0) {
     ESP_LOGI(TAG, "touch: bridged %" PRId64 "ms dropout",
              (now_us - s_touch_release_start_us) / 1000);
-  }
-  else if (!s_touch_pressed && s_touch_last_release_us != 0 &&
-           now_us - s_touch_last_release_us < 300000)
-  {
+  } else if (!s_touch_pressed && s_touch_last_release_us != 0 &&
+             now_us - s_touch_last_release_us < 300000) {
     ESP_LOGW(TAG,
              "touch: re-press %" PRId64 "ms after release (dropout %" PRId64
              "ms before release)",
@@ -443,18 +412,14 @@ static void touch_report_pressed(lv_indev_data_t *data, int32_t x, int32_t y)
 }
 
 /* The AXS15231B sometimes drops a read or reports zero points mid-press. */
-static void touch_report_released(lv_indev_data_t *data)
-{
+static void touch_report_released(lv_indev_data_t *data) {
   data->point = s_touch_last_point;
-  if (s_touch_pressed)
-  {
+  if (s_touch_pressed) {
     int64_t now_us = esp_timer_get_time();
-    if (s_touch_release_start_us == 0)
-    {
+    if (s_touch_release_start_us == 0) {
       s_touch_release_start_us = now_us;
     }
-    if (now_us - s_touch_release_start_us < TOUCH_RELEASE_DEBOUNCE_MS * 1000)
-    {
+    if (now_us - s_touch_release_start_us < TOUCH_RELEASE_DEBOUNCE_MS * 1000) {
       data->state = LV_INDEV_STATE_PRESSED;
       return;
     }
@@ -468,10 +433,9 @@ static void touch_report_released(lv_indev_data_t *data)
   data->state = LV_INDEV_STATE_RELEASED;
 }
 
-static void touch_read(lv_indev_data_t *data)
-{
+static void touch_read(lv_indev_data_t *data) {
   uint8_t read_touchpad_cmd[11] = {0xb5, 0xab, 0xa5, 0x5a, 0x0, 0x0,
-                                   0x0, 0x0e, 0x0, 0x0, 0x0};
+                                   0x0,  0x0e, 0x0,  0x0,  0x0};
   uint8_t buff[32] = {0};
 
   xSemaphoreTake(s_panel_chip_mutex, portMAX_DELAY);
@@ -480,25 +444,20 @@ static void touch_read(lv_indev_data_t *data)
       touch_dev, read_touchpad_cmd, 11, buff, 32, pdMS_TO_TICKS(15));
   DISPLAY_PERF_SET(s_touch_in_i2c, false);
   xSemaphoreGive(s_panel_chip_mutex);
-  if (touch_err != ESP_OK)
-  {
+  if (touch_err != ESP_OK) {
     DISPLAY_PERF_SET(s_touch_i2c_errors, s_touch_i2c_errors + 1);
     touch_report_released(data);
     return;
   }
 
-  if (buff[1] == 0)
-  {
+  if (buff[1] == 0) {
     bool changed = !s_last_key_debug_valid;
-    for (int i = 0; i < 8 && !changed; i++)
-    {
-      if (s_last_key_debug[i] != buff[i])
-      {
+    for (int i = 0; i < 8 && !changed; i++) {
+      if (s_last_key_debug[i] != buff[i]) {
         changed = true;
       }
     }
-    if (changed)
-    {
+    if (changed) {
       memcpy(s_last_key_debug, buff, 8);
       s_last_key_debug_valid = true;
       ESP_LOGI(TAG,
@@ -514,68 +473,55 @@ static void touch_read(lv_indev_data_t *data)
    * Treat these flags as a one-shot settings key event.
    */
   bool hw_key_active = false;
-  if (buff[1] == 0)
-  {
-    if ((buff[4] & 0x80) != 0 || (buff[5] & 0x80) != 0)
-    {
+  if (buff[1] == 0) {
+    if ((buff[4] & 0x80) != 0 || (buff[5] & 0x80) != 0) {
       hw_key_active = true;
     }
   }
-  if (hw_key_active && !s_touch_key_latched)
-  {
+  if (hw_key_active && !s_touch_key_latched) {
     s_touch_key_latched = true;
     s_settings_key_event = true;
     ESP_LOGI(TAG, "Touch key event detected (b1=%u b4=0x%02x b5=0x%02x)",
              buff[1], buff[4], buff[5]);
-  }
-  else if (!hw_key_active)
-  {
+  } else if (!hw_key_active) {
     s_touch_key_latched = false;
   }
 
   uint16_t pointX = (((uint16_t)buff[2] & 0x0f) << 8) | (uint16_t)buff[3];
   uint16_t pointY = (((uint16_t)buff[4] & 0x0f) << 8) | (uint16_t)buff[5];
 
-  if (buff[1] > 0 && buff[1] < 5)
-  {
+  if (buff[1] > 0 && buff[1] < 5) {
     if (pointX > LCD_V_RES)
       pointX = LCD_V_RES;
     if (pointY > LCD_H_RES)
       pointY = LCD_H_RES;
-    if (s_touch_pressed && s_touch_release_start_us != 0)
-    {
+    if (s_touch_pressed && s_touch_release_start_us != 0) {
       DISPLAY_PERF_SET(s_touch_gaps_bridged, s_touch_gaps_bridged + 1);
     }
     /* Map to native panel coordinates (172 x 640) */
     touch_report_pressed(data, pointY, LCD_V_RES - pointX);
-  }
-  else
-  {
+  } else {
     touch_report_released(data);
   }
 }
 
-static void touch_input_read_cb(lv_indev_t *indev, lv_indev_data_t *data)
-{
+static void touch_input_read_cb(lv_indev_t *indev, lv_indev_data_t *data) {
   touch_read(data);
 
   bool active = data->state == LV_INDEV_STATE_PRESSED ||
                 lv_display_get_inactive_time(NULL) < TOUCH_POLL_IDLE_AFTER_MS;
   lv_timer_t *read_timer = lv_indev_get_read_timer(indev);
-  if (read_timer)
-  {
+  if (read_timer) {
     lv_timer_set_period(read_timer,
                         active ? TOUCH_POLL_ACTIVE_MS : TOUCH_POLL_IDLE_MS);
   }
 }
 
-static uint32_t lvgl_tick_get_cb(void)
-{
+static uint32_t lvgl_tick_get_cb(void) {
   return (uint32_t)(esp_timer_get_time() / 1000);
 }
 
-bool display_lock(int timeout_ms)
-{
+bool display_lock(int timeout_ms) {
   const TickType_t timeout_ticks =
       (timeout_ms == -1) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
   return xSemaphoreTake(lvgl_mux, timeout_ticks) == pdTRUE;
@@ -583,13 +529,10 @@ bool display_lock(int timeout_ms)
 
 void display_unlock(void) { xSemaphoreGive(lvgl_mux); }
 
-static void example_lvgl_port_task(void *arg)
-{
+static void example_lvgl_port_task(void *arg) {
   uint32_t task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-  for (;;)
-  {
-    if (display_lock(-1))
-    {
+  for (;;) {
+    if (display_lock(-1)) {
       if (s_cpu_max_lock)
         esp_pm_lock_acquire(s_cpu_max_lock);
       task_delay_ms = lv_timer_handler();
@@ -598,20 +541,16 @@ static void example_lvgl_port_task(void *arg)
       DISPLAY_PERF_SET(s_lvgl_last_run_us, esp_timer_get_time());
       display_unlock();
     }
-    if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS)
-    {
+    if (task_delay_ms > LVGL_TASK_MAX_DELAY_MS) {
       task_delay_ms = LVGL_TASK_MAX_DELAY_MS;
-    }
-    else
-    {
+    } else {
       /* LVGL animations need tighter handler pacing than idle operation.
        * Keep the 10 ms idle floor for power, but avoid adding a fixed 10 ms
        * gap between animation frames. */
       uint32_t min_delay_ms = lv_anim_count_running()
                                   ? LVGL_TASK_ANIM_MIN_DELAY_MS
                                   : LVGL_TASK_MIN_DELAY_MS;
-      if (task_delay_ms < min_delay_ms)
-      {
+      if (task_delay_ms < min_delay_ms) {
         task_delay_ms = min_delay_ms;
       }
     }
@@ -619,8 +558,7 @@ static void example_lvgl_port_task(void *arg)
   }
 }
 
-static void lcd_bl_init(void)
-{
+static void lcd_bl_init(void) {
   ledc_timer_config_t timer_conf = {
       .speed_mode = LEDC_LOW_SPEED_MODE,
       .duty_resolution = LEDC_TIMER_8_BIT,
@@ -643,10 +581,8 @@ static void lcd_bl_init(void)
   ESP_ERROR_CHECK_WITHOUT_ABORT(ledc_channel_config(&ledc_conf));
 }
 
-void display_set_brightness(uint8_t percent)
-{
-  if (percent > 100)
-  {
+void display_set_brightness(uint8_t percent) {
+  if (percent > 100) {
     percent = 100;
   }
 
@@ -655,13 +591,10 @@ void display_set_brightness(uint8_t percent)
    * Backlight PWM alone is used for power saving at 0% brightness. */
 
   uint32_t duty;
-  if (percent == 0)
-  {
+  if (percent == 0) {
     /* Full off: drive active-low backlight transistor fully off. */
     duty = 0xFFU;
-  }
-  else
-  {
+  } else {
     /* Remap user-visible 10-100% to the hardware-viable 40-100% range.
      * The panel's backlight LED driver cuts out below ~40% PWM low-time. */
     if (percent < 10)
@@ -679,19 +612,16 @@ void display_set_brightness(uint8_t percent)
   /* Nothing is visible with the backlight off, so stop rendering and QSPI
    * transfers entirely; repaint the whole screen on wake. */
   bool off = percent == 0;
-  if (s_disp && off != s_backlight_off)
-  {
+  if (s_disp && off != s_backlight_off) {
     lv_display_enable_invalidation(s_disp, !off);
-    if (!off)
-    {
+    if (!off) {
       lv_obj_invalidate(lv_display_get_screen_active(s_disp));
     }
   }
   s_backlight_off = off;
 }
 
-static void lcd_reset(void)
-{
+static void lcd_reset(void) {
   gpio_config_t gpio_conf = {
       .intr_type = GPIO_INTR_DISABLE,
       .mode = GPIO_MODE_OUTPUT,
@@ -709,14 +639,12 @@ static void lcd_reset(void)
   vTaskDelay(pdMS_TO_TICKS(30));
 }
 
-static void io_expander_init(void)
-{
+static void io_expander_init(void) {
   i2c_master_bus_handle_t tca9554_bus = NULL;
 
   /* Reuse I2C0 if another module has already created it. */
   esp_err_t r = i2c_master_get_bus_handle(0, &tca9554_bus);
-  if (r != ESP_OK || !tca9554_bus)
-  {
+  if (r != ESP_OK || !tca9554_bus) {
     i2c_master_bus_config_t bus_cfg = {
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .i2c_port = I2C_NUM_0,
@@ -726,8 +654,7 @@ static void io_expander_init(void)
         .flags = {.enable_internal_pullup = true},
     };
     r = i2c_new_master_bus(&bus_cfg, &tca9554_bus);
-    if (r != ESP_OK)
-    {
+    if (r != ESP_OK) {
       ESP_LOGE(TAG, "Failed to get/create TCA9554 I2C bus (%d)", r);
       return;
     }
@@ -736,13 +663,11 @@ static void io_expander_init(void)
   /* Try TCA9554 (0x20) first, then TCA9554A (0x38) as fallback */
   uint32_t tca_addr = ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000; /* 0x20 */
   if (esp_io_expander_new_i2c_tca9554(tca9554_bus, tca_addr,
-                                      &io_expander_handle) != ESP_OK)
-  {
+                                      &io_expander_handle) != ESP_OK) {
     ESP_LOGW(TAG, "TCA9554 not found at 0x20, trying TCA9554A at 0x38");
     tca_addr = ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_000; /* 0x38 */
     if (esp_io_expander_new_i2c_tca9554(tca9554_bus, tca_addr,
-                                        &io_expander_handle) != ESP_OK)
-    {
+                                        &io_expander_handle) != ESP_OK) {
       ESP_LOGE(
           TAG,
           "TCA9554/A not found at 0x20 or 0x38 — NS4168 amp will be DISABLED");
@@ -788,17 +713,14 @@ static void io_expander_init(void)
     ESP_LOGI(TAG, "NS4168 amp SD (TCA9554 pin 7) set LOW — amp disabled");
 }
 
-bool display_get_pressed_key_mask(uint32_t *pressed_mask)
-{
-  if (!io_expander_handle || !pressed_mask)
-  {
+bool display_get_pressed_key_mask(uint32_t *pressed_mask) {
+  if (!io_expander_handle || !pressed_mask) {
     return false;
   }
 
   uint32_t level_mask = KEY_INPUT_CANDIDATE_MASK;
   if (esp_io_expander_get_level(io_expander_handle, KEY_INPUT_CANDIDATE_MASK,
-                                &level_mask) != ESP_OK)
-  {
+                                &level_mask) != ESP_OK) {
     return false;
   }
 
@@ -806,85 +728,71 @@ bool display_get_pressed_key_mask(uint32_t *pressed_mask)
   return true;
 }
 
-bool display_consume_settings_key_event(void)
-{
+bool display_consume_settings_key_event(void) {
   bool fired = s_settings_key_event;
   s_settings_key_event = false;
   return fired;
 }
 
-bool display_amp_enable(void)
-{
-  if (!io_expander_handle)
-  {
+bool display_amp_enable(void) {
+  if (!io_expander_handle) {
     ESP_LOGW(TAG, "Amp enable skipped: no IO expander handle");
     return false;
   }
 
   esp_err_t r = esp_io_expander_set_dir(
       io_expander_handle, IO_EXPANDER_PIN_NUM_7, IO_EXPANDER_OUTPUT);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_amp_enable: set_dir pin7 failed (%d)", r);
     return false;
   }
   r = esp_io_expander_set_level(io_expander_handle, IO_EXPANDER_PIN_NUM_7, 1);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_amp_enable: set_level pin7 failed (%d)", r);
     return false;
   }
   return true;
 }
 
-bool display_amp_disable(void)
-{
-  if (!io_expander_handle)
-  {
+bool display_amp_disable(void) {
+  if (!io_expander_handle) {
     ESP_LOGW(TAG, "Amp disable skipped: no IO expander handle");
     return false;
   }
 
   esp_err_t r = esp_io_expander_set_dir(
       io_expander_handle, IO_EXPANDER_PIN_NUM_7, IO_EXPANDER_OUTPUT);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_amp_disable: set_dir pin7 failed (%d)", r);
     return false;
   }
   r = esp_io_expander_set_level(io_expander_handle, IO_EXPANDER_PIN_NUM_7, 0);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_amp_disable: set_level pin7 failed (%d)", r);
     return false;
   }
   return true;
 }
 
-bool display_power_hold_enable(void)
-{
-  if (!io_expander_handle)
-  {
+bool display_power_hold_enable(void) {
+  if (!io_expander_handle) {
     io_expander_init();
   }
 
-  if (!io_expander_handle)
-  {
+  if (!io_expander_handle) {
     ESP_LOGW(TAG, "Power-hold enable skipped: no IO expander handle");
     return false;
   }
 
   esp_err_t r = esp_io_expander_set_dir(
       io_expander_handle, IO_EXPANDER_PIN_NUM_6, IO_EXPANDER_OUTPUT);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_power_hold_enable: set_dir pin6 failed (%d)", r);
     return false;
   }
 
   r = esp_io_expander_set_level(io_expander_handle, IO_EXPANDER_PIN_NUM_6, 1);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_power_hold_enable: set_level pin6 HIGH failed (%d)",
              r);
     return false;
@@ -894,25 +802,21 @@ bool display_power_hold_enable(void)
   return true;
 }
 
-bool display_power_off(void)
-{
-  if (!io_expander_handle)
-  {
+bool display_power_off(void) {
+  if (!io_expander_handle) {
     ESP_LOGW(TAG, "Power-off skipped: no IO expander handle");
     return false;
   }
 
   esp_err_t r = esp_io_expander_set_dir(
       io_expander_handle, IO_EXPANDER_PIN_NUM_6, IO_EXPANDER_OUTPUT);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_power_off: set_dir pin6 failed (%d)", r);
     return false;
   }
 
   r = esp_io_expander_set_level(io_expander_handle, IO_EXPANDER_PIN_NUM_6, 0);
-  if (r != ESP_OK)
-  {
+  if (r != ESP_OK) {
     ESP_LOGE(TAG, "display_power_off: set_level pin6 LOW failed (%d)", r);
     return false;
   }
@@ -921,8 +825,7 @@ bool display_power_off(void)
   return true;
 }
 
-static void touch_init(void)
-{
+static void touch_init(void) {
   i2c_master_bus_config_t bus_cfg = {
       .clk_source = I2C_CLK_SRC_DEFAULT,
       .i2c_port = I2C_NUM_1,
@@ -942,10 +845,8 @@ static void touch_init(void)
       i2c_master_bus_add_device(touch_i2c_bus, &dev_cfg, &touch_dev));
 }
 
-void display_show_startup_screen(const char *title, const char *subtitle)
-{
-  if (!s_startup_scr)
-  {
+void display_show_startup_screen(const char *title, const char *subtitle) {
+  if (!s_startup_scr) {
     s_startup_scr = lv_obj_create(NULL);
     lv_obj_remove_style_all(s_startup_scr);
     lv_obj_set_style_bg_opa(s_startup_scr, LV_OPA_COVER, 0);
@@ -969,8 +870,7 @@ void display_show_startup_screen(const char *title, const char *subtitle)
   lv_scr_load(s_startup_scr);
 }
 
-lv_display_t *display_init(void)
-{
+lv_display_t *display_init(void) {
   io_expander_init();
   lcd_reset();
   touch_init();
@@ -1028,8 +928,7 @@ lv_display_t *display_init(void)
   lv_init();
   lv_tick_set_cb(lvgl_tick_get_cb);
   if (esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "lvgl", &s_cpu_max_lock) !=
-      ESP_OK)
-  {
+      ESP_OK) {
     s_cpu_max_lock = NULL;
   }
   lv_display_t *disp = lv_display_create(LCD_H_RES, LCD_V_RES);

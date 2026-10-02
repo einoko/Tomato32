@@ -89,6 +89,10 @@ lv_obj_t *lbl_system_full_battery_indicator;
 lv_obj_t *system_full_battery_indicator_seg_container;
 lv_obj_t *system_full_battery_indicator_on;
 lv_obj_t *system_full_battery_indicator_off;
+lv_obj_t *lbl_system_battery_icon;
+lv_obj_t *system_battery_icon_seg_container;
+lv_obj_t *system_battery_icon_on;
+lv_obj_t *system_battery_icon_off;
 
 lv_obj_t *lbl_system_default_brightness;
 lv_obj_t *lbl_system_default_brightness_value;

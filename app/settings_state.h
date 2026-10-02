@@ -127,6 +127,10 @@ extern lv_obj_t *lbl_system_full_battery_indicator;
 extern lv_obj_t *system_full_battery_indicator_seg_container;
 extern lv_obj_t *system_full_battery_indicator_on;
 extern lv_obj_t *system_full_battery_indicator_off;
+extern lv_obj_t *lbl_system_battery_icon;
+extern lv_obj_t *system_battery_icon_seg_container;
+extern lv_obj_t *system_battery_icon_on;
+extern lv_obj_t *system_battery_icon_off;
 
 /* System view: brightness subview rows. */
 extern lv_obj_t *lbl_system_default_brightness;
