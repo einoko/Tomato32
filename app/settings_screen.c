@@ -9,7 +9,8 @@
 #include "theme.h"
 #include <time.h>
 
-lv_obj_t *settings_screen_create(void) {
+lv_obj_t *settings_screen_create(void)
+{
   scr = lv_obj_create(NULL);
   theme_apply_scr(scr);
 
@@ -21,20 +22,25 @@ lv_obj_t *settings_screen_create(void) {
   return scr;
 }
 
-void settings_screen_update(void) {
+void settings_screen_update(void)
+{
   pomodoro_preset_t *p = pomodoro_get_preset(pomodoro_get_active_preset());
   pomodoro_preset_id_t active = pomodoro_get_active_preset();
 
   /* Update preset tabs (A, B, C only) */
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++)
+  {
     lv_color_t color = theme_get_preset_color(i);
-    if ((pomodoro_preset_id_t)i == active) {
+    if ((pomodoro_preset_id_t)i == active)
+    {
       lv_obj_set_style_bg_opa(tab_btns[i], LV_OPA_COVER, 0);
       lv_obj_set_style_bg_color(tab_btns[i], color, 0);
       lv_obj_set_style_radius(tab_btns[i], LV_RADIUS_CIRCLE, 0);
       lv_obj_set_style_border_width(tab_btns[i], 0, 0);
       lv_obj_set_style_text_color(tab_lbls[i], lv_color_white(), 0);
-    } else {
+    }
+    else
+    {
       lv_obj_set_style_bg_opa(tab_btns[i], LV_OPA_TRANSP, 0);
       lv_obj_set_style_radius(tab_btns[i], 0, 0);
       lv_obj_set_style_border_width(tab_btns[i], 0, 0);
@@ -47,7 +53,8 @@ void settings_screen_update(void) {
   lv_color_t active_text = theme_get_inverse_text();
   lv_color_t inactive_text = theme_get_text_muted();
 
-  if (pomodoro_get_auto_advance()) {
+  if (pomodoro_get_auto_advance())
+  {
     lv_obj_set_style_bg_opa(seg_auto, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(seg_auto, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(seg_auto, 0), active_text, 0);
@@ -55,7 +62,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(seg_manual, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(seg_manual, 0), inactive_text,
                                 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(seg_manual, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(seg_manual, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(seg_manual, 0), active_text,
@@ -67,7 +76,8 @@ void settings_screen_update(void) {
   }
 
   /* Update system view theme segmented control */
-  if (theme_is_dark()) {
+  if (theme_is_dark())
+  {
     lv_obj_set_style_bg_opa(system_theme_dark, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_theme_dark, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_theme_dark, 0),
@@ -76,7 +86,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_theme_light, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_theme_light, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_theme_light, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_theme_light, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_theme_light, 0),
@@ -88,7 +100,8 @@ void settings_screen_update(void) {
   }
 
   /* Update visual pulse segmented control */
-  if (pomodoro_get_visual_pulse()) {
+  if (pomodoro_get_visual_pulse())
+  {
     lv_obj_set_style_bg_opa(system_visual_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_visual_on, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_visual_on, 0),
@@ -97,7 +110,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_visual_off, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_visual_off, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_visual_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_visual_off, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_visual_off, 0),
@@ -109,7 +124,8 @@ void settings_screen_update(void) {
   }
 
   /* Update custom background segmented control */
-  if (pomodoro_get_custom_bg()) {
+  if (pomodoro_get_custom_bg())
+  {
     lv_obj_set_style_bg_opa(system_custom_bg_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_custom_bg_on, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_custom_bg_on, 0),
@@ -118,7 +134,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_custom_bg_off, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_custom_bg_off, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_custom_bg_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_custom_bg_off, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_custom_bg_off, 0),
@@ -130,7 +148,8 @@ void settings_screen_update(void) {
   }
 
   /* Update sound segmented control */
-  if (pomodoro_get_sound()) {
+  if (pomodoro_get_sound())
+  {
     lv_obj_set_style_bg_opa(system_sound_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_sound_on, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_sound_on, 0),
@@ -139,7 +158,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_sound_off, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_sound_off, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_sound_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_sound_off, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_sound_off, 0),
@@ -156,17 +177,21 @@ void settings_screen_update(void) {
   bool test_sound_playing = app_is_test_sound_playing();
   lv_label_set_text(lv_obj_get_child(btn_system_sound_test, 0),
                     test_sound_playing ? "Playing" : "Play");
-  if (test_sound_playing) {
+  if (test_sound_playing)
+  {
     lv_obj_add_state(btn_system_sound_test, LV_STATE_DISABLED);
     lv_obj_remove_flag(btn_system_sound_test, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_opa(btn_system_sound_test, LV_OPA_50, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_clear_state(btn_system_sound_test, LV_STATE_DISABLED);
     lv_obj_add_flag(btn_system_sound_test, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_opa(btn_system_sound_test, LV_OPA_COVER, 0);
   }
 
-  if (pomodoro_get_smart_dim()) {
+  if (pomodoro_get_smart_dim())
+  {
     lv_obj_set_style_bg_opa(system_smart_dim_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_smart_dim_on, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_smart_dim_on, 0),
@@ -175,7 +200,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_smart_dim_off, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_smart_dim_off, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_smart_dim_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_smart_dim_off, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_smart_dim_off, 0),
@@ -187,7 +214,8 @@ void settings_screen_update(void) {
   }
 
   /* Update smart sleep segmented control */
-  if (pomodoro_get_power_nap_mode()) {
+  if (pomodoro_get_power_nap_mode())
+  {
     lv_obj_set_style_bg_opa(system_power_nap_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_power_nap_on, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_power_nap_on, 0),
@@ -196,7 +224,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_power_nap_off, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_power_nap_off, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_power_nap_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_power_nap_off, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_power_nap_off, 0),
@@ -208,7 +238,8 @@ void settings_screen_update(void) {
   }
 
   /* Update persist timer segmented control */
-  if (pomodoro_get_persist_timer()) {
+  if (pomodoro_get_persist_timer())
+  {
     lv_obj_set_style_bg_opa(system_persist_timer_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_persist_timer_on, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_on, 0),
@@ -217,7 +248,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_bg_opa(system_persist_timer_off, LV_OPA_TRANSP, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_off, 0),
                                 inactive_text, 0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_persist_timer_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_persist_timer_off, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_persist_timer_off, 0),
@@ -229,7 +262,8 @@ void settings_screen_update(void) {
   }
 
   /* Update low-battery indicator segmented control */
-  if (pomodoro_get_low_battery_indicator()) {
+  if (pomodoro_get_low_battery_indicator())
+  {
     lv_obj_set_style_bg_opa(system_low_battery_indicator_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_low_battery_indicator_on, active_bg, 0);
     lv_obj_set_style_text_color(
@@ -238,7 +272,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_text_color(
         lv_obj_get_child(system_low_battery_indicator_off, 0), inactive_text,
         0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_low_battery_indicator_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_low_battery_indicator_off, active_bg, 0);
     lv_obj_set_style_text_color(
@@ -249,7 +285,8 @@ void settings_screen_update(void) {
   }
 
   /* Update full-battery indicator segmented control */
-  if (pomodoro_get_full_battery_indicator()) {
+  if (pomodoro_get_full_battery_indicator())
+  {
     lv_obj_set_style_bg_opa(system_full_battery_indicator_on, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_full_battery_indicator_on, active_bg, 0);
     lv_obj_set_style_text_color(
@@ -259,7 +296,9 @@ void settings_screen_update(void) {
     lv_obj_set_style_text_color(
         lv_obj_get_child(system_full_battery_indicator_off, 0), inactive_text,
         0);
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_full_battery_indicator_off, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_full_battery_indicator_off, active_bg, 0);
     lv_obj_set_style_text_color(
@@ -271,7 +310,8 @@ void settings_screen_update(void) {
   }
 
   /* Update date source segmented control */
-  if (pomodoro_get_date_source_ntp()) {
+  if (pomodoro_get_date_source_ntp())
+  {
     lv_obj_set_style_bg_opa(system_date_source_ntp_btn, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_date_source_ntp_btn, active_bg, 0);
     lv_obj_set_style_text_color(lv_obj_get_child(system_date_source_ntp_btn, 0),
@@ -288,7 +328,9 @@ void settings_screen_update(void) {
     lv_obj_add_flag(lbl_system_set_time_chevron, LV_OBJ_FLAG_HIDDEN);
     lv_label_set_text(lbl_system_set_date, "Date");
     lv_label_set_text(lbl_system_set_time, "Time");
-  } else {
+  }
+  else
+  {
     lv_obj_set_style_bg_opa(system_date_source_manual_btn, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(system_date_source_manual_btn, active_bg, 0);
     lv_obj_set_style_text_color(
@@ -311,13 +353,16 @@ void settings_screen_update(void) {
   {
     time_t now = time(NULL);
     struct tm tm_now;
-    if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024) {
+    if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024)
+    {
       lv_label_set_text_fmt(lbl_system_set_date_value, "%04d-%02d-%02d",
                             tm_now.tm_year + 1900, tm_now.tm_mon + 1,
                             tm_now.tm_mday);
       lv_label_set_text_fmt(lbl_system_set_time_value, "%02d:%02d",
                             tm_now.tm_hour, tm_now.tm_min);
-    } else {
+    }
+    else
+    {
       lv_label_set_text(lbl_system_set_date_value, "--");
       lv_label_set_text(lbl_system_set_time_value, "--");
     }
@@ -325,20 +370,28 @@ void settings_screen_update(void) {
 
   /* Update battery percentage */
   int battery_percent = app_get_battery_percent();
-  if (battery_percent >= 0 && battery_percent <= 100) {
-    if (battery_percent >= 98) {
-      lv_label_set_text(lbl_system_hours, "Full 100%");
-    } else {
-      lv_label_set_text_fmt(lbl_system_hours, "Battery %d%%", battery_percent);
+  if (battery_percent >= 0 && battery_percent <= 100)
+  {
+    if (battery_percent >= 98)
+    {
+      lv_label_set_text(lbl_system_hours, "Battery 100 %");
     }
-  } else {
-    lv_label_set_text(lbl_system_hours, "Battery --%");
+    else
+    {
+      lv_label_set_text_fmt(lbl_system_hours, "Battery %d %%", battery_percent);
+    }
+  }
+  else
+  {
+    lv_label_set_text(lbl_system_hours, "Battery -- %");
   }
 
   /* Update edit view value */
-  if (!lv_obj_has_flag(view_edit, LV_OBJ_FLAG_HIDDEN)) {
+  if (!lv_obj_has_flag(view_edit, LV_OBJ_FLAG_HIDDEN))
+  {
     char buf[8];
-    switch (edit_field) {
+    switch (edit_field)
+    {
     case 0:
       lv_snprintf(buf, sizeof(buf), "%" LV_PRIu32, p->work_duration / 60);
       break;
@@ -392,7 +445,8 @@ void settings_screen_update(void) {
   }
 }
 
-void settings_screen_refresh_theme(void) {
+void settings_screen_refresh_theme(void)
+{
   lv_style_set_border_color(&style_stepper_btn, theme_get_text());
   lv_style_set_text_color(&style_stepper_btn, theme_get_text());
   lv_style_set_bg_color(&style_stepper_btn_pressed, theme_get_text());
