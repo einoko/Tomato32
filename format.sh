@@ -62,7 +62,7 @@ while IFS= read -r -d '' file; do
 	clang_files+=("$file")
 done < <(
 	find app platform \
-		-type d \( -name lvgl -o -name build -o -name .git \) -prune -o \
+		-type d \( -name lvgl -o -name build -o -name .git -o -name managed_components \) -prune -o \
 		-type f \( -name '*.c' -o -name '*.h' -o -name '*.cc' -o -name '*.cpp' -o -name '*.cxx' -o -name '*.hpp' \) \
 		-print0
 )
@@ -76,7 +76,7 @@ while IFS= read -r -d '' file; do
 	cmake_files+=("$file")
 done < <(
 	find . \
-		-type d \( -name .git -o -name lvgl -o -name build \) -prune -o \
+		-type d \( -name .git -o -name lvgl -o -name build -o -name managed_components \) -prune -o \
 		-type f \( -name 'CMakeLists.txt' -o -name '*.cmake' \) \
 		-print0
 )
@@ -86,7 +86,7 @@ while IFS= read -r -d '' file; do
 	sh_files+=("$file")
 done < <(
 	find app platform \
-		-type d \( -name lvgl -o -name build -o -name .git \) -prune -o \
+		-type d \( -name lvgl -o -name build -o -name .git -o -name managed_components \) -prune -o \
 		-type f -name '*.sh' -print0
 )
 
