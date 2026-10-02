@@ -1,0 +1,53 @@
+name: Build firmware release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build and package ESP32-S3 firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build firmware with ESP-IDF
+        run: ./platform/esp32/build.sh
+
+      - name: Package browser firmware bundle
+        run: >-
+          python3 platform/esp32/package_release.py
+          --version "$GITHUB_REF_NAME"
+          --build-dir platform/esp32/build
+          --output-dir dist
+
+      - name: Create or update draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          archive="dist/tomato32-firmware-${tag}.zip"
+          checksum="${archive}.sha256"
+
+          if gh release view "$tag" --json isDraft --jq '.isDraft' >/tmp/tomato32-release-is-draft 2>/dev/null; then
+            if [[ "$(cat /tmp/tomato32-release-is-draft)" != "true" ]]; then
+              echo "A published release already exists for ${tag}; refusing to replace it." >&2
+              exit 1
+            fi
+            gh release upload "$tag" "$archive" "$checksum" --clobber
+          else
+            gh release create "$tag" "$archive" "$checksum" \
+              --draft \
+              --verify-tag \
+              --generate-notes \
+              --title "Tomato32 ${tag}"
+          fi
