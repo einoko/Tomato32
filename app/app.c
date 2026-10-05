@@ -12,10 +12,10 @@ static lv_obj_t *settings_scr;
 static lv_obj_t *stats_scr;
 static lv_obj_t *debug_scr;
 static lv_timer_t *tick_timer;
-static uint32_t last_tick_ms = 0;
+/* Monotonic ms timestamp of the most recent whole-second boundary. */
+static uint32_t tick_anchor_ms = 0;
 static uint32_t pause_elapsed_in_second = 0;
 static bool pause_elapsed_valid = false;
-static bool restore_period_needed = false;
 static app_battery_percent_provider_t battery_provider;
 static app_battery_charging_provider_t battery_charging_provider;
 static app_brightness_provider_t brightness_provider;
@@ -89,16 +89,24 @@ static void update_brightness_policy(bool phase_just_completed) {
 static void tick_cb(lv_timer_t *timer) {
   (void)timer;
 
-  last_tick_ms = lv_tick_get();
-  if (restore_period_needed) {
-    lv_timer_set_period(tick_timer, 1000);
-    restore_period_needed = false;
+  /* lv_timer re-arms from the (late) actual run time, so counting callbacks
+   * drifts. Count whole seconds elapsed on the monotonic clock instead and
+   * re-arm the timer to land on the next boundary. */
+  uint32_t now = lv_tick_get();
+  uint32_t ticks = 0;
+  while (now - tick_anchor_ms >= 1000) {
+    tick_anchor_ms += 1000;
+    ticks++;
   }
+  uint32_t next_ms = 1000 - (now - tick_anchor_ms);
+  lv_timer_set_period(tick_timer, next_ms ? next_ms : 1);
 
   uint32_t before_remaining = pomodoro_get_remaining();
   bool was_running = pomodoro_is_running();
 
-  pomodoro_tick();
+  for (uint32_t i = 0; i < ticks; i++) {
+    pomodoro_tick();
+  }
 
   if (!pomodoro_get_persist_timer() || !pomodoro_is_running()) {
     timer_checkpoint_seconds = 0;
@@ -143,6 +151,7 @@ void app_init(lv_display_t *display) {
   active_screen = APP_SCREEN_TIMER;
 
   tick_timer = lv_timer_create(tick_cb, 1000, NULL);
+  tick_anchor_ms = lv_tick_get();
   timer_checkpoint_seconds = 0;
   (void)display;
   apply_screen_brightness(pomodoro_get_default_brightness());
@@ -286,23 +295,20 @@ void app_timer_toggle(void) {
   bool is_running = pomodoro_is_running();
 
   if (!was_running && is_running) {
+    uint32_t now = lv_tick_get();
+    uint32_t elapsed = 0;
     if (pause_elapsed_valid) {
-      /* Resume: fire the first tick after the remainder of the interrupted
-       * second, then restore the normal 1000 ms period. */
-      uint32_t remaining_ms = 1000 - pause_elapsed_in_second;
-      if (remaining_ms == 0 || remaining_ms > 1000)
-        remaining_ms = 1000;
-      lv_timer_set_period(tick_timer, remaining_ms);
-      lv_timer_reset(tick_timer);
-      restore_period_needed = true;
+      /* Resume: continue the interrupted second where it left off. */
+      elapsed = pause_elapsed_in_second;
       pause_elapsed_valid = false;
-    } else {
-      /* Fresh start: first tick in exactly 1000 ms. */
-      lv_timer_reset(tick_timer);
     }
+    /* Fresh start (elapsed == 0): first tick in exactly 1000 ms. */
+    tick_anchor_ms = now - elapsed;
+    lv_timer_set_period(tick_timer, 1000 - elapsed);
+    lv_timer_reset(tick_timer);
   } else if (was_running && !is_running) {
     /* Pause: record how far into the current second we are. */
-    uint32_t elapsed = lv_tick_get() - last_tick_ms;
+    uint32_t elapsed = lv_tick_get() - tick_anchor_ms;
     pause_elapsed_in_second = (elapsed < 1000) ? elapsed : 0;
     pause_elapsed_valid = true;
   }
