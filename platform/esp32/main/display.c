@@ -21,6 +21,7 @@
 
 extern lv_font_t inter_36;
 extern lv_font_t inter_20;
+extern lv_font_t inter_16;
 
 /* Pin configuration from Waveshare examples */
 #define LCD_HOST SPI3_HOST
@@ -122,6 +123,7 @@ static bool s_last_key_debug_valid = false;
 static lv_obj_t *s_startup_scr = NULL;
 static lv_obj_t *s_startup_title_lbl = NULL;
 static lv_obj_t *s_startup_subtitle_lbl = NULL;
+static lv_obj_t *s_startup_version_lbl = NULL;
 
 #if TOMATO32_DISPLAY_PERF
 typedef struct {
@@ -862,11 +864,18 @@ void display_show_startup_screen(const char *title, const char *subtitle) {
                                 0);
     lv_obj_set_style_text_font(s_startup_subtitle_lbl, &inter_20, 0);
     lv_obj_align(s_startup_subtitle_lbl, LV_ALIGN_CENTER, 0, 26);
+
+    s_startup_version_lbl = lv_label_create(s_startup_scr);
+    lv_obj_set_style_text_color(s_startup_version_lbl, lv_color_hex(0x71849A),
+                                0);
+    lv_obj_set_style_text_font(s_startup_version_lbl, &inter_16, 0);
+    lv_obj_align(s_startup_version_lbl, LV_ALIGN_BOTTOM_LEFT, 8, -8);
   }
 
   lv_label_set_text(s_startup_title_lbl, title ? title : "Tomato32");
   lv_label_set_text(s_startup_subtitle_lbl,
                     subtitle ? subtitle : "Starting...");
+  lv_label_set_text_fmt(s_startup_version_lbl, "v%s", TOMATO32_VERSION);
   lv_scr_load(s_startup_scr);
 }
 

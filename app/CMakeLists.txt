@@ -76,6 +76,8 @@ if(ESP_PLATFORM)
     target_compile_definitions(${COMPONENT_LIB} PRIVATE
         PERSIST_PATH="/spiffs/.pomodoro_state"
         THEME_PERSIST_PATH="/spiffs/.pomodoro_theme"
+    )
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC
         TOMATO32_VERSION="${TOMATO32_VERSION}"
     )
 else()
