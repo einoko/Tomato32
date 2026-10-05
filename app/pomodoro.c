@@ -419,11 +419,9 @@ static bool pomodoro_load(void) {
   int full_battery_indicator = 1;
   int battery_icon = 0;
   unsigned int smart_dim_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
-  unsigned int smart_sleep_delay_minutes =
-      POMODORO_MIN_IDLE_DELAY_MINUTES;
+  unsigned int smart_sleep_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
   int parsed =
-      sscanf(first_line,
-             "%d %d %d %d %u %u %d %d %d %u %u %d %d %d %d %u %u",
+      sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u %d %d %d %d %u %u",
              &active_preset, &auto_adv, &visual_pulse, &sound, &bell_volume,
              &default_brightness, &smart_dim, &power_nap_mode, &custom_bg,
              &smart_dim_brightness, &visual_pulse_opacity, &persist_timer,
