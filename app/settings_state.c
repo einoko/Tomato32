@@ -9,9 +9,10 @@ lv_obj_t *view_system_display;
 lv_obj_t *view_system_ui;
 lv_obj_t *view_system_sound;
 lv_obj_t *view_system_brightness;
-lv_obj_t *view_system_system_menu;
+lv_obj_t *view_system_general;
 lv_obj_t *view_system_battery;
 lv_obj_t *view_system_datetime;
+lv_obj_t *view_system_timer_settings;
 lv_obj_t *main_divider;
 
 lv_obj_t *tab_btns[PRESET_COUNT];
@@ -23,7 +24,9 @@ lv_obj_t *seg_manual;
 
 lv_obj_t *lbl_edit;
 lv_obj_t *lbl_edit_chevron;
-lv_obj_t *lbl_adv;
+lv_obj_t *lbl_timer_settings;
+lv_obj_t *lbl_timer_settings_chevron;
+lv_obj_t *lbl_advance_to_next;
 lv_obj_t *lbl_system_settings;
 lv_obj_t *lbl_system_chevron;
 lv_obj_t *btn_use_profile;
@@ -43,8 +46,8 @@ lv_obj_t *lbl_system_ui;
 lv_obj_t *lbl_system_ui_chevron;
 lv_obj_t *lbl_system_sound_menu;
 lv_obj_t *lbl_system_sound_menu_chevron;
-lv_obj_t *lbl_system_brightness_menu;
-lv_obj_t *lbl_system_brightness_menu_chevron;
+lv_obj_t *lbl_system_general_menu;
+lv_obj_t *lbl_system_general_menu_chevron;
 
 lv_obj_t *lbl_system_appearance;
 lv_obj_t *lbl_system_appearance_chevron;

@@ -35,11 +35,9 @@ static void system_settings_cb(lv_event_t *e) {
   settings_system_view_show();
 }
 
-static void toggle_auto_cb(lv_event_t *e) {
+static void timer_settings_cb(lv_event_t *e) {
   (void)e;
-  pomodoro_set_auto_advance(!pomodoro_get_auto_advance());
-  settings_screen_update();
-  pomodoro_save();
+  settings_system_view_show_timer_settings();
 }
 
 void settings_main_view_build(lv_obj_t *parent) {
@@ -123,7 +121,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_opa(right, LV_OPA_TRANSP, 0);
   lv_obj_remove_flag(right, LV_OBJ_FLAG_SCROLLABLE);
 
-  /* Row 1: Edit durations */
+  /* Row 1: Edit profile */
   lv_obj_t *row_edit = lv_obj_create(right);
   lv_obj_remove_style_all(row_edit);
   lv_obj_set_size(row_edit, SETTINGS_RIGHT_W, 57);
@@ -134,7 +132,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_add_event_cb(row_edit, edit_durations_cb, LV_EVENT_CLICKED, NULL);
 
   lbl_edit = lv_label_create(row_edit);
-  lv_label_set_text(lbl_edit, "Edit durations");
+  lv_label_set_text(lbl_edit, "Edit profile");
   lv_obj_set_style_text_font(lbl_edit, &inter_24, 0);
   lv_obj_set_style_text_color(lbl_edit, theme_get_text(), 0);
   lv_obj_align(lbl_edit, LV_ALIGN_LEFT_MID, 24, 0);
@@ -145,53 +143,29 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_style_text_color(lbl_edit_chevron, theme_get_text_muted(), 0);
   lv_obj_align(lbl_edit_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 
-  /* Row 2: Advance to next */
-  lv_obj_t *row_advance = lv_obj_create(right);
-  lv_obj_remove_style_all(row_advance);
-  lv_obj_set_size(row_advance, SETTINGS_RIGHT_W, 57);
-  lv_obj_set_pos(row_advance, 0, 57);
-  lv_obj_remove_flag(row_advance, LV_OBJ_FLAG_SCROLLABLE);
+  /* Row 2: Timer settings */
+  lv_obj_t *row_timer_settings = lv_obj_create(right);
+  lv_obj_remove_style_all(row_timer_settings);
+  lv_obj_set_size(row_timer_settings, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_timer_settings, 0, 57);
+  lv_obj_remove_flag(row_timer_settings, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_flag(row_timer_settings, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(row_timer_settings, timer_settings_cb, LV_EVENT_CLICKED,
+                      NULL);
 
-  lbl_adv = lv_label_create(row_advance);
-  lv_label_set_text(lbl_adv, "Advance to next");
-  lv_obj_set_style_text_font(lbl_adv, &inter_24, 0);
-  lv_obj_set_style_text_color(lbl_adv, theme_get_text(), 0);
-  lv_obj_align(lbl_adv, LV_ALIGN_LEFT_MID, 24, 0);
+  lbl_timer_settings = lv_label_create(row_timer_settings);
+  lv_label_set_text(lbl_timer_settings, "Timer settings");
+  lv_obj_set_style_text_font(lbl_timer_settings, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_timer_settings, theme_get_text(), 0);
+  lv_obj_align(lbl_timer_settings, LV_ALIGN_LEFT_MID, 24, 0);
 
-  /* Segmented control */
-  seg_container = lv_obj_create(row_advance);
-  lv_obj_remove_style_all(seg_container);
-  lv_obj_set_size(seg_container, 146, 40);
-  lv_obj_set_style_radius(seg_container, 20, 0);
-  lv_obj_set_style_bg_color(seg_container, theme_get_seg_bg(), 0);
-  lv_obj_set_style_bg_opa(seg_container, LV_OPA_COVER, 0);
-  lv_obj_set_style_pad_all(seg_container, 2, 0);
-  lv_obj_remove_flag(seg_container, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_align(seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
-
-  seg_auto = lv_btn_create(seg_container);
-  lv_obj_remove_style_all(seg_auto);
-  lv_obj_set_size(seg_auto, 62, 36);
-  lv_obj_set_style_radius(seg_auto, 18, 0);
-  lv_obj_add_event_cb(seg_auto, toggle_auto_cb, LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(seg_auto, 0, 0);
-
-  lv_obj_t *lbl_seg_auto = lv_label_create(seg_auto);
-  lv_label_set_text(lbl_seg_auto, "Auto");
-  lv_obj_set_style_text_font(lbl_seg_auto, &inter_16, 0);
-  lv_obj_align(lbl_seg_auto, LV_ALIGN_CENTER, 0, -1);
-
-  seg_manual = lv_btn_create(seg_container);
-  lv_obj_remove_style_all(seg_manual);
-  lv_obj_set_size(seg_manual, 78, 36);
-  lv_obj_set_style_radius(seg_manual, 18, 0);
-  lv_obj_add_event_cb(seg_manual, toggle_auto_cb, LV_EVENT_CLICKED, NULL);
-  lv_obj_set_pos(seg_manual, 64, 0);
-
-  lv_obj_t *lbl_seg_manual = lv_label_create(seg_manual);
-  lv_label_set_text(lbl_seg_manual, "Manual");
-  lv_obj_set_style_text_font(lbl_seg_manual, &inter_16, 0);
-  lv_obj_align(lbl_seg_manual, LV_ALIGN_CENTER, 0, -1);
+  lbl_timer_settings_chevron = lv_label_create(row_timer_settings);
+  lv_label_set_text(lbl_timer_settings_chevron, LV_SYMBOL_RIGHT);
+  lv_obj_set_style_text_font(lbl_timer_settings_chevron, &lv_font_montserrat_16,
+                             0);
+  lv_obj_set_style_text_color(lbl_timer_settings_chevron,
+                              theme_get_text_muted(), 0);
+  lv_obj_align(lbl_timer_settings_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 
   /* Row 3: System Settings */
   lv_obj_t *row_system = lv_obj_create(right);

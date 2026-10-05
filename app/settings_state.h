@@ -11,16 +11,17 @@
 #define SETTINGS_LEFT_W 240
 #define SETTINGS_RIGHT_W (SETTINGS_DISPLAY_W - SETTINGS_LEFT_W)
 
-/* System subview navigation. */
+/* Settings subview navigation. */
 typedef enum {
   SYSTEM_SUBVIEW_ROOT = 0,
-  SYSTEM_SUBVIEW_DISPLAY,     /* Display intermediate menu */
-  SYSTEM_SUBVIEW_UI,          /* Appearance */
-  SYSTEM_SUBVIEW_BRIGHTNESS,  /* Brightness */
-  SYSTEM_SUBVIEW_SOUND,       /* Sound */
-  SYSTEM_SUBVIEW_SYSTEM_MENU, /* System intermediate menu */
-  SYSTEM_SUBVIEW_BATTERY,     /* Battery */
-  SYSTEM_SUBVIEW_DATETIME,    /* Date & time */
+  SYSTEM_SUBVIEW_DISPLAY,        /* Display intermediate menu */
+  SYSTEM_SUBVIEW_UI,             /* Appearance */
+  SYSTEM_SUBVIEW_BRIGHTNESS,     /* Brightness */
+  SYSTEM_SUBVIEW_SOUND,          /* Sound */
+  SYSTEM_SUBVIEW_GENERAL,        /* General intermediate menu */
+  SYSTEM_SUBVIEW_BATTERY,        /* Battery */
+  SYSTEM_SUBVIEW_DATETIME,       /* Date & time */
+  SYSTEM_SUBVIEW_TIMER_SETTINGS, /* Timer settings */
 } system_subview_t;
 
 /* Top-level screen and views. */
@@ -33,16 +34,17 @@ extern lv_obj_t *view_system_display;
 extern lv_obj_t *view_system_ui;
 extern lv_obj_t *view_system_sound;
 extern lv_obj_t *view_system_brightness;
-extern lv_obj_t *view_system_system_menu;
+extern lv_obj_t *view_system_general;
 extern lv_obj_t *view_system_battery;
 extern lv_obj_t *view_system_datetime;
+extern lv_obj_t *view_system_timer_settings;
 extern lv_obj_t *main_divider;
 
 /* Main view: preset tabs. */
 extern lv_obj_t *tab_btns[PRESET_COUNT];
 extern lv_obj_t *tab_lbls[PRESET_COUNT];
 
-/* Main view: auto-advance segmented control. */
+/* Timer settings view: auto-advance segmented control. */
 extern lv_obj_t *seg_container;
 extern lv_obj_t *seg_auto;
 extern lv_obj_t *seg_manual;
@@ -50,7 +52,9 @@ extern lv_obj_t *seg_manual;
 /* Main view: row labels and buttons. */
 extern lv_obj_t *lbl_edit;
 extern lv_obj_t *lbl_edit_chevron;
-extern lv_obj_t *lbl_adv;
+extern lv_obj_t *lbl_timer_settings;
+extern lv_obj_t *lbl_timer_settings_chevron;
+extern lv_obj_t *lbl_advance_to_next;
 extern lv_obj_t *lbl_system_settings;
 extern lv_obj_t *lbl_system_chevron;
 extern lv_obj_t *btn_use_profile;
@@ -75,8 +79,8 @@ extern lv_obj_t *lbl_system_ui;
 extern lv_obj_t *lbl_system_ui_chevron;
 extern lv_obj_t *lbl_system_sound_menu;
 extern lv_obj_t *lbl_system_sound_menu_chevron;
-extern lv_obj_t *lbl_system_brightness_menu;
-extern lv_obj_t *lbl_system_brightness_menu_chevron;
+extern lv_obj_t *lbl_system_general_menu;
+extern lv_obj_t *lbl_system_general_menu_chevron;
 
 /* System view: display subview rows (Appearance, Brightness, Battery). */
 extern lv_obj_t *lbl_system_appearance;
@@ -86,7 +90,7 @@ extern lv_obj_t *lbl_system_brightness_sub_chevron;
 extern lv_obj_t *lbl_system_battery_menu;
 extern lv_obj_t *lbl_system_battery_menu_chevron;
 
-/* System view: system menu subview rows. */
+/* System view: General subview rows. */
 extern lv_obj_t *lbl_system_datetime_menu;
 extern lv_obj_t *lbl_system_datetime_menu_chevron;
 extern lv_obj_t *lbl_system_persist_timer;

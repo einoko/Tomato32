@@ -431,7 +431,10 @@ void settings_screen_refresh_theme(void) {
 
   lv_obj_set_style_text_color(lbl_edit, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_edit_chevron, theme_get_text_muted(), 0);
-  lv_obj_set_style_text_color(lbl_adv, theme_get_text(), 0);
+  lv_obj_set_style_text_color(lbl_timer_settings, theme_get_text(), 0);
+  lv_obj_set_style_text_color(lbl_timer_settings_chevron,
+                              theme_get_text_muted(), 0);
+  lv_obj_set_style_text_color(lbl_advance_to_next, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_settings, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_chevron, theme_get_text_muted(), 0);
   lv_obj_set_style_bg_color(btn_use_profile, theme_get_inverse_bg(), 0);
@@ -447,8 +450,8 @@ void settings_screen_refresh_theme(void) {
   lv_obj_set_style_text_color(lbl_system_sound_menu, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_sound_menu_chevron,
                               theme_get_text_muted(), 0);
-  lv_obj_set_style_text_color(lbl_system_brightness_menu, theme_get_text(), 0);
-  lv_obj_set_style_text_color(lbl_system_brightness_menu_chevron,
+  lv_obj_set_style_text_color(lbl_system_general_menu, theme_get_text(), 0);
+  lv_obj_set_style_text_color(lbl_system_general_menu_chevron,
                               theme_get_text_muted(), 0);
   lv_obj_set_style_text_color(lbl_system_theme, theme_get_text(), 0);
   lv_obj_set_style_text_color(lbl_system_visual, theme_get_text(), 0);
