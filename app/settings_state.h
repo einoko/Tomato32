@@ -78,18 +78,18 @@ extern lv_obj_t *lbl_system_sound_menu_chevron;
 extern lv_obj_t *lbl_system_brightness_menu;
 extern lv_obj_t *lbl_system_brightness_menu_chevron;
 
-/* System view: display subview rows (Appearance, Brightness). */
+/* System view: display subview rows (Appearance, Brightness, Battery). */
 extern lv_obj_t *lbl_system_appearance;
 extern lv_obj_t *lbl_system_appearance_chevron;
 extern lv_obj_t *lbl_system_brightness_sub;
 extern lv_obj_t *lbl_system_brightness_sub_chevron;
+extern lv_obj_t *lbl_system_battery_menu;
+extern lv_obj_t *lbl_system_battery_menu_chevron;
 
 /* System view: system menu subview rows. */
 extern lv_obj_t *lbl_system_datetime_menu;
 extern lv_obj_t *lbl_system_datetime_menu_chevron;
 extern lv_obj_t *lbl_system_persist_timer;
-extern lv_obj_t *lbl_system_battery_menu;
-extern lv_obj_t *lbl_system_battery_menu_chevron;
 
 /* System view: date & time subview rows. */
 extern lv_obj_t *lbl_system_date_source;

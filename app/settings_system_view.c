@@ -61,7 +61,7 @@ static void system_back_cb(lv_event_t *e) {
     settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
     break;
   case SYSTEM_SUBVIEW_BATTERY:
-    settings_system_view_set_subview(SYSTEM_SUBVIEW_SYSTEM_MENU);
+    settings_system_view_set_subview(SYSTEM_SUBVIEW_DISPLAY);
     break;
   case SYSTEM_SUBVIEW_DATETIME:
     settings_system_view_set_subview(SYSTEM_SUBVIEW_SYSTEM_MENU);
@@ -870,6 +870,29 @@ void settings_system_view_build(lv_obj_t *parent) {
                               theme_get_text_muted(), 0);
   lv_obj_align(lbl_system_brightness_sub_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 
+  lv_obj_t *row_battery_menu = lv_obj_create(view_system_display);
+  lv_obj_remove_style_all(row_battery_menu);
+  lv_obj_set_size(row_battery_menu, SETTINGS_RIGHT_W, 57);
+  lv_obj_set_pos(row_battery_menu, 0, 114);
+  lv_obj_remove_flag(row_battery_menu, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_add_flag(row_battery_menu, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_event_cb(row_battery_menu, system_battery_menu_cb,
+                      LV_EVENT_CLICKED, NULL);
+
+  lbl_system_battery_menu = lv_label_create(row_battery_menu);
+  lv_label_set_text(lbl_system_battery_menu, "Battery indicators");
+  lv_obj_set_style_text_font(lbl_system_battery_menu, &inter_24, 0);
+  lv_obj_set_style_text_color(lbl_system_battery_menu, theme_get_text(), 0);
+  lv_obj_align(lbl_system_battery_menu, LV_ALIGN_LEFT_MID, 24, 0);
+
+  lbl_system_battery_menu_chevron = lv_label_create(row_battery_menu);
+  lv_label_set_text(lbl_system_battery_menu_chevron, LV_SYMBOL_RIGHT);
+  lv_obj_set_style_text_font(lbl_system_battery_menu_chevron,
+                             &lv_font_montserrat_16, 0);
+  lv_obj_set_style_text_color(lbl_system_battery_menu_chevron,
+                              theme_get_text_muted(), 0);
+  lv_obj_align(lbl_system_battery_menu_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
+
   /* ── System menu subview (Date & time) ── */
   view_system_system_menu = lv_obj_create(right);
   lv_obj_remove_style_all(view_system_system_menu);
@@ -952,30 +975,6 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_label_set_text(lbl_persist_timer_off, "Off");
   lv_obj_set_style_text_font(lbl_persist_timer_off, &inter_16, 0);
   lv_obj_align(lbl_persist_timer_off, LV_ALIGN_CENTER, 0, -1);
-
-  /* System menu row 3: Battery indicators */
-  lv_obj_t *row_battery_menu = lv_obj_create(view_system_system_menu);
-  lv_obj_remove_style_all(row_battery_menu);
-  lv_obj_set_size(row_battery_menu, SETTINGS_RIGHT_W, 57);
-  lv_obj_set_pos(row_battery_menu, 0, 114);
-  lv_obj_remove_flag(row_battery_menu, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_battery_menu, LV_OBJ_FLAG_CLICKABLE);
-  lv_obj_add_event_cb(row_battery_menu, system_battery_menu_cb,
-                      LV_EVENT_CLICKED, NULL);
-
-  lbl_system_battery_menu = lv_label_create(row_battery_menu);
-  lv_label_set_text(lbl_system_battery_menu, "Battery indicators");
-  lv_obj_set_style_text_font(lbl_system_battery_menu, &inter_24, 0);
-  lv_obj_set_style_text_color(lbl_system_battery_menu, theme_get_text(), 0);
-  lv_obj_align(lbl_system_battery_menu, LV_ALIGN_LEFT_MID, 24, 0);
-
-  lbl_system_battery_menu_chevron = lv_label_create(row_battery_menu);
-  lv_label_set_text(lbl_system_battery_menu_chevron, LV_SYMBOL_RIGHT);
-  lv_obj_set_style_text_font(lbl_system_battery_menu_chevron,
-                             &lv_font_montserrat_16, 0);
-  lv_obj_set_style_text_color(lbl_system_battery_menu_chevron,
-                              theme_get_text_muted(), 0);
-  lv_obj_align(lbl_system_battery_menu_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 
   /* Battery subview */
   view_system_battery = lv_obj_create(right);
