@@ -93,7 +93,7 @@ void settings_edit_view_show(int field) {
   lv_obj_add_flag(view_system, LV_OBJ_FLAG_HIDDEN);
   lv_obj_remove_flag(view_edit, LV_OBJ_FLAG_HIDDEN);
 
-  static const char *titles[13] = {"Focus session",
+  static const char *titles[15] = {"Focus session",
                                    "Short break",
                                    "Long break",
                                    "Rounds",
@@ -105,11 +105,13 @@ void settings_edit_view_show(int field) {
                                    "Minute",
                                    "Year",
                                    "Month",
-                                   "Day"};
-  static const char *units[13] = {"minutes", "minutes", "minutes", "rounds",
+                                   "Day",
+                                   "Smart dim delay",
+                                   "Smart sleep delay"};
+  static const char *units[15] = {"minutes", "minutes", "minutes", "rounds",
                                   "percent", "percent", "percent", "percent",
                                   "",        "",        "",        "",
-                                  ""};
+                                  "",        "minutes", "minutes"};
 
   lv_label_set_text(lbl_edit_title, titles[field]);
   lv_label_set_text(lbl_edit_unit, units[field]);

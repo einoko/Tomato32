@@ -80,6 +80,8 @@ void pomodoro_init(void) {
   state.bell_volume = 80;
   state.default_brightness = 50;
   state.smart_dim_brightness = 10;
+  state.smart_dim_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  state.smart_sleep_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
   state.smart_dim = true;
   state.power_nap_mode = false;
   state.persist_timer = false;
@@ -357,7 +359,7 @@ void pomodoro_save(void) {
   if (!f)
     return;
 
-  fprintf(f, "%d %d %d %d %u %u %d %d %d %u %u %d %d %d %d\n",
+  fprintf(f, "%d %d %d %d %u %u %d %d %d %u %u %d %d %d %d %u %u\n",
           (int)state.active_preset, state.auto_advance ? 1 : 0,
           state.visual_pulse ? 1 : 0, state.sound ? 1 : 0,
           (unsigned)state.bell_volume, (unsigned)state.default_brightness,
@@ -365,7 +367,9 @@ void pomodoro_save(void) {
           state.custom_bg ? 1 : 0, (unsigned)state.smart_dim_brightness,
           (unsigned)state.visual_pulse_opacity, state.persist_timer ? 1 : 0,
           state.low_battery_indicator ? 1 : 0,
-          state.full_battery_indicator ? 1 : 0, state.battery_icon ? 1 : 0);
+          state.full_battery_indicator ? 1 : 0, state.battery_icon ? 1 : 0,
+          (unsigned)state.smart_dim_delay_minutes,
+          (unsigned)state.smart_sleep_delay_minutes);
   for (int i = 0; i < PRESET_COUNT; i++) {
     pomodoro_preset_t *p = &state.presets[i];
     fprintf(f, "%" PRIu32 " %" PRIu32 " %" PRIu32 " %u\n", p->work_duration,
@@ -414,12 +418,17 @@ static bool pomodoro_load(void) {
   int low_battery_indicator = 1;
   int full_battery_indicator = 1;
   int battery_icon = 0;
+  unsigned int smart_dim_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  unsigned int smart_sleep_delay_minutes =
+      POMODORO_MIN_IDLE_DELAY_MINUTES;
   int parsed =
-      sscanf(first_line, "%d %d %d %d %u %u %d %d %d %u %u %d %d %d %d",
+      sscanf(first_line,
+             "%d %d %d %d %u %u %d %d %d %u %u %d %d %d %d %u %u",
              &active_preset, &auto_adv, &visual_pulse, &sound, &bell_volume,
              &default_brightness, &smart_dim, &power_nap_mode, &custom_bg,
              &smart_dim_brightness, &visual_pulse_opacity, &persist_timer,
-             &low_battery_indicator, &full_battery_indicator, &battery_icon);
+             &low_battery_indicator, &full_battery_indicator, &battery_icon,
+             &smart_dim_delay_minutes, &smart_sleep_delay_minutes);
   if (parsed < 4 || active_preset < 0 || active_preset >= PRESET_COUNT ||
       (visual_pulse != 0 && visual_pulse != 1) || (sound != 0 && sound != 1)) {
     fclose(f);
@@ -457,6 +466,12 @@ static bool pomodoro_load(void) {
   }
   if (parsed <= 14) {
     battery_icon = 0;
+  }
+  if (parsed <= 15) {
+    smart_dim_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  }
+  if (parsed <= 16) {
+    smart_sleep_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
   }
 
   pomodoro_preset_t tmp_presets[PRESET_COUNT];
@@ -549,6 +564,20 @@ static bool pomodoro_load(void) {
     smart_dim_brightness = 100;
   }
   state.smart_dim_brightness = (uint8_t)smart_dim_brightness;
+  if (smart_dim_delay_minutes < POMODORO_MIN_IDLE_DELAY_MINUTES) {
+    smart_dim_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  }
+  if (smart_dim_delay_minutes > POMODORO_MAX_IDLE_DELAY_MINUTES) {
+    smart_dim_delay_minutes = POMODORO_MAX_IDLE_DELAY_MINUTES;
+  }
+  state.smart_dim_delay_minutes = (uint8_t)smart_dim_delay_minutes;
+  if (smart_sleep_delay_minutes < POMODORO_MIN_IDLE_DELAY_MINUTES) {
+    smart_sleep_delay_minutes = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  }
+  if (smart_sleep_delay_minutes > POMODORO_MAX_IDLE_DELAY_MINUTES) {
+    smart_sleep_delay_minutes = POMODORO_MAX_IDLE_DELAY_MINUTES;
+  }
+  state.smart_sleep_delay_minutes = (uint8_t)smart_sleep_delay_minutes;
   if (visual_pulse_opacity < 10) {
     visual_pulse_opacity = 10;
   }
@@ -680,6 +709,34 @@ void pomodoro_set_smart_dim_brightness(uint8_t val) {
     val = 100;
   }
   state.smart_dim_brightness = val;
+}
+
+uint8_t pomodoro_get_smart_dim_delay_minutes(void) {
+  return state.smart_dim_delay_minutes;
+}
+
+void pomodoro_set_smart_dim_delay_minutes(uint8_t val) {
+  if (val < POMODORO_MIN_IDLE_DELAY_MINUTES) {
+    val = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  }
+  if (val > POMODORO_MAX_IDLE_DELAY_MINUTES) {
+    val = POMODORO_MAX_IDLE_DELAY_MINUTES;
+  }
+  state.smart_dim_delay_minutes = val;
+}
+
+uint8_t pomodoro_get_smart_sleep_delay_minutes(void) {
+  return state.smart_sleep_delay_minutes;
+}
+
+void pomodoro_set_smart_sleep_delay_minutes(uint8_t val) {
+  if (val < POMODORO_MIN_IDLE_DELAY_MINUTES) {
+    val = POMODORO_MIN_IDLE_DELAY_MINUTES;
+  }
+  if (val > POMODORO_MAX_IDLE_DELAY_MINUTES) {
+    val = POMODORO_MAX_IDLE_DELAY_MINUTES;
+  }
+  state.smart_sleep_delay_minutes = val;
 }
 
 bool pomodoro_get_power_nap_mode(void) { return state.power_nap_mode; }

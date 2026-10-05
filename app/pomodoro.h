@@ -19,6 +19,8 @@ typedef enum {
 } pomodoro_preset_id_t;
 
 #define POMODORO_MAX_ROUNDS 10
+#define POMODORO_MIN_IDLE_DELAY_MINUTES 1U
+#define POMODORO_MAX_IDLE_DELAY_MINUTES 99U
 
 typedef struct {
   uint32_t work_duration;        /* seconds */
@@ -42,6 +44,8 @@ typedef struct {
   uint8_t bell_volume;
   uint8_t default_brightness;
   uint8_t smart_dim_brightness;
+  uint8_t smart_dim_delay_minutes;
+  uint8_t smart_sleep_delay_minutes;
   bool smart_dim;
   bool power_nap_mode;
   bool persist_timer;
@@ -100,6 +104,12 @@ void pomodoro_set_default_brightness(uint8_t val);
 
 uint8_t pomodoro_get_smart_dim_brightness(void);
 void pomodoro_set_smart_dim_brightness(uint8_t val);
+
+uint8_t pomodoro_get_smart_dim_delay_minutes(void);
+void pomodoro_set_smart_dim_delay_minutes(uint8_t val);
+
+uint8_t pomodoro_get_smart_sleep_delay_minutes(void);
+void pomodoro_set_smart_sleep_delay_minutes(uint8_t val);
 
 bool pomodoro_get_smart_dim(void);
 void pomodoro_set_smart_dim(bool val);

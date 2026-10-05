@@ -65,8 +65,9 @@ extern lv_obj_t *btn_edit_next;
 extern lv_obj_t *lbl_edit_title;
 extern lv_obj_t *lbl_edit_val;
 extern lv_obj_t *lbl_edit_unit;
-/* 0=work, 1=short, 2=long, 3=interval, 4=default_brightness, 5=volume,
-   6=smart_dim_brightness */
+/* 0-3=profile, 4=default_brightness, 5=volume, 6=smart_dim_brightness,
+   7=visual_pulse_opacity, 8-12=manual date/time, 13=smart_dim_delay,
+   14=smart_sleep_delay */
 extern int edit_field;
 
 /* System view: titles, version, battery. */

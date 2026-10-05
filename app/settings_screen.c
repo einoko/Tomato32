@@ -406,6 +406,14 @@ void settings_screen_update(void) {
       lv_snprintf(buf, sizeof(buf), "%02u",
                   (unsigned)pomodoro_get_manual_day());
       break;
+    case 13:
+      lv_snprintf(buf, sizeof(buf), "%u",
+                  (unsigned)pomodoro_get_smart_dim_delay_minutes());
+      break;
+    case 14:
+      lv_snprintf(buf, sizeof(buf), "%u",
+                  (unsigned)pomodoro_get_smart_sleep_delay_minutes());
+      break;
     }
     lv_label_set_text(lbl_edit_val, buf);
   }

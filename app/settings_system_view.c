@@ -709,7 +709,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                       LV_EVENT_CLICKED, NULL);
 
   lbl_system_default_brightness = lv_label_create(row_default_brightness);
-  lv_label_set_text(lbl_system_default_brightness, "Edit brightness levels");
+  lv_label_set_text(lbl_system_default_brightness, "Edit brightness settings");
   lv_obj_set_style_text_font(lbl_system_default_brightness, &inter_24, 0);
   lv_obj_set_style_text_color(lbl_system_default_brightness, theme_get_text(),
                               0);

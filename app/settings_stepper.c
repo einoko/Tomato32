@@ -37,7 +37,15 @@ static void edit_back_cb(lv_event_t *e) {
     return;
   }
   if (edit_field == 7) {
+    settings_edit_view_show(14);
+    return;
+  }
+  if (edit_field == 13) {
     settings_edit_view_show(6);
+    return;
+  }
+  if (edit_field == 14) {
+    settings_edit_view_show(13);
     return;
   }
   if (edit_field == 8) {
@@ -81,12 +89,20 @@ static void edit_next_cb(lv_event_t *e) {
     return;
   }
   if (edit_field == 6) {
-    settings_edit_view_show(7);
+    settings_edit_view_show(13);
     return;
   }
   if (edit_field == 7) {
     settings_system_view_show();
     settings_system_view_set_subview(SYSTEM_SUBVIEW_BRIGHTNESS);
+    return;
+  }
+  if (edit_field == 13) {
+    settings_edit_view_show(14);
+    return;
+  }
+  if (edit_field == 14) {
+    settings_edit_view_show(7);
     return;
   }
   if (edit_field == 8) {
@@ -199,6 +215,28 @@ static void apply_step(int plus) {
     } else {
       if (opacity > 10)
         pomodoro_set_visual_pulse_opacity((uint8_t)(opacity - 10));
+    }
+    break;
+  }
+  case 13: {
+    uint8_t delay = pomodoro_get_smart_dim_delay_minutes();
+    if (plus) {
+      if (delay < POMODORO_MAX_IDLE_DELAY_MINUTES) {
+        pomodoro_set_smart_dim_delay_minutes((uint8_t)(delay + 1));
+      }
+    } else if (delay > POMODORO_MIN_IDLE_DELAY_MINUTES) {
+      pomodoro_set_smart_dim_delay_minutes((uint8_t)(delay - 1));
+    }
+    break;
+  }
+  case 14: {
+    uint8_t delay = pomodoro_get_smart_sleep_delay_minutes();
+    if (plus) {
+      if (delay < POMODORO_MAX_IDLE_DELAY_MINUTES) {
+        pomodoro_set_smart_sleep_delay_minutes((uint8_t)(delay + 1));
+      }
+    } else if (delay > POMODORO_MIN_IDLE_DELAY_MINUTES) {
+      pomodoro_set_smart_sleep_delay_minutes((uint8_t)(delay - 1));
     }
     break;
   }

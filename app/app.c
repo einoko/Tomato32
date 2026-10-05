@@ -34,8 +34,6 @@ static bool s_last_brightness_valid = false;
 static bool s_display_sleeping = false;
 static uint32_t timer_checkpoint_seconds = 0;
 
-#define SMART_DIM_TIMEOUT_MS (60 * 1000U)
-
 static void apply_screen_brightness(uint8_t brightness_percent) {
   s_display_sleeping = brightness_provider && brightness_percent == 0;
   if (brightness_provider) {
@@ -74,13 +72,15 @@ static void update_brightness_policy(bool phase_just_completed) {
   }
 
   uint32_t inactive_ms = lv_display_get_inactive_time(NULL);
+  uint32_t smart_dim_timeout_ms =
+      (uint32_t)pomodoro_get_smart_dim_delay_minutes() * 60U * 1000U;
+  uint32_t smart_sleep_timeout_ms =
+      (uint32_t)pomodoro_get_smart_sleep_delay_minutes() * 60U * 1000U;
 
-  if (inactive_ms >= SMART_DIM_TIMEOUT_MS) {
-    if (smart_sleep) {
-      apply_screen_brightness(0);
-    } else {
-      apply_screen_brightness(pomodoro_get_smart_dim_brightness());
-    }
+  if (smart_sleep && inactive_ms >= smart_sleep_timeout_ms) {
+    apply_screen_brightness(0);
+  } else if (smart_dim && inactive_ms >= smart_dim_timeout_ms) {
+    apply_screen_brightness(pomodoro_get_smart_dim_brightness());
   } else {
     apply_screen_brightness(normal);
   }
