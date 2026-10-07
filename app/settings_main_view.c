@@ -10,12 +10,14 @@
 
 extern void timer_screen_refresh_theme(void);
 
-static void back_to_timer_cb(lv_event_t *e) {
+static void back_to_timer_cb(lv_event_t *e)
+{
   (void)e;
   app_show_timer_screen();
 }
 
-static void preset_tab_cb(lv_event_t *e) {
+static void preset_tab_cb(lv_event_t *e)
+{
   pomodoro_preset_id_t id =
       (pomodoro_preset_id_t)(intptr_t)lv_event_get_user_data(e);
   pomodoro_set_active_preset(id);
@@ -25,28 +27,32 @@ static void preset_tab_cb(lv_event_t *e) {
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void edit_durations_cb(lv_event_t *e) {
+static void edit_durations_cb(lv_event_t *e)
+{
   (void)e;
   settings_edit_view_show(0);
 }
 
-static void system_settings_cb(lv_event_t *e) {
+static void system_settings_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_show();
 }
 
-static void timer_settings_cb(lv_event_t *e) {
+static void timer_settings_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_show_timer_settings();
 }
 
-void settings_main_view_build(lv_obj_t *parent) {
+void settings_main_view_build(lv_obj_t *parent)
+{
   view_main = lv_obj_create(parent);
   lv_obj_remove_style_all(view_main);
   lv_obj_set_size(view_main, SETTINGS_DISPLAY_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_main, 0, 0);
   lv_obj_set_style_bg_opa(view_main, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_main, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_main, false);
 
   /* Left panel: preset grid */
   lv_obj_t *left = lv_obj_create(view_main);
@@ -54,7 +60,7 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_size(left, SETTINGS_LEFT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(left, 0, 0);
   lv_obj_set_style_bg_opa(left, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(left, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(left, false);
 
   /* Preset row: A B C */
   lv_obj_t *preset_row = lv_obj_create(left);
@@ -65,15 +71,16 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_flex_align(preset_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
                         LV_FLEX_ALIGN_CENTER);
   lv_obj_set_style_pad_gap(preset_row, 14, 0);
-  lv_obj_remove_flag(preset_row, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(preset_row, false);
 
   static const char *preset_labels[3] = {"A", "B", "C"};
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++)
+  {
     lv_obj_t *tab = lv_obj_create(preset_row);
     lv_obj_remove_style_all(tab);
     lv_obj_set_size(tab, 56, 56);
-    lv_obj_remove_flag(tab, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_flag(tab, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_scrollable(tab, false);
+    lv_obj_set_clickable(tab, true);
     lv_obj_add_event_cb(tab, preset_tab_cb, LV_EVENT_CLICKED,
                         (void *)(intptr_t)i);
 
@@ -119,16 +126,16 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_set_size(right, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(right, SETTINGS_LEFT_W + 1, 0);
   lv_obj_set_style_bg_opa(right, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(right, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(right, false);
 
   /* Row 1: Edit profile */
   lv_obj_t *row_edit = lv_obj_create(right);
   lv_obj_remove_style_all(row_edit);
   lv_obj_set_size(row_edit, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_edit, 0, 0);
-  lv_obj_remove_flag(row_edit, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_edit, false);
 
-  lv_obj_add_flag(row_edit, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_clickable(row_edit, true);
   lv_obj_add_event_cb(row_edit, edit_durations_cb, LV_EVENT_CLICKED, NULL);
 
   lbl_edit = lv_label_create(row_edit);
@@ -148,8 +155,8 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_timer_settings);
   lv_obj_set_size(row_timer_settings, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_timer_settings, 0, 57);
-  lv_obj_remove_flag(row_timer_settings, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_timer_settings, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_timer_settings, false);
+  lv_obj_set_clickable(row_timer_settings, true);
   lv_obj_add_event_cb(row_timer_settings, timer_settings_cb, LV_EVENT_CLICKED,
                       NULL);
 
@@ -172,9 +179,9 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_system);
   lv_obj_set_size(row_system, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_system, 0, 114);
-  lv_obj_remove_flag(row_system, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_system, false);
 
-  lv_obj_add_flag(row_system, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_clickable(row_system, true);
   lv_obj_add_event_cb(row_system, system_settings_cb, LV_EVENT_CLICKED, NULL);
 
   lbl_system_settings = lv_label_create(row_system);
@@ -190,12 +197,14 @@ void settings_main_view_build(lv_obj_t *parent) {
   lv_obj_align(lbl_system_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 }
 
-void settings_main_view_show(void) {
-  if (repeat_timer) {
+void settings_main_view_show(void)
+{
+  if (repeat_timer)
+  {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
-  lv_obj_add_flag(view_edit, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_remove_flag(view_main, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_set_hidden(view_edit, true);
+  lv_obj_set_hidden(view_system, true);
+  lv_obj_set_hidden(view_main, false);
 }

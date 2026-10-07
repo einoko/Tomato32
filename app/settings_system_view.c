@@ -45,9 +45,11 @@ static void toggle_full_battery_indicator_cb(lv_event_t *e);
 static void toggle_battery_icon_cb(lv_event_t *e);
 static void toggle_date_source_cb(lv_event_t *e);
 
-static void system_back_cb(lv_event_t *e) {
+static void system_back_cb(lv_event_t *e)
+{
   (void)e;
-  switch (system_subview) {
+  switch (system_subview)
+  {
   case SYSTEM_SUBVIEW_DISPLAY:
     settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
     break;
@@ -76,71 +78,85 @@ static void system_back_cb(lv_event_t *e) {
   }
 }
 
-static void system_display_menu_cb(lv_event_t *e) {
+static void system_display_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_DISPLAY);
 }
 
-static void system_sound_menu_cb(lv_event_t *e) {
+static void system_sound_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_SOUND);
 }
 
-static void system_general_menu_cb(lv_event_t *e) {
+static void system_general_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_GENERAL);
 }
 
-static void system_battery_menu_cb(lv_event_t *e) {
+static void system_battery_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_BATTERY);
 }
 
-static void system_appearance_menu_cb(lv_event_t *e) {
+static void system_appearance_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_UI);
 }
 
-static void system_brightness_sub_menu_cb(lv_event_t *e) {
+static void system_brightness_sub_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_BRIGHTNESS);
 }
 
-static void system_datetime_menu_cb(lv_event_t *e) {
+static void system_datetime_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_DATETIME);
 }
 
-static void toggle_auto_cb(lv_event_t *e) {
+static void toggle_auto_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_auto_advance(!pomodoro_get_auto_advance());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void default_brightness_menu_cb(lv_event_t *e) {
+static void default_brightness_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_edit_view_show(4);
 }
 
-static void sound_volume_menu_cb(lv_event_t *e) {
+static void sound_volume_menu_cb(lv_event_t *e)
+{
   (void)e;
   settings_edit_view_show(5);
 }
 
-static void test_sound_cb(lv_event_t *e) {
+static void test_sound_cb(lv_event_t *e)
+{
   (void)e;
-  if (app_play_test_sound()) {
+  if (app_play_test_sound())
+  {
     settings_screen_update();
   }
 }
 
-static void set_date_cb(lv_event_t *e) {
+static void set_date_cb(lv_event_t *e)
+{
   (void)e;
   /* Seed manual date from current system time so the stepper starts from now */
   time_t now = time(NULL);
   struct tm tm_now;
-  if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024) {
+  if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024)
+  {
     pomodoro_set_manual_year((uint16_t)(tm_now.tm_year + 1900));
     pomodoro_set_manual_month((uint8_t)(tm_now.tm_mon + 1));
     pomodoro_set_manual_day((uint8_t)tm_now.tm_mday);
@@ -148,23 +164,27 @@ static void set_date_cb(lv_event_t *e) {
   settings_edit_view_show(10); /* year first */
 }
 
-static void set_time_cb(lv_event_t *e) {
+static void set_time_cb(lv_event_t *e)
+{
   (void)e;
   /* Seed manual time from current system time so the stepper starts from now */
   time_t now = time(NULL);
   struct tm tm_now;
-  if (localtime_r(&now, &tm_now)) {
+  if (localtime_r(&now, &tm_now))
+  {
     pomodoro_set_manual_hour((uint8_t)tm_now.tm_hour);
     pomodoro_set_manual_minute((uint8_t)tm_now.tm_min);
   }
   settings_edit_view_show(8); /* hour first */
 }
 
-static void toggle_date_source_cb(lv_event_t *e) {
+static void toggle_date_source_cb(lv_event_t *e)
+{
   /* user_data: 0 = NTP, 1 = Manual */
   int manual = (int)(intptr_t)lv_event_get_user_data(e);
   pomodoro_set_date_source_ntp(!manual);
-  if (!manual) {
+  if (!manual)
+  {
     /* Switched to NTP — request an immediate sync so the clock corrects
        without waiting for the next 24-hour periodic sync. */
     app_request_ntp_sync();
@@ -177,11 +197,15 @@ static void toggle_date_source_cb(lv_event_t *e) {
   pomodoro_save();
 }
 
-static void toggle_theme_cb(lv_event_t *e) {
+static void toggle_theme_cb(lv_event_t *e)
+{
   int mode = (int)(intptr_t)lv_event_get_user_data(e);
-  if (mode == 0) {
+  if (mode == 0)
+  {
     theme_set_dark(false);
-  } else {
+  }
+  else
+  {
     theme_set_dark(true);
   }
   theme_save();
@@ -193,14 +217,16 @@ static void toggle_theme_cb(lv_event_t *e) {
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void toggle_visual_pulse_cb(lv_event_t *e) {
+static void toggle_visual_pulse_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_visual_pulse(!pomodoro_get_visual_pulse());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_custom_bg_cb(lv_event_t *e) {
+static void toggle_custom_bg_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_custom_bg(!pomodoro_get_custom_bg());
   settings_screen_update();
@@ -212,64 +238,72 @@ static void toggle_custom_bg_cb(lv_event_t *e) {
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void toggle_sound_cb(lv_event_t *e) {
+static void toggle_sound_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_sound(!pomodoro_get_sound());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_smart_dim_cb(lv_event_t *e) {
+static void toggle_smart_dim_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_smart_dim(!pomodoro_get_smart_dim());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_power_nap_cb(lv_event_t *e) {
+static void toggle_power_nap_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_power_nap_mode(!pomodoro_get_power_nap_mode());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_persist_timer_cb(lv_event_t *e) {
+static void toggle_persist_timer_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_persist_timer(!pomodoro_get_persist_timer());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_low_battery_indicator_cb(lv_event_t *e) {
+static void toggle_low_battery_indicator_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_low_battery_indicator(!pomodoro_get_low_battery_indicator());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_full_battery_indicator_cb(lv_event_t *e) {
+static void toggle_full_battery_indicator_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_full_battery_indicator(!pomodoro_get_full_battery_indicator());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_battery_icon_cb(lv_event_t *e) {
+static void toggle_battery_icon_cb(lv_event_t *e)
+{
   (void)e;
   pomodoro_set_battery_icon(!pomodoro_get_battery_icon());
   settings_screen_update();
   pomodoro_save();
 }
 
-void settings_system_view_build(lv_obj_t *parent) {
+void settings_system_view_build(lv_obj_t *parent)
+{
   view_system = lv_obj_create(parent);
   lv_obj_remove_style_all(view_system);
   lv_obj_set_size(view_system, SETTINGS_DISPLAY_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system, 0, 0);
   lv_obj_set_style_bg_color(view_system, theme_get_bg(), 0);
   lv_obj_set_style_bg_opa(view_system, LV_OPA_COVER, 0);
-  lv_obj_add_flag(view_system, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_remove_flag(view_system, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_hidden(view_system, true);
+  lv_obj_set_scrollable(view_system, false);
 
   /* Left pane */
   lv_obj_t *left = lv_obj_create(view_system);
@@ -277,7 +311,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(left, SETTINGS_LEFT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(left, 0, 0);
   lv_obj_set_style_bg_opa(left, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(left, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(left, false);
 
   /* Title */
   lbl_system_title = lv_label_create(left);
@@ -337,7 +371,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(right, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(right, SETTINGS_LEFT_W + 1, 0);
   lv_obj_set_style_bg_opa(right, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(right, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(right, false);
 
   /* Root subview */
   view_system_root = lv_obj_create(right);
@@ -345,15 +379,15 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_root, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_root, 0, 0);
   lv_obj_set_style_bg_opa(view_system_root, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_root, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_root, false);
 
   /* Root row 1: Display */
   lv_obj_t *row_ui = lv_obj_create(view_system_root);
   lv_obj_remove_style_all(row_ui);
   lv_obj_set_size(row_ui, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_ui, 0, 0);
-  lv_obj_remove_flag(row_ui, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_ui, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_ui, false);
+  lv_obj_set_clickable(row_ui, true);
   lv_obj_add_event_cb(row_ui, system_display_menu_cb, LV_EVENT_CLICKED, NULL);
 
   lbl_system_ui = lv_label_create(row_ui);
@@ -373,8 +407,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_sound_menu);
   lv_obj_set_size(row_sound_menu, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_sound_menu, 0, 57);
-  lv_obj_remove_flag(row_sound_menu, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_sound_menu, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_sound_menu, false);
+  lv_obj_set_clickable(row_sound_menu, true);
   lv_obj_add_event_cb(row_sound_menu, system_sound_menu_cb, LV_EVENT_CLICKED,
                       NULL);
 
@@ -397,8 +431,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_brightness_menu);
   lv_obj_set_size(row_brightness_menu, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_brightness_menu, 0, 114);
-  lv_obj_remove_flag(row_brightness_menu, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_brightness_menu, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_brightness_menu, false);
+  lv_obj_set_clickable(row_brightness_menu, true);
   lv_obj_add_event_cb(row_brightness_menu, system_general_menu_cb,
                       LV_EVENT_CLICKED, NULL);
 
@@ -422,14 +456,14 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_ui, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_ui, 0, 0);
   lv_obj_set_style_bg_opa(view_system_ui, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_ui, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_ui, false);
 
   /* UI row 1: Theme */
   lv_obj_t *row_theme = lv_obj_create(view_system_ui);
   lv_obj_remove_style_all(row_theme);
   lv_obj_set_size(row_theme, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_theme, 0, 0);
-  lv_obj_remove_flag(row_theme, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_theme, false);
 
   lbl_system_theme = lv_label_create(row_theme);
   lv_label_set_text(lbl_system_theme, "Theme");
@@ -445,7 +479,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_color(system_theme_seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_theme_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_theme_seg_container, 2, 0);
-  lv_obj_remove_flag(system_theme_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_theme_seg_container, false);
   lv_obj_align(system_theme_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_theme_light = lv_btn_create(system_theme_seg_container);
@@ -479,7 +513,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_visual);
   lv_obj_set_size(row_visual, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_visual, 0, 57);
-  lv_obj_remove_flag(row_visual, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_visual, false);
 
   lbl_system_visual = lv_label_create(row_visual);
   lv_label_set_text(lbl_system_visual, "Visual pulse");
@@ -495,7 +529,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_color(system_visual_seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_visual_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_visual_seg_container, 2, 0);
-  lv_obj_remove_flag(system_visual_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_visual_seg_container, false);
   lv_obj_align(system_visual_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_visual_on = lv_btn_create(system_visual_seg_container);
@@ -529,7 +563,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_custom_bg);
   lv_obj_set_size(row_custom_bg, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_custom_bg, 0, 114);
-  lv_obj_remove_flag(row_custom_bg, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_custom_bg, false);
 
   system_custom_bg_label = lv_label_create(row_custom_bg);
   lv_label_set_text(system_custom_bg_label, "Custom backdrop");
@@ -545,7 +579,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                             0);
   lv_obj_set_style_bg_opa(system_custom_bg_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_custom_bg_seg_container, 2, 0);
-  lv_obj_remove_flag(system_custom_bg_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_custom_bg_seg_container, false);
   lv_obj_align(system_custom_bg_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_custom_bg_on = lv_btn_create(system_custom_bg_seg_container);
@@ -580,14 +614,14 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_sound, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_sound, 0, 0);
   lv_obj_set_style_bg_opa(view_system_sound, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_sound, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_sound, false);
 
   /* Sound row 1: Sound */
   lv_obj_t *row_sound = lv_obj_create(view_system_sound);
   lv_obj_remove_style_all(row_sound);
   lv_obj_set_size(row_sound, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_sound, 0, 0);
-  lv_obj_remove_flag(row_sound, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_sound, false);
 
   lbl_system_sound = lv_label_create(row_sound);
   lv_label_set_text(lbl_system_sound, "Sound");
@@ -603,7 +637,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_color(system_sound_seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_sound_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_sound_seg_container, 2, 0);
-  lv_obj_remove_flag(system_sound_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_sound_seg_container, false);
   lv_obj_align(system_sound_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_sound_on = lv_btn_create(system_sound_seg_container);
@@ -636,8 +670,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_sound_volume);
   lv_obj_set_size(row_sound_volume, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_sound_volume, 0, 57);
-  lv_obj_remove_flag(row_sound_volume, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_sound_volume, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_sound_volume, false);
+  lv_obj_set_clickable(row_sound_volume, true);
   lv_obj_add_event_cb(row_sound_volume, sound_volume_menu_cb, LV_EVENT_CLICKED,
                       NULL);
 
@@ -666,7 +700,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_sound_test);
   lv_obj_set_size(row_sound_test, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_sound_test, 0, 114);
-  lv_obj_remove_flag(row_sound_test, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_sound_test, false);
 
   lbl_system_sound_test = lv_label_create(row_sound_test);
   lv_label_set_text(lbl_system_sound_test, "Test sound");
@@ -696,15 +730,15 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_brightness, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_brightness, 0, 0);
   lv_obj_set_style_bg_opa(view_system_brightness, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_brightness, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_brightness, false);
 
   /* Brightness row 1: Default brightness */
   lv_obj_t *row_default_brightness = lv_obj_create(view_system_brightness);
   lv_obj_remove_style_all(row_default_brightness);
   lv_obj_set_size(row_default_brightness, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_default_brightness, 0, 0);
-  lv_obj_remove_flag(row_default_brightness, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_default_brightness, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_default_brightness, false);
+  lv_obj_set_clickable(row_default_brightness, true);
   lv_obj_add_event_cb(row_default_brightness, default_brightness_menu_cb,
                       LV_EVENT_CLICKED, NULL);
 
@@ -732,7 +766,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_smart_dim);
   lv_obj_set_size(row_smart_dim, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_smart_dim, 0, 57);
-  lv_obj_remove_flag(row_smart_dim, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_smart_dim, false);
 
   lbl_system_smart_dim = lv_label_create(row_smart_dim);
   lv_label_set_text(lbl_system_smart_dim, "Smart dim");
@@ -748,7 +782,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                             0);
   lv_obj_set_style_bg_opa(system_smart_dim_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_smart_dim_seg_container, 2, 0);
-  lv_obj_remove_flag(system_smart_dim_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_smart_dim_seg_container, false);
   lv_obj_align(system_smart_dim_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_smart_dim_on = lv_btn_create(system_smart_dim_seg_container);
@@ -782,7 +816,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_power_nap);
   lv_obj_set_size(row_power_nap, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_power_nap, 0, 114);
-  lv_obj_remove_flag(row_power_nap, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_power_nap, false);
 
   lbl_system_power_nap = lv_label_create(row_power_nap);
   lv_label_set_text(lbl_system_power_nap, "Smart sleep");
@@ -798,7 +832,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                             0);
   lv_obj_set_style_bg_opa(system_power_nap_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_power_nap_seg_container, 2, 0);
-  lv_obj_remove_flag(system_power_nap_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_power_nap_seg_container, false);
   lv_obj_align(system_power_nap_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_power_nap_on = lv_btn_create(system_power_nap_seg_container);
@@ -833,14 +867,14 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_display, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_display, 0, 0);
   lv_obj_set_style_bg_opa(view_system_display, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_display, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_display, false);
 
   lv_obj_t *row_appearance = lv_obj_create(view_system_display);
   lv_obj_remove_style_all(row_appearance);
   lv_obj_set_size(row_appearance, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_appearance, 0, 0);
-  lv_obj_remove_flag(row_appearance, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_appearance, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_appearance, false);
+  lv_obj_set_clickable(row_appearance, true);
   lv_obj_add_event_cb(row_appearance, system_appearance_menu_cb,
                       LV_EVENT_CLICKED, NULL);
 
@@ -862,8 +896,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_brightness_sub);
   lv_obj_set_size(row_brightness_sub, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_brightness_sub, 0, 57);
-  lv_obj_remove_flag(row_brightness_sub, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_brightness_sub, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_brightness_sub, false);
+  lv_obj_set_clickable(row_brightness_sub, true);
   lv_obj_add_event_cb(row_brightness_sub, system_brightness_sub_menu_cb,
                       LV_EVENT_CLICKED, NULL);
 
@@ -885,8 +919,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_battery_menu);
   lv_obj_set_size(row_battery_menu, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_battery_menu, 0, 114);
-  lv_obj_remove_flag(row_battery_menu, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_battery_menu, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_battery_menu, false);
+  lv_obj_set_clickable(row_battery_menu, true);
   lv_obj_add_event_cb(row_battery_menu, system_battery_menu_cb,
                       LV_EVENT_CLICKED, NULL);
 
@@ -910,14 +944,14 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_general, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_general, 0, 0);
   lv_obj_set_style_bg_opa(view_system_general, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_general, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_general, false);
 
   lv_obj_t *row_datetime_menu = lv_obj_create(view_system_general);
   lv_obj_remove_style_all(row_datetime_menu);
   lv_obj_set_size(row_datetime_menu, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_datetime_menu, 0, 0);
-  lv_obj_remove_flag(row_datetime_menu, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row_datetime_menu, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(row_datetime_menu, false);
+  lv_obj_set_clickable(row_datetime_menu, true);
   lv_obj_add_event_cb(row_datetime_menu, system_datetime_menu_cb,
                       LV_EVENT_CLICKED, NULL);
 
@@ -942,14 +976,14 @@ void settings_system_view_build(lv_obj_t *parent) {
                   SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_timer_settings, 0, 0);
   lv_obj_set_style_bg_opa(view_system_timer_settings, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_timer_settings, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_timer_settings, false);
 
   /* Timer settings row 1: Advance to next */
   lv_obj_t *row_advance = lv_obj_create(view_system_timer_settings);
   lv_obj_remove_style_all(row_advance);
   lv_obj_set_size(row_advance, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_advance, 0, 0);
-  lv_obj_remove_flag(row_advance, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_advance, false);
 
   lbl_advance_to_next = lv_label_create(row_advance);
   lv_label_set_text(lbl_advance_to_next, "Advance to next");
@@ -964,7 +998,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_color(seg_container, theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(seg_container, 2, 0);
-  lv_obj_remove_flag(seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(seg_container, false);
   lv_obj_align(seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   seg_auto = lv_btn_create(seg_container);
@@ -996,7 +1030,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_persist_timer);
   lv_obj_set_size(row_persist_timer, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_persist_timer, 0, 57);
-  lv_obj_remove_flag(row_persist_timer, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_persist_timer, false);
 
   lbl_system_persist_timer = lv_label_create(row_persist_timer);
   lv_label_set_text(lbl_system_persist_timer, "Remember timer");
@@ -1012,8 +1046,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                             theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_persist_timer_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_persist_timer_seg_container, 2, 0);
-  lv_obj_remove_flag(system_persist_timer_seg_container,
-                     LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_persist_timer_seg_container, false);
   lv_obj_align(system_persist_timer_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_persist_timer_on = lv_btn_create(system_persist_timer_seg_container);
@@ -1048,13 +1081,13 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_battery, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_battery, 0, 0);
   lv_obj_set_style_bg_opa(view_system_battery, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_battery, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_battery, false);
 
   lv_obj_t *row_low_battery = lv_obj_create(view_system_battery);
   lv_obj_remove_style_all(row_low_battery);
   lv_obj_set_size(row_low_battery, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_low_battery, 0, 0);
-  lv_obj_remove_flag(row_low_battery, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_low_battery, false);
 
   lbl_system_low_battery_indicator = lv_label_create(row_low_battery);
   lv_label_set_text(lbl_system_low_battery_indicator, "Low charge");
@@ -1072,8 +1105,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_opa(system_low_battery_indicator_seg_container,
                           LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_low_battery_indicator_seg_container, 2, 0);
-  lv_obj_remove_flag(system_low_battery_indicator_seg_container,
-                     LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_low_battery_indicator_seg_container, false);
   lv_obj_align(system_low_battery_indicator_seg_container, LV_ALIGN_RIGHT_MID,
                -24, 0);
 
@@ -1109,7 +1141,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_full_battery);
   lv_obj_set_size(row_full_battery, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_full_battery, 0, 57);
-  lv_obj_remove_flag(row_full_battery, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_full_battery, false);
 
   lbl_system_full_battery_indicator = lv_label_create(row_full_battery);
   lv_label_set_text(lbl_system_full_battery_indicator, "Full charge");
@@ -1127,8 +1159,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_style_bg_opa(system_full_battery_indicator_seg_container,
                           LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_full_battery_indicator_seg_container, 2, 0);
-  lv_obj_remove_flag(system_full_battery_indicator_seg_container,
-                     LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_full_battery_indicator_seg_container, false);
   lv_obj_align(system_full_battery_indicator_seg_container, LV_ALIGN_RIGHT_MID,
                -24, 0);
 
@@ -1164,7 +1195,7 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(row_battery_icon);
   lv_obj_set_size(row_battery_icon, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_battery_icon, 0, 114);
-  lv_obj_remove_flag(row_battery_icon, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_battery_icon, false);
 
   lbl_system_battery_icon = lv_label_create(row_battery_icon);
   lv_label_set_text(lbl_system_battery_icon, "Always show");
@@ -1180,7 +1211,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                             theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_battery_icon_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_battery_icon_seg_container, 2, 0);
-  lv_obj_remove_flag(system_battery_icon_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_battery_icon_seg_container, false);
   lv_obj_align(system_battery_icon_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_battery_icon_on = lv_btn_create(system_battery_icon_seg_container);
@@ -1213,14 +1244,14 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_set_size(view_system_datetime, SETTINGS_RIGHT_W, SETTINGS_DISPLAY_H);
   lv_obj_set_pos(view_system_datetime, 0, 0);
   lv_obj_set_style_bg_opa(view_system_datetime, LV_OPA_TRANSP, 0);
-  lv_obj_remove_flag(view_system_datetime, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(view_system_datetime, false);
 
   /* Date & time row 1: Date source */
   lv_obj_t *row_date_source = lv_obj_create(view_system_datetime);
   lv_obj_remove_style_all(row_date_source);
   lv_obj_set_size(row_date_source, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(row_date_source, 0, 0);
-  lv_obj_remove_flag(row_date_source, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(row_date_source, false);
 
   lbl_system_date_source = lv_label_create(row_date_source);
   lv_label_set_text(lbl_system_date_source, "Date source");
@@ -1236,7 +1267,7 @@ void settings_system_view_build(lv_obj_t *parent) {
                             theme_get_seg_bg(), 0);
   lv_obj_set_style_bg_opa(system_date_source_seg_container, LV_OPA_COVER, 0);
   lv_obj_set_style_pad_all(system_date_source_seg_container, 2, 0);
-  lv_obj_remove_flag(system_date_source_seg_container, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_scrollable(system_date_source_seg_container, false);
   lv_obj_align(system_date_source_seg_container, LV_ALIGN_RIGHT_MID, -24, 0);
 
   system_date_source_ntp_btn = lv_btn_create(system_date_source_seg_container);
@@ -1271,8 +1302,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(system_dt_set_date_row);
   lv_obj_set_size(system_dt_set_date_row, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(system_dt_set_date_row, 0, 57);
-  lv_obj_remove_flag(system_dt_set_date_row, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(system_dt_set_date_row, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(system_dt_set_date_row, false);
+  lv_obj_set_clickable(system_dt_set_date_row, true);
   lv_obj_add_event_cb(system_dt_set_date_row, set_date_cb, LV_EVENT_CLICKED,
                       NULL);
 
@@ -1301,8 +1332,8 @@ void settings_system_view_build(lv_obj_t *parent) {
   lv_obj_remove_style_all(system_dt_set_time_row);
   lv_obj_set_size(system_dt_set_time_row, SETTINGS_RIGHT_W, 57);
   lv_obj_set_pos(system_dt_set_time_row, 0, 114);
-  lv_obj_remove_flag(system_dt_set_time_row, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(system_dt_set_time_row, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_scrollable(system_dt_set_time_row, false);
+  lv_obj_set_clickable(system_dt_set_time_row, true);
   lv_obj_add_event_cb(system_dt_set_time_row, set_time_cb, LV_EVENT_CLICKED,
                       NULL);
 
@@ -1329,77 +1360,83 @@ void settings_system_view_build(lv_obj_t *parent) {
   settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
 }
 
-void settings_system_view_show(void) {
-  if (repeat_timer) {
+void settings_system_view_show(void)
+{
+  if (repeat_timer)
+  {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
-  lv_obj_add_flag(view_main, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_edit, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_remove_flag(view_system, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_set_hidden(view_main, true);
+  lv_obj_set_hidden(view_edit, true);
+  lv_obj_set_hidden(view_system, false);
   settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
 }
 
-void settings_system_view_show_timer_settings(void) {
-  if (repeat_timer) {
+void settings_system_view_show_timer_settings(void)
+{
+  if (repeat_timer)
+  {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
-  lv_obj_add_flag(view_main, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_edit, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_remove_flag(view_system, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_set_hidden(view_main, true);
+  lv_obj_set_hidden(view_edit, true);
+  lv_obj_set_hidden(view_system, false);
   settings_system_view_set_subview(SYSTEM_SUBVIEW_TIMER_SETTINGS);
 }
 
-void settings_system_view_set_subview(system_subview_t subview) {
+void settings_system_view_set_subview(system_subview_t subview)
+{
   system_subview = subview;
 
-  lv_obj_add_flag(view_system_root, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_display, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_ui, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_sound, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_brightness, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_general, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_battery, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_datetime, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(view_system_timer_settings, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_set_hidden(view_system_root, true);
+  lv_obj_set_hidden(view_system_display, true);
+  lv_obj_set_hidden(view_system_ui, true);
+  lv_obj_set_hidden(view_system_sound, true);
+  lv_obj_set_hidden(view_system_brightness, true);
+  lv_obj_set_hidden(view_system_general, true);
+  lv_obj_set_hidden(view_system_battery, true);
+  lv_obj_set_hidden(view_system_datetime, true);
+  lv_obj_set_hidden(view_system_timer_settings, true);
 
-  switch (subview) {
+  switch (subview)
+  {
   case SYSTEM_SUBVIEW_DISPLAY:
     lv_label_set_text(lbl_system_title, "Display");
-    lv_obj_remove_flag(view_system_display, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_display, false);
     break;
   case SYSTEM_SUBVIEW_UI:
     lv_label_set_text(lbl_system_title, "Appearance");
-    lv_obj_remove_flag(view_system_ui, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_ui, false);
     break;
   case SYSTEM_SUBVIEW_BRIGHTNESS:
     lv_label_set_text(lbl_system_title, "Brightness");
-    lv_obj_remove_flag(view_system_brightness, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_brightness, false);
     break;
   case SYSTEM_SUBVIEW_SOUND:
     lv_label_set_text(lbl_system_title, "Sound");
-    lv_obj_remove_flag(view_system_sound, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_sound, false);
     break;
   case SYSTEM_SUBVIEW_GENERAL:
     lv_label_set_text(lbl_system_title, "General");
-    lv_obj_remove_flag(view_system_general, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_general, false);
     break;
   case SYSTEM_SUBVIEW_BATTERY:
     lv_label_set_text(lbl_system_title, "Battery indicators");
-    lv_obj_remove_flag(view_system_battery, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_battery, false);
     break;
   case SYSTEM_SUBVIEW_DATETIME:
     lv_label_set_text(lbl_system_title, "Date & time");
-    lv_obj_remove_flag(view_system_datetime, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_datetime, false);
     break;
   case SYSTEM_SUBVIEW_TIMER_SETTINGS:
     lv_label_set_text(lbl_system_title, "Timer settings");
-    lv_obj_remove_flag(view_system_timer_settings, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_timer_settings, false);
     break;
   default: /* ROOT */
     lv_label_set_text(lbl_system_title, "System settings");
-    lv_obj_remove_flag(view_system_root, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_hidden(view_system_root, false);
     break;
   }
 }
