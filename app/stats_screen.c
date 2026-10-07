@@ -21,58 +21,45 @@ static lv_obj_t *today_value_label;
 static lv_obj_t *total_title_label;
 static lv_obj_t *total_value_label;
 
-static void back_btn_cb(lv_event_t *e)
-{
+static void back_btn_cb(lv_event_t *e) {
   (void)e;
   app_show_timer_screen();
 }
 
 static void format_minutes_human(uint32_t total_minutes, char *buf,
-                                 size_t buf_size)
-{
+                                 size_t buf_size) {
   uint32_t hours = total_minutes / 60;
   uint32_t minutes = total_minutes % 60;
 
-  if (hours > 0 && minutes > 0)
-  {
+  if (hours > 0 && minutes > 0) {
     lv_snprintf(buf, buf_size, "%" PRIu32 " h %" PRIu32 " min", hours, minutes);
-  }
-  else if (hours > 0)
-  {
+  } else if (hours > 0) {
     lv_snprintf(buf, buf_size, "%" PRIu32 " h", hours);
-  }
-  else
-  {
+  } else {
     lv_snprintf(buf, buf_size, "%" PRIu32 " min", minutes);
   }
 }
 
 static void format_total_hours(uint32_t total_minutes, char *buf,
-                               size_t buf_size)
-{
+                               size_t buf_size) {
   uint32_t whole_hours = total_minutes / 60;
   uint32_t decimal = (total_minutes % 60) * 10;
   decimal = (decimal + 30) / 60;
 
-  if (decimal >= 10)
-  {
+  if (decimal >= 10) {
     whole_hours++;
     decimal = 0;
   }
 
-  if (decimal == 0)
-  {
+  if (decimal == 0) {
     lv_snprintf(buf, buf_size, "%" PRIu32 " h", whole_hours);
-  }
-  else
-  {
+  } else {
     lv_snprintf(buf, buf_size, "%" PRIu32 ".%" PRIu32 " h", whole_hours,
                 decimal);
   }
 }
 
-lv_obj_t *stats_screen_create(void)
-{
+lv_obj_t *stats_screen_create(void) {
   scr = lv_obj_create(NULL);
   theme_apply_scr(scr);
 
@@ -138,8 +125,7 @@ lv_obj_t *stats_screen_create(void)
   return scr;
 }
 
-void stats_screen_update(void)
-{
+void stats_screen_update(void) {
   uint32_t today_minutes = pomodoro_get_today_focus_minutes();
   uint32_t total_minutes = pomodoro_get_total_focus_minutes();
 
@@ -152,8 +138,7 @@ void stats_screen_update(void)
   lv_label_set_text(total_value_label, total_buf);
 }
 
-void stats_screen_refresh_theme(void)
-{
+void stats_screen_refresh_theme(void) {
   lv_obj_set_style_text_color(title_label, theme_get_text(), 0);
   lv_obj_set_style_bg_color(btn_back, theme_get_seg_bg(), 0);
   lv_obj_set_style_text_color(lbl_back, theme_get_text(), 0);

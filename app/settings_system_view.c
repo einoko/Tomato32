@@ -45,11 +45,9 @@ static void toggle_full_battery_indicator_cb(lv_event_t *e);
 static void toggle_battery_icon_cb(lv_event_t *e);
 static void toggle_date_source_cb(lv_event_t *e);
 
-static void system_back_cb(lv_event_t *e)
-{
+static void system_back_cb(lv_event_t *e) {
   (void)e;
-  switch (system_subview)
-  {
+  switch (system_subview) {
   case SYSTEM_SUBVIEW_DISPLAY:
     settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
     break;
@@ -78,85 +76,71 @@ static void system_back_cb(lv_event_t *e)
   }
 }
 
-static void system_display_menu_cb(lv_event_t *e)
-{
+static void system_display_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_DISPLAY);
 }
 
-static void system_sound_menu_cb(lv_event_t *e)
-{
+static void system_sound_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_SOUND);
 }
 
-static void system_general_menu_cb(lv_event_t *e)
-{
+static void system_general_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_GENERAL);
 }
 
-static void system_battery_menu_cb(lv_event_t *e)
-{
+static void system_battery_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_BATTERY);
 }
 
-static void system_appearance_menu_cb(lv_event_t *e)
-{
+static void system_appearance_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_UI);
 }
 
-static void system_brightness_sub_menu_cb(lv_event_t *e)
-{
+static void system_brightness_sub_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_BRIGHTNESS);
 }
 
-static void system_datetime_menu_cb(lv_event_t *e)
-{
+static void system_datetime_menu_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_set_subview(SYSTEM_SUBVIEW_DATETIME);
 }
 
-static void toggle_auto_cb(lv_event_t *e)
-{
+static void toggle_auto_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_auto_advance(!pomodoro_get_auto_advance());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void default_brightness_menu_cb(lv_event_t *e)
-{
+static void default_brightness_menu_cb(lv_event_t *e) {
   (void)e;
   settings_edit_view_show(4);
 }
 
-static void sound_volume_menu_cb(lv_event_t *e)
-{
+static void sound_volume_menu_cb(lv_event_t *e) {
   (void)e;
   settings_edit_view_show(5);
 }
 
-static void test_sound_cb(lv_event_t *e)
-{
+static void test_sound_cb(lv_event_t *e) {
   (void)e;
-  if (app_play_test_sound())
-  {
+  if (app_play_test_sound()) {
     settings_screen_update();
   }
 }
 
-static void set_date_cb(lv_event_t *e)
-{
+static void set_date_cb(lv_event_t *e) {
   (void)e;
   /* Seed manual date from current system time so the stepper starts from now */
   time_t now = time(NULL);
   struct tm tm_now;
-  if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024)
-  {
+  if (localtime_r(&now, &tm_now) && tm_now.tm_year + 1900 >= 2024) {
     pomodoro_set_manual_year((uint16_t)(tm_now.tm_year + 1900));
     pomodoro_set_manual_month((uint8_t)(tm_now.tm_mon + 1));
     pomodoro_set_manual_day((uint8_t)tm_now.tm_mday);
@@ -164,27 +148,23 @@ static void set_date_cb(lv_event_t *e)
   settings_edit_view_show(10); /* year first */
 }
 
-static void set_time_cb(lv_event_t *e)
-{
+static void set_time_cb(lv_event_t *e) {
   (void)e;
   /* Seed manual time from current system time so the stepper starts from now */
   time_t now = time(NULL);
   struct tm tm_now;
-  if (localtime_r(&now, &tm_now))
-  {
+  if (localtime_r(&now, &tm_now)) {
     pomodoro_set_manual_hour((uint8_t)tm_now.tm_hour);
     pomodoro_set_manual_minute((uint8_t)tm_now.tm_min);
   }
   settings_edit_view_show(8); /* hour first */
 }
 
-static void toggle_date_source_cb(lv_event_t *e)
-{
+static void toggle_date_source_cb(lv_event_t *e) {
   /* user_data: 0 = NTP, 1 = Manual */
   int manual = (int)(intptr_t)lv_event_get_user_data(e);
   pomodoro_set_date_source_ntp(!manual);
-  if (!manual)
-  {
+  if (!manual) {
     /* Switched to NTP — request an immediate sync so the clock corrects
        without waiting for the next 24-hour periodic sync. */
     app_request_ntp_sync();
@@ -197,15 +177,11 @@ static void toggle_date_source_cb(lv_event_t *e)
   pomodoro_save();
 }
 
-static void toggle_theme_cb(lv_event_t *e)
-{
+static void toggle_theme_cb(lv_event_t *e) {
   int mode = (int)(intptr_t)lv_event_get_user_data(e);
-  if (mode == 0)
-  {
+  if (mode == 0) {
     theme_set_dark(false);
-  }
-  else
-  {
+  } else {
     theme_set_dark(true);
   }
   theme_save();
@@ -217,16 +193,14 @@ static void toggle_theme_cb(lv_event_t *e)
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void toggle_visual_pulse_cb(lv_event_t *e)
-{
+static void toggle_visual_pulse_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_visual_pulse(!pomodoro_get_visual_pulse());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_custom_bg_cb(lv_event_t *e)
-{
+static void toggle_custom_bg_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_custom_bg(!pomodoro_get_custom_bg());
   settings_screen_update();
@@ -238,64 +212,56 @@ static void toggle_custom_bg_cb(lv_event_t *e)
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void toggle_sound_cb(lv_event_t *e)
-{
+static void toggle_sound_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_sound(!pomodoro_get_sound());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_smart_dim_cb(lv_event_t *e)
-{
+static void toggle_smart_dim_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_smart_dim(!pomodoro_get_smart_dim());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_power_nap_cb(lv_event_t *e)
-{
+static void toggle_power_nap_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_power_nap_mode(!pomodoro_get_power_nap_mode());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_persist_timer_cb(lv_event_t *e)
-{
+static void toggle_persist_timer_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_persist_timer(!pomodoro_get_persist_timer());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_low_battery_indicator_cb(lv_event_t *e)
-{
+static void toggle_low_battery_indicator_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_low_battery_indicator(!pomodoro_get_low_battery_indicator());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_full_battery_indicator_cb(lv_event_t *e)
-{
+static void toggle_full_battery_indicator_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_full_battery_indicator(!pomodoro_get_full_battery_indicator());
   settings_screen_update();
   pomodoro_save();
 }
 
-static void toggle_battery_icon_cb(lv_event_t *e)
-{
+static void toggle_battery_icon_cb(lv_event_t *e) {
   (void)e;
   pomodoro_set_battery_icon(!pomodoro_get_battery_icon());
   settings_screen_update();
   pomodoro_save();
 }
 
-void settings_system_view_build(lv_obj_t *parent)
-{
+void settings_system_view_build(lv_obj_t *parent) {
   view_system = lv_obj_create(parent);
   lv_obj_remove_style_all(view_system);
   lv_obj_set_size(view_system, SETTINGS_DISPLAY_W, SETTINGS_DISPLAY_H);
@@ -1360,10 +1326,8 @@ void settings_system_view_build(lv_obj_t *parent)
   settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
 }
 
-void settings_system_view_show(void)
-{
-  if (repeat_timer)
-  {
+void settings_system_view_show(void) {
+  if (repeat_timer) {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
@@ -1373,10 +1337,8 @@ void settings_system_view_show(void)
   settings_system_view_set_subview(SYSTEM_SUBVIEW_ROOT);
 }
 
-void settings_system_view_show_timer_settings(void)
-{
-  if (repeat_timer)
-  {
+void settings_system_view_show_timer_settings(void) {
+  if (repeat_timer) {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
@@ -1386,8 +1348,7 @@ void settings_system_view_show_timer_settings(void)
   settings_system_view_set_subview(SYSTEM_SUBVIEW_TIMER_SETTINGS);
 }
 
-void settings_system_view_set_subview(system_subview_t subview)
-{
+void settings_system_view_set_subview(system_subview_t subview) {
   system_subview = subview;
 
   lv_obj_set_hidden(view_system_root, true);
@@ -1400,8 +1361,7 @@ void settings_system_view_set_subview(system_subview_t subview)
   lv_obj_set_hidden(view_system_datetime, true);
   lv_obj_set_hidden(view_system_timer_settings, true);
 
-  switch (subview)
-  {
+  switch (subview) {
   case SYSTEM_SUBVIEW_DISPLAY:
     lv_label_set_text(lbl_system_title, "Display");
     lv_obj_set_hidden(view_system_display, false);

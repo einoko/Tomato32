@@ -14,8 +14,7 @@
 #define MINIMAL_REVEAL_TIME_MS 360
 #define MINIMAL_CHROME_SHIFT 12
 
-typedef enum
-{
+typedef enum {
   TIMER_LAYOUT_NORMAL,
   TIMER_LAYOUT_ENTERING_MINIMAL,
   TIMER_LAYOUT_MINIMAL,
@@ -61,8 +60,7 @@ static int32_t presentation_to_shift;
 static lv_opa_t presentation_from_opa;
 static lv_opa_t presentation_to_opa;
 
-typedef enum
-{
+typedef enum {
   BATTERY_STATUS_NONE,
   BATTERY_STATUS_LOW,
   BATTERY_STATUS_FULL,
@@ -73,39 +71,29 @@ static battery_status_t battery_status = BATTERY_STATUS_NONE;
 static void timer_screen_update_layout(void);
 static void timer_screen_update_presentation(void);
 
-static void timer_screen_update_battery_status(void)
-{
+static void timer_screen_update_battery_status(void) {
   int battery_percent = app_get_battery_percent();
   bool low_enabled = pomodoro_get_low_battery_indicator();
   bool full_enabled = pomodoro_get_full_battery_indicator();
 
-  if (battery_percent < 0 || battery_percent > 100)
-  {
+  if (battery_percent < 0 || battery_percent > 100) {
     battery_status = BATTERY_STATUS_NONE;
-  }
-  else
-  {
-    switch (battery_status)
-    {
+  } else {
+    switch (battery_status) {
     case BATTERY_STATUS_LOW:
-      if (!low_enabled || battery_percent > 23)
-      {
+      if (!low_enabled || battery_percent > 23) {
         battery_status = BATTERY_STATUS_NONE;
       }
       break;
     case BATTERY_STATUS_FULL:
-      if (!full_enabled || battery_percent < 95)
-      {
+      if (!full_enabled || battery_percent < 95) {
         battery_status = BATTERY_STATUS_NONE;
       }
       break;
     case BATTERY_STATUS_NONE:
-      if (low_enabled && battery_percent <= 20)
-      {
+      if (low_enabled && battery_percent <= 20) {
         battery_status = BATTERY_STATUS_LOW;
-      }
-      else if (full_enabled && battery_percent >= 98)
-      {
+      } else if (full_enabled && battery_percent >= 98) {
         battery_status = BATTERY_STATUS_FULL;
       }
       break;
@@ -114,43 +102,27 @@ static void timer_screen_update_battery_status(void)
 
   const char *symbol;
   lv_color_t color;
-  if (battery_status == BATTERY_STATUS_LOW)
-  {
+  if (battery_status == BATTERY_STATUS_LOW) {
     symbol = LV_SYMBOL_BATTERY_1;
     color = theme_get_battery_low_color();
-  }
-  else if (battery_status == BATTERY_STATUS_FULL)
-  {
+  } else if (battery_status == BATTERY_STATUS_FULL) {
     symbol = LV_SYMBOL_BATTERY_FULL;
     color = theme_get_battery_full_color();
-  }
-  else if (pomodoro_get_battery_icon() && battery_percent >= 0 &&
-           battery_percent <= 100)
-  {
-    if (battery_percent >= 90)
-    {
+  } else if (pomodoro_get_battery_icon() && battery_percent >= 0 &&
+             battery_percent <= 100) {
+    if (battery_percent >= 90) {
       symbol = LV_SYMBOL_BATTERY_FULL;
-    }
-    else if (battery_percent >= 65)
-    {
+    } else if (battery_percent >= 65) {
       symbol = LV_SYMBOL_BATTERY_3;
-    }
-    else if (battery_percent >= 40)
-    {
+    } else if (battery_percent >= 40) {
       symbol = LV_SYMBOL_BATTERY_2;
-    }
-    else if (battery_percent >= 15)
-    {
+    } else if (battery_percent >= 15) {
       symbol = LV_SYMBOL_BATTERY_1;
-    }
-    else
-    {
+    } else {
       symbol = LV_SYMBOL_BATTERY_EMPTY;
     }
     color = theme_get_text_muted();
-  }
-  else
-  {
+  } else {
     lv_obj_set_hidden(battery_icon, true);
     return;
   }
@@ -161,8 +133,7 @@ static void timer_screen_update_battery_status(void)
 }
 static void timer_screen_toggle_layout(void);
 
-static void presentation_anim_cb(void *var, int32_t value)
-{
+static void presentation_anim_cb(void *var, int32_t value) {
   (void)var;
   int32_t x = presentation_from_x +
               (presentation_to_x - presentation_from_x) * value / 1000;
@@ -180,19 +151,15 @@ static void presentation_anim_cb(void *var, int32_t value)
   lv_obj_set_style_opa(normal_chrome, opa, 0);
 }
 
-static void presentation_anim_completed_cb(lv_anim_t *anim)
-{
+static void presentation_anim_completed_cb(lv_anim_t *anim) {
   (void)anim;
-  if (presentation_to_minimal)
-  {
+  if (presentation_to_minimal) {
     layout_state = TIMER_LAYOUT_MINIMAL;
     lv_obj_set_hidden(normal_chrome, true);
     lv_obj_set_style_opa(normal_chrome, LV_OPA_COVER, 0);
     lv_obj_set_style_translate_x(normal_chrome, 0, 0);
     lv_obj_set_pos(lbl_timer, minimal_timer_x, minimal_timer_y);
-  }
-  else
-  {
+  } else {
     layout_state = TIMER_LAYOUT_NORMAL;
     lv_obj_set_hidden(normal_chrome, false);
     lv_obj_set_style_opa(normal_chrome, LV_OPA_COVER, 0);
@@ -202,18 +169,13 @@ static void presentation_anim_completed_cb(lv_anim_t *anim)
   }
 }
 
-static void start_presentation_animation(bool to_minimal)
-{
+static void start_presentation_animation(bool to_minimal) {
   lv_anim_del(scr, presentation_anim_cb);
 
-  if (to_minimal)
-  {
+  if (to_minimal) {
     lv_obj_set_hidden(normal_chrome, false);
-  }
-  else
-  {
-    if (layout_state == TIMER_LAYOUT_MINIMAL)
-    {
+  } else {
+    if (layout_state == TIMER_LAYOUT_MINIMAL) {
       lv_obj_set_style_opa(normal_chrome, LV_OPA_TRANSP, 0);
       lv_obj_set_style_translate_x(normal_chrome, MINIMAL_CHROME_SHIFT, 0);
     }
@@ -246,42 +208,34 @@ static void start_presentation_animation(bool to_minimal)
   lv_anim_start(&presentation_anim);
 }
 
-static void reveal_normal_layout(void)
-{
+static void reveal_normal_layout(void) {
   if (layout_state == TIMER_LAYOUT_NORMAL ||
-      layout_state == TIMER_LAYOUT_REVEALING_NORMAL)
-  {
+      layout_state == TIMER_LAYOUT_REVEALING_NORMAL) {
     return;
   }
   start_presentation_animation(false);
 }
 
-static void phase_press_cb(lv_event_t *e)
-{
+static void phase_press_cb(lv_event_t *e) {
   (void)e;
   phase_press_start_ms = lv_tick_get();
 }
 
-static void phase_pressing_cb(lv_event_t *e)
-{
+static void phase_pressing_cb(lv_event_t *e) {
   (void)e;
   if (phase_press_start_ms > 0 &&
-      (lv_tick_get() - phase_press_start_ms) >= 1000)
-  {
+      (lv_tick_get() - phase_press_start_ms) >= 1000) {
     phase_press_start_ms = 0;
     app_show_stats_screen();
   }
 }
 
-static void timer_tap_cb(lv_event_t *e)
-{
+static void timer_tap_cb(lv_event_t *e) {
   (void)e;
-  if (pomodoro_is_running())
-  {
+  if (pomodoro_is_running()) {
     bool was_sleeping = app_is_display_sleeping();
     app_notify_user_activity();
-    if (was_sleeping)
-    {
+    if (was_sleeping) {
       return;
     }
 
@@ -292,36 +246,29 @@ static void timer_tap_cb(lv_event_t *e)
 
   uint32_t now = lv_tick_get();
   if (debug_tap_count == 0 ||
-      (now - debug_first_tap_ms) > DEBUG_TAP_WINDOW_MS)
-  {
+      (now - debug_first_tap_ms) > DEBUG_TAP_WINDOW_MS) {
     debug_tap_count = 1;
     debug_first_tap_ms = now;
-  }
-  else
-  {
+  } else {
     debug_tap_count++;
-    if (debug_tap_count >= DEBUG_TAP_COUNT)
-    {
+    if (debug_tap_count >= DEBUG_TAP_COUNT) {
       debug_tap_count = 0;
       app_show_debug_screen();
     }
   }
 }
 
-static void blink_bg_anim_cb(void *var, int32_t v)
-{
+static void blink_bg_anim_cb(void *var, int32_t v) {
   lv_obj_set_style_bg_opa((lv_obj_t *)var, v, 0);
 }
 
-static void btn_start_pause_cb(lv_event_t *e)
-{
+static void btn_start_pause_cb(lv_event_t *e) {
   (void)e;
   app_timer_toggle();
   timer_screen_update();
 }
 
-static void btn_reset_cb(lv_event_t *e)
-{
+static void btn_reset_cb(lv_event_t *e) {
   (void)e;
   app_invalidate_pause_state();
   pomodoro_reset();
@@ -329,8 +276,7 @@ static void btn_reset_cb(lv_event_t *e)
   timer_screen_update();
 }
 
-static void btn_skip_cb(lv_event_t *e)
-{
+static void btn_skip_cb(lv_event_t *e) {
   (void)e;
   app_invalidate_pause_state();
   pomodoro_skip_to_next();
@@ -338,8 +284,7 @@ static void btn_skip_cb(lv_event_t *e)
   timer_screen_update();
 }
 
-static void dot_click_cb(lv_event_t *e)
-{
+static void dot_click_cb(lv_event_t *e) {
   int round = (int)(intptr_t)lv_event_get_user_data(e);
   app_invalidate_pause_state();
   pomodoro_jump_to_round(round);
@@ -347,11 +292,9 @@ static void dot_click_cb(lv_event_t *e)
   timer_screen_update();
 }
 
-static void stop_pulse_cb(lv_event_t *e)
-{
+static void stop_pulse_cb(lv_event_t *e) {
   (void)e;
-  if (pomodoro_get_ran_out_waiting())
-  {
+  if (pomodoro_get_ran_out_waiting()) {
     pomodoro_clear_ran_out_waiting();
     pomodoro_save();
     timer_screen_update();
@@ -359,10 +302,8 @@ static void stop_pulse_cb(lv_event_t *e)
 }
 
 static lv_obj_t *create_circle_btn(lv_obj_t *parent, const char *symbol,
-                                   lv_event_cb_t cb, int size)
-{
-  if (!circle_btn_styles_ready)
-  {
+                                   lv_event_cb_t cb, int size) {
+  if (!circle_btn_styles_ready) {
     lv_style_init(&style_circle_btn);
     lv_style_set_bg_color(&style_circle_btn, COLOR_CTRL);
     lv_style_set_bg_opa(&style_circle_btn, LV_OPA_COVER);
@@ -392,8 +333,7 @@ static lv_obj_t *create_circle_btn(lv_obj_t *parent, const char *symbol,
   return btn;
 }
 
-lv_obj_t *timer_screen_create(void)
-{
+lv_obj_t *timer_screen_create(void) {
   scr = lv_obj_create(NULL);
   theme_apply_scr(scr);
   theme_apply_custom_bg(scr);
@@ -455,8 +395,7 @@ lv_obj_t *timer_screen_create(void)
                         LV_FLEX_ALIGN_CENTER);
   lv_obj_set_style_pad_gap(dots_cont, 10, 0);
 
-  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++)
-  {
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
     dots[i] = lv_obj_create(dots_cont);
     lv_obj_remove_style_all(dots[i]);
     lv_obj_add_style(dots[i], &theme.dot_empty, 0);
@@ -532,8 +471,7 @@ lv_obj_t *timer_screen_create(void)
   return scr;
 }
 
-static void timer_screen_update_layout(void)
-{
+static void timer_screen_update_layout(void) {
   lv_obj_update_layout(scr);
   int32_t timer_w = lv_obj_get_width(lbl_timer);
   int32_t timer_h = lv_obj_get_height(lbl_timer);
@@ -543,36 +481,29 @@ static void timer_screen_update_layout(void)
   minimal_timer_x = (DISPLAY_W - timer_w) / 2;
   minimal_timer_y = (DISPLAY_H - timer_h) / 2;
 
-  if (layout_state == TIMER_LAYOUT_NORMAL)
-  {
+  if (layout_state == TIMER_LAYOUT_NORMAL) {
     lv_obj_set_pos(lbl_timer, normal_timer_x, normal_timer_y);
-  }
-  else if (layout_state == TIMER_LAYOUT_MINIMAL)
-  {
+  } else if (layout_state == TIMER_LAYOUT_MINIMAL) {
     lv_obj_set_pos(lbl_timer, minimal_timer_x, minimal_timer_y);
   }
 }
 
-static void timer_screen_update_presentation(void)
-{
+static void timer_screen_update_presentation(void) {
   if (!pomodoro_is_running() && layout_state != TIMER_LAYOUT_NORMAL &&
-      layout_state != TIMER_LAYOUT_REVEALING_NORMAL)
-  {
+      layout_state != TIMER_LAYOUT_REVEALING_NORMAL) {
     /* A manually stopped phase can end while minimal mode is active. Make
      * the controls available again without requiring a blind tap. */
     reveal_normal_layout();
   }
 }
 
-static void timer_screen_toggle_layout(void)
-{
+static void timer_screen_toggle_layout(void) {
   bool to_minimal = layout_state == TIMER_LAYOUT_NORMAL ||
                     layout_state == TIMER_LAYOUT_REVEALING_NORMAL;
   start_presentation_animation(to_minimal);
 }
 
-void timer_screen_update(void)
-{
+void timer_screen_update(void) {
   pomodoro_phase_t phase = pomodoro_get_phase();
   uint32_t remaining = pomodoro_get_remaining();
   bool running = pomodoro_is_running();
@@ -581,8 +512,7 @@ void timer_screen_update(void)
   pomodoro_preset_t *p = pomodoro_get_preset(preset);
   lv_color_t preset_color = theme_get_preset_color((int)preset);
 
-  switch (phase)
-  {
+  switch (phase) {
   case PHASE_WORK:
     lv_label_set_text(lbl_phase, "Focus");
     break;
@@ -605,11 +535,9 @@ void timer_screen_update(void)
 
   bool should_blink =
       pomodoro_get_ran_out_waiting() && pomodoro_get_visual_pulse();
-  if (should_blink)
-  {
+  if (should_blink) {
     lv_obj_set_hidden(pulse_stop_overlay, false);
-    if (!is_blinking)
-    {
+    if (!is_blinking) {
       lv_obj_set_style_bg_color(bg_glow, preset_color, 0);
 
       lv_anim_init(&blink_bg_anim);
@@ -625,12 +553,9 @@ void timer_screen_update(void)
 
       is_blinking = true;
     }
-  }
-  else
-  {
+  } else {
     lv_obj_set_hidden(pulse_stop_overlay, true);
-    if (is_blinking)
-    {
+    if (is_blinking) {
       lv_anim_del(bg_glow, blink_bg_anim_cb);
       lv_obj_set_style_bg_opa(bg_glow, 0, 0);
 
@@ -644,20 +569,16 @@ void timer_screen_update(void)
   /* Update control button colors to match active preset */
   bool can_prev = true;
   if (!running && current_round == 0 && phase == PHASE_WORK &&
-      remaining == p->work_duration && !pomodoro_get_ran_out_waiting())
-  {
+      remaining == p->work_duration && !pomodoro_get_ran_out_waiting()) {
     can_prev = false;
   }
 
-  if (can_prev)
-  {
+  if (can_prev) {
     lv_obj_set_clickable(btn_reset, true);
     lv_obj_set_style_bg_color(btn_reset, preset_color, 0);
     lv_obj_set_style_bg_color(btn_reset, preset_color, LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(btn_reset, LV_OPA_COVER, 0);
-  }
-  else
-  {
+  } else {
     lv_obj_set_clickable(btn_reset, false);
     lv_obj_set_style_bg_color(btn_reset, lv_color_white(), 0);
     lv_obj_set_style_bg_opa(btn_reset, LV_OPA_50, 0);
@@ -671,27 +592,20 @@ void timer_screen_update(void)
   /* Update dots: show only the active interval count, filled dots use preset
    * color */
   int interval = p->long_break_interval;
-  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++)
-  {
-    if (i >= interval)
-    {
+  for (int i = 0; i < POMODORO_MAX_ROUNDS; i++) {
+    if (i >= interval) {
       lv_obj_set_hidden(dots[i], true);
       continue;
     }
     lv_obj_set_hidden(dots[i], false);
     lv_obj_remove_style(dots[i], NULL, LV_PART_MAIN | LV_STATE_ANY);
-    if (pomodoro_is_completed(i))
-    {
+    if (pomodoro_is_completed(i)) {
       lv_obj_add_style(dots[i], &theme.dot_filled, 0);
       lv_obj_set_style_bg_color(dots[i], preset_color, 0);
-    }
-    else if (i == current_round && phase == PHASE_WORK)
-    {
+    } else if (i == current_round && phase == PHASE_WORK) {
       lv_obj_add_style(dots[i], &theme.dot_filled, 0);
       lv_obj_set_style_bg_color(dots[i], theme_get_inverse_bg(), 0);
-    }
-    else
-    {
+    } else {
       lv_obj_add_style(dots[i], &theme.dot_empty, 0);
     }
   }
@@ -699,8 +613,7 @@ void timer_screen_update(void)
   timer_screen_update_presentation();
 }
 
-void timer_screen_refresh_theme(void)
-{
+void timer_screen_refresh_theme(void) {
   lv_style_set_text_color(&style_circle_btn, lv_color_white());
   theme_apply_custom_bg(scr);
 }

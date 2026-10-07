@@ -10,14 +10,12 @@
 
 extern void timer_screen_refresh_theme(void);
 
-static void back_to_timer_cb(lv_event_t *e)
-{
+static void back_to_timer_cb(lv_event_t *e) {
   (void)e;
   app_show_timer_screen();
 }
 
-static void preset_tab_cb(lv_event_t *e)
-{
+static void preset_tab_cb(lv_event_t *e) {
   pomodoro_preset_id_t id =
       (pomodoro_preset_id_t)(intptr_t)lv_event_get_user_data(e);
   pomodoro_set_active_preset(id);
@@ -27,26 +25,22 @@ static void preset_tab_cb(lv_event_t *e)
   lv_obj_invalidate(lv_scr_act());
 }
 
-static void edit_durations_cb(lv_event_t *e)
-{
+static void edit_durations_cb(lv_event_t *e) {
   (void)e;
   settings_edit_view_show(0);
 }
 
-static void system_settings_cb(lv_event_t *e)
-{
+static void system_settings_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_show();
 }
 
-static void timer_settings_cb(lv_event_t *e)
-{
+static void timer_settings_cb(lv_event_t *e) {
   (void)e;
   settings_system_view_show_timer_settings();
 }
 
-void settings_main_view_build(lv_obj_t *parent)
-{
+void settings_main_view_build(lv_obj_t *parent) {
   view_main = lv_obj_create(parent);
   lv_obj_remove_style_all(view_main);
   lv_obj_set_size(view_main, SETTINGS_DISPLAY_W, SETTINGS_DISPLAY_H);
@@ -74,8 +68,7 @@ void settings_main_view_build(lv_obj_t *parent)
   lv_obj_set_scrollable(preset_row, false);
 
   static const char *preset_labels[3] = {"A", "B", "C"};
-  for (int i = 0; i < 3; i++)
-  {
+  for (int i = 0; i < 3; i++) {
     lv_obj_t *tab = lv_obj_create(preset_row);
     lv_obj_remove_style_all(tab);
     lv_obj_set_size(tab, 56, 56);
@@ -197,10 +190,8 @@ void settings_main_view_build(lv_obj_t *parent)
   lv_obj_align(lbl_system_chevron, LV_ALIGN_RIGHT_MID, -24, 0);
 }
 
-void settings_main_view_show(void)
-{
-  if (repeat_timer)
-  {
+void settings_main_view_show(void) {
+  if (repeat_timer) {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }

@@ -37,14 +37,12 @@ static lv_obj_t *key_pass;
 static lv_obj_t *key_ip;
 static lv_obj_t *key_heap;
 
-static void back_btn_cb(lv_event_t *e)
-{
+static void back_btn_cb(lv_event_t *e) {
   (void)e;
   app_show_timer_screen();
 }
 
-static lv_obj_t *make_key(lv_obj_t *parent, const char *text, int y)
-{
+static lv_obj_t *make_key(lv_obj_t *parent, const char *text, int y) {
   lv_obj_t *lbl = lv_label_create(parent);
   theme_apply_label_muted(lbl);
   lv_obj_set_style_text_font(lbl, &inter_16, 0);
@@ -53,8 +51,7 @@ static lv_obj_t *make_key(lv_obj_t *parent, const char *text, int y)
   return lbl;
 }
 
-static lv_obj_t *make_val(lv_obj_t *parent, int y)
-{
+static lv_obj_t *make_val(lv_obj_t *parent, int y) {
   lv_obj_t *lbl = lv_label_create(parent);
   theme_apply_label_normal(lbl);
   lv_obj_set_style_text_font(lbl, &inter_20, 0);
@@ -63,8 +60,7 @@ static lv_obj_t *make_val(lv_obj_t *parent, int y)
   return lbl;
 }
 
-lv_obj_t *debug_screen_create(void)
-{
+lv_obj_t *debug_screen_create(void) {
   scr = lv_obj_create(NULL);
   theme_apply_scr(scr);
 
@@ -123,27 +119,21 @@ lv_obj_t *debug_screen_create(void)
   return scr;
 }
 
-static void mask_password(const char *pass, char *buf, size_t buf_size)
-{
-  if (!pass || pass[0] == '\0')
-  {
+static void mask_password(const char *pass, char *buf, size_t buf_size) {
+  if (!pass || pass[0] == '\0') {
     lv_snprintf(buf, buf_size, "N/A");
     return;
   }
   size_t len = strlen(pass);
   size_t show = len > 3 ? 3 : 0;
-  if (show > 0)
-  {
+  if (show > 0) {
     lv_snprintf(buf, buf_size, "%.*s***", (int)show, pass);
-  }
-  else
-  {
+  } else {
     lv_snprintf(buf, buf_size, "***");
   }
 }
 
-void debug_screen_update(void)
-{
+void debug_screen_update(void) {
   /* Date & time */
   time_t now = time(NULL);
   struct tm timeinfo;
@@ -168,20 +158,16 @@ void debug_screen_update(void)
 
   /* Free heap */
   uint32_t heap = app_get_free_heap();
-  if (heap > 0)
-  {
+  if (heap > 0) {
     char heap_buf[32];
     lv_snprintf(heap_buf, sizeof(heap_buf), "%" LV_PRIu32 " KB", heap / 1024);
     lv_label_set_text(val_heap, heap_buf);
-  }
-  else
-  {
+  } else {
     lv_label_set_text(val_heap, "N/A");
   }
 }
 
-void debug_screen_refresh_theme(void)
-{
+void debug_screen_refresh_theme(void) {
   lv_obj_set_style_text_color(title_label, theme_get_text(), 0);
   lv_obj_set_style_bg_color(btn_back, theme_get_seg_bg(), 0);
   lv_obj_set_style_text_color(lbl_back, theme_get_text(), 0);

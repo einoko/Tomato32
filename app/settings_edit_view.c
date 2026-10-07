@@ -10,8 +10,7 @@
 static lv_obj_t *stepper_btn_minus;
 static lv_obj_t *stepper_btn_plus;
 
-void settings_edit_view_build(lv_obj_t *parent)
-{
+void settings_edit_view_build(lv_obj_t *parent) {
   view_edit = lv_obj_create(parent);
   lv_obj_remove_style_all(view_edit);
   lv_obj_set_size(view_edit, SETTINGS_DISPLAY_W, SETTINGS_DISPLAY_H);
@@ -84,10 +83,8 @@ void settings_edit_view_build(lv_obj_t *parent)
   lv_obj_align(lbl_edit_unit, LV_ALIGN_BOTTOM_MID, 0, -20);
 }
 
-void settings_edit_view_show(int field)
-{
-  if (repeat_timer)
-  {
+void settings_edit_view_show(int field) {
+  if (repeat_timer) {
     lv_timer_delete(repeat_timer);
     repeat_timer = NULL;
   }
@@ -113,8 +110,8 @@ void settings_edit_view_show(int field)
                                    "Smart sleep delay"};
   static const char *units[15] = {"minutes", "minutes", "minutes", "rounds",
                                   "percent", "percent", "percent", "percent",
-                                  "", "", "", "",
-                                  "", "minutes", "minutes"};
+                                  "",        "",        "",        "",
+                                  "",        "minutes", "minutes"};
 
   lv_label_set_text(lbl_edit_title, titles[field]);
   lv_label_set_text(lbl_edit_unit, units[field]);
