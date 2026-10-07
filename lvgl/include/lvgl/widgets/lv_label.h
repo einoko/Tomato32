@@ -58,8 +58,9 @@ typedef enum {
 enum _lv_property_label_id_t {
     LV_PROPERTY_ID(LABEL, TEXT,                   LV_PROPERTY_TYPE_TEXT,      0),
     LV_PROPERTY_ID(LABEL, LONG_MODE,              LV_PROPERTY_TYPE_INT,       1),
-    LV_PROPERTY_ID(LABEL, TEXT_SELECTION_START,   LV_PROPERTY_TYPE_INT,       2),
-    LV_PROPERTY_ID(LABEL, TEXT_SELECTION_END,     LV_PROPERTY_TYPE_INT,       3),
+    LV_PROPERTY_ID(LABEL, MAX_LINES,              LV_PROPERTY_TYPE_INT,       2),
+    LV_PROPERTY_ID(LABEL, TEXT_SELECTION_START,   LV_PROPERTY_TYPE_INT,       3),
+    LV_PROPERTY_ID(LABEL, TEXT_SELECTION_END,     LV_PROPERTY_TYPE_INT,       4),
     LV_PROPERTY_LABEL_END,
 };
 #endif
@@ -72,7 +73,8 @@ LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_label_class;
 
 /**
  * Create a label object
- * @param parent    pointer to an object, it will be the parent of the new label.
+ * @param parent    pointer to a parent widget @nullable. When NULL, the widget
+ *                  is created as a screen on the default display.
  * @return          pointer to the created button
  */
 lv_obj_t * lv_label_create(lv_obj_t * parent);
@@ -84,7 +86,8 @@ lv_obj_t * lv_label_create(lv_obj_t * parent);
 /**
  * Set a new text for a label. Memory will be allocated to store the text by the label.
  * @param obj           pointer to a label object
- * @param text          '\0' terminated character string. NULL to refresh with the current text.
+ * @param text          '\0' terminated character string. @nullable When NULL the label is
+ *                      refreshed with its current text.
  * @note If `LV_USE_ARABIC_PERSIAN_CHARS` is enabled the text will be modified to have the correct Arabic
  * characters in it.
  */
@@ -123,7 +126,7 @@ void lv_label_set_text_vfmt(lv_obj_t * obj, const char * fmt, va_list args);
  * Set a static text. It will not be saved by the label so the 'text' variable
  * has to be 'alive' while the label exists.
  * @param obj           pointer to a label object
- * @param text          pointer to a text. NULL to refresh with the current text.
+ * @param text          pointer to a text. @nullable When NULL the current text is refreshed.
  * @note It ignores `LV_USE_ARABIC_PERSIAN_CHARS`
  */
 void lv_label_set_text_static(lv_obj_t * obj, const char * text);
@@ -135,6 +138,14 @@ void lv_label_set_text_static(lv_obj_t * obj, const char * text);
  *                      In LV_LONG_WRAP/DOT/SCROLL/SCROLL_CIRC the size of the label should be set AFTER this function
  */
 void lv_label_set_long_mode(lv_obj_t * obj, lv_label_long_mode_t long_mode);
+
+/**
+ * Set the maximum number of lines that the label should display in
+ * `LV_LABEL_LONG_MODE_WRAP` and `LV_LABEL_LONG_MODE_DOTS` mode.
+ * @param obj     pointer to a label object
+ * @param lines   number of lines to display (unlimited if not positive)
+ */
+void lv_label_set_max_lines(lv_obj_t * obj, int32_t lines);
 
 /**
  * Set where text selection should start
@@ -188,6 +199,13 @@ char * lv_label_get_text(const lv_obj_t * obj);
  * @return          the current long mode
  */
 lv_label_long_mode_t lv_label_get_long_mode(const lv_obj_t * obj);
+
+/**
+ * Get the maximum number of lines that a label should display
+ * @param obj       pointer to a label object
+ * @return          the maximum number of lines, if positive
+ */
+int32_t lv_label_get_max_lines(const lv_obj_t * obj);
 
 /**
  * Get the relative x and y coordinates of a letter
@@ -246,8 +264,8 @@ bool lv_label_get_recolor(const lv_obj_t * obj);
  * Bind an integer, string, or pointer Subject to a Label.
  * @param obj       pointer to Label
  * @param subject   pointer to Subject
- * @param fmt       optional printf-like format string with 1 format specifier (e.g. "%d °C")
- *                  or NULL to bind to the value directly.
+ * @param fmt       optional printf-like format string with 1 format specifier (e.g. "%d °C").
+ *                  @nullable When NULL the value is bound directly.
  * @return          pointer to newly-created Observer
  * @note            If `fmt == NULL` strings and pointers (`\0` terminated string) will be shown
  *                  as text as they are, integers as %d, floats as %0.1f

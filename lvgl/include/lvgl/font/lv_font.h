@@ -195,6 +195,7 @@ struct _lv_font_info_t {
  * @param g_dsc         the glyph descriptor including which font to use, which supply the glyph_index
  *                      and the format.
  * @param draw_buf      a draw buffer that can be used to store the bitmap of the glyph.
+ *                      @nullable Fonts returning an image source do not use it.
  * @return              pointer to the glyph's data.
  *                      It can be a draw buffer for bitmap fonts or an image source for imgfonts.
  */
@@ -203,7 +204,7 @@ const void * lv_font_get_glyph_bitmap(lv_font_glyph_dsc_t * g_dsc, lv_draw_buf_t
 
 /**
  * Return the bitmap as it is. It works only if the font stores the bitmap in
- * a non-volitile memory.
+ * a non-volatile memory.
  * @param g_dsc         the glyph descriptor including which font to use, which supply the glyph_index
  *                      and the format.
  * @return              the bitmap as it is
