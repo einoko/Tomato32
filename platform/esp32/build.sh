@@ -86,7 +86,20 @@ fi
 # Pull the image if not present
 if ! docker image inspect "${IMAGE}" &>/dev/null; then
 	echo "Pulling ${IMAGE} ..."
-	docker pull "${IMAGE}"
+	for attempt in 1 2 3 4; do
+		if docker pull "${IMAGE}"; then
+			break
+		fi
+
+		if [ "${attempt}" -eq 4 ]; then
+			echo "ERROR: Failed to pull ${IMAGE} after 4 attempts." >&2
+			exit 1
+		fi
+
+		delay=$((5 << (attempt - 1)))
+		echo "Docker pull attempt ${attempt} failed; retrying in ${delay}s."
+		sleep "${delay}"
+	done
 fi
 
 # Use -t only if stdin is a terminal (avoids "input device is not a TTY" in CI)
